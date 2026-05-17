@@ -1,0 +1,28 @@
+#!/bin/bash
+
+BASE_DIR="$HOME/Developer/genpy"
+
+COMMAND=$1
+
+case "$COMMAND" in
+  create)
+    bash "$BASE_DIR/generador/pro_max_python_project_generator.sh"
+    ;;
+
+  update)
+    bash "$BASE_DIR/instalador/actualizar.sh"
+    ;;
+
+  uninstall)
+    bash "$BASE_DIR/instalador/desinstalar.sh"
+    ;;
+
+  *)
+    echo "🚀 GenPy CLI"
+    echo ""
+    echo "Uso:"
+    echo "  genpy create"
+    echo "  genpy update"
+    echo "  genpy uninstall"
+    ;;
+esac
