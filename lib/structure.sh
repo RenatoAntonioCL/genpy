@@ -1,33 +1,21 @@
 create_structure() {
   local dir=$1
+  local lang=${2:-python}
 
   mkdir -p "$dir/src" "$dir/test"
 
+  case "$lang" in
+    python)
+      echo 'print("Hello Python")' > "$dir/src/main.py"
+      ;;
+    node)
+      echo 'console.log("Hello Node")' > "$dir/src/main.js"
+      ;;
+    cpp)
+      echo '#include <iostream>\nint main(){ std::cout << "Hello"; }' > "$dir/src/main.cpp"
+      ;;
+  esac
+
   echo "# GenPy Project" > "$dir/README.md"
-  echo "Proyecto generado con GenPy" >> "$dir/README.md"
-
-  echo "DEBUG=True" > "$dir/.env"
-  echo "DEBUG=True" > "$dir/.env.example"
-
   touch "$dir/requirements.txt"
-
-  echo 'print("👋 Hello from GenPy")' > "$dir/src/main.py"
-
-  echo 'def test_example():\n    pass' > "$dir/test/test_main.py"
-
-  touch "$dir/src/__init__.py"
-
-  # 🐳 ESTO ES LO QUE TE FALTABA
-  cat > "$dir/Dockerfile" <<EOF
-FROM python:3.10-slim
-
-WORKDIR /app
-COPY . /app
-
-RUN pip install --no-cache-dir -r requirements.txt
-
-CMD ["python", "src/main.py"]
-EOF
-
-  echo "🐳 Dockerfile creado"
 }
