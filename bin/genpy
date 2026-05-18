@@ -1,12 +1,19 @@
 #!/bin/bash
 
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$HOME/Developer/genpy"
 
-COMMAND=$1
+GENERATOR="$BASE_DIR/generador/genpy.sh"
 
-case "$COMMAND" in
+if [[ ! -f "$GENERATOR" ]]; then
+  echo "❌ No se encontró el generador"
+  echo "$GENERATOR"
+  exit 1
+fi
+
+case "$1" in
   create)
-    bash "$BASE_DIR/generador/pro_max_python_project_generator.sh"
+    bash "$GENERATOR"
     ;;
 
   update)
@@ -19,10 +26,6 @@ case "$COMMAND" in
 
   *)
     echo "🚀 GenPy CLI"
-    echo ""
-    echo "Uso:"
-    echo "  genpy create"
-    echo "  genpy update"
-    echo "  genpy uninstall"
+    echo "Uso: genpy create | update | uninstall"
     ;;
 esac
