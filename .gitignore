@@ -1,22 +1,38 @@
-# macOS
-.Ds_Store
+# =============================================================================
+# GenPy — .gitignore
+#
+# Aplica a los proyectos generados por GenPy (Python).
+# Los archivos listados aquí no se incluirán en el repositorio git.
+# =============================================================================
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+# Metadatos del Finder, se generan automáticamente en cualquier carpeta abierta
+.DS_Store
 **/.DS_Store
 
-# Python cache
+# ── Python ────────────────────────────────────────────────────────────────────
+# Bytecode compilado por el intérprete (no necesario en el repo)
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
-# Entornos virtuales
+# ── Entornos virtuales ────────────────────────────────────────────────────────
+# El entorno virtual se crea localmente y no debe compartirse
 env/
 venv/
 ENV/
+.venv/
 
-# Logs
-*.log 
+# ── Variables de entorno ──────────────────────────────────────────────────────
+# Contienen secretos (API keys, passwords) — NUNCA deben subirse al repo
+.env
+.env.local
+.env.*.local
 
-# Git
-.git/
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
 
-# Archivos temporales
+# ── Archivos temporales ───────────────────────────────────────────────────────
 *.temp
+*.tmp

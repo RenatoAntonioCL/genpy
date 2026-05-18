@@ -1,34 +1,84 @@
+```bash
 #!/bin/bash
+set -euo pipefail
 
-INSTALL_DIR="/usr/local/share/genpy"
-GENERATOR="$INSTALL_DIR/generador/genpy.sh"
-INSTALLER="$INSTALL_DIR/instalador"
+# =============================================================================
+# GenPy — Punto de entrada principal del CLI
+#
+# Este script es el que el sistema ejecuta cuando el usuario corre "genpy".
+# Su única responsabilidad es leer el primer argumento y delegar al script
+# correspondiente. No contiene lógica de negocio.
+#
+# Comandos disponibles:
+#   genpy create      → lanza el generador de proyectos
+#   genpy update      → descarga la última versión desde GitHub
+#   genpy uninstall   → elimina GenPy del sistema
+#   genpy version     → muestra la versión instalada
+#   genpy help        → muestra esta ayuda
+# =============================================================================
+
+# Ruta base donde se instala GenPy en el sistema (definida en instalar.sh)
+readonly INSTALL_DIR="/usr/local/share/genpy"
+
+# Script principal del generador de proyectos
+readonly GENERATOR="$INSTALL_DIR/generador/genpy.sh"
+
+# Carpeta que contiene los scripts de mantenimiento (instalar, actualizar, desinstalar)
+readonly INSTALLER_DIR="$INSTALL_DIR/instalador"
+
+# ─── Verificar que la instalación está íntegra ───────────────────────────────
 
 if [[ ! -f "$GENERATOR" ]]; then
-  echo "❌ No se encontró el generador"
+  echo "❌ Instalación corrupta: no se encontró el generador en $GENERATOR"
+  echo "   Reinstala GenPy con:"
+  echo "   curl -fsSL https://raw.githubusercontent.com/RenatoAntonioCL/genpy/main/instalador/instalar.sh | bash"
   exit 1
 fi
 
-case "$1" in
+# ─── Router de comandos ───────────────────────────────────────────────────────
+#
+# ${1:-} usa el primer argumento si existe, o string vacío si no se pasó nada.
+# Sin el ":-", set -u lanzaría un error al correr "genpy" sin argumentos.
+
+case "${1:-}" in
+
   create)
+    # Remueve "create" de los argumentos y pasa el resto al generador
+    # (útil cuando se agreguen flags como --no-git, --no-docker, etc.)
     shift
     bash "$GENERATOR" "$@"
     ;;
 
   update)
-    bash "$INSTALLER/actualizar.sh"
+    bash "$INSTALLER_DIR/actualizar.sh"
     ;;
 
   uninstall)
-    bash "$INSTALLER/desinstalar.sh"
+    bash "$INSTALLER_DIR/desinstalar.sh"
+    ;;
+
+  version | --version | -v)
+    # Extrae el número de versión del encabezado del generador
+    grep -m1 'GenPy v' "$GENERATOR" | grep -o 'v[0-9.]*' || echo "versión desconocida"
+    ;;
+
+  help | --help | -h | "")
+    echo ""
+    echo "  🛠️  GenPy — project scaffolding tool"
+    echo ""
+    echo "  Uso:"
+    echo "    genpy create       Crear un nuevo proyecto"
+    echo "    genpy update       Actualizar GenPy a la última versión"
+    echo "    genpy uninstall    Desinstalar GenPy del sistema"
+    echo "    genpy version      Ver la versión instalada"
+    echo ""
     ;;
 
   *)
-    echo "🛠️ GenPy v2.2.0"
-    echo ""
-    echo "Uso:"
-    echo "  genpy create [lang] [--git] [--docker] [--venv]"
-    echo "  genpy update"
-    echo "  genpy uninstall"
+    echo "❌ Comando desconocido: '${1}'"
+    echo "   Ejecuta 'genpy help' para ver los comandos disponibles"
+    exit 1
     ;;
+
 esac
+```

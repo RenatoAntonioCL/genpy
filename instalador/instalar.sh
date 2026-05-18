@@ -1,46 +1,63 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
+# =============================================================================
+# GenPy — Instalador
+#
+# Copia el proyecto completo a /usr/local/share/genpy y crea un wrapper
+# en /usr/local/bin/genpy para que el comando esté disponible globalmente.
+#
+# Uso:
+#   bash instalador/instalar.sh
+#
+# Requiere: sudo (para escribir en /usr/local)
+# =============================================================================
+
+# REPO_DIR: raíz del repositorio desde donde se está ejecutando el instalador.
+# Navega un nivel arriba desde la carpeta "instalador/" para llegar a la raíz.
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-INSTALL_BIN="/usr/local/bin/genpy"
-INSTALL_DIR="/usr/local/share/genpy"
+# Ruta donde vive GenPy una vez instalado en el sistema
+readonly INSTALL_DIR="/usr/local/share/genpy"
+
+# Ruta del comando global que el usuario va a ejecutar
+readonly INSTALL_BIN="/usr/local/bin/genpy"
 
 echo "📦 Instalando GenPy..."
 
-# =========================
-# CLEAN INSTALL
-# =========================
+# ─── Limpiar instalación anterior ────────────────────────────────────────────
+# Garantiza un estado limpio antes de copiar. Sin esto, archivos eliminados
+# del repo seguirían presentes en la instalación.
+
 sudo rm -rf "$INSTALL_DIR"
-sudo rm -f "$INSTALL_BIN"
+sudo rm -f  "$INSTALL_BIN"
+
+# ─── Copiar el proyecto completo ─────────────────────────────────────────────
 
 sudo mkdir -p "$INSTALL_DIR"
+sudo cp -R "$REPO_DIR/"* "$INSTALL_DIR/"
 
-# =========================
-# COPY CORE SYSTEM
-# =========================
-sudo cp -R "$REPO_DIR/bin" "$INSTALL_DIR/"
-sudo cp -R "$REPO_DIR/lib" "$INSTALL_DIR/"
-sudo cp -R "$REPO_DIR/generador" "$INSTALL_DIR/"
-sudo cp -R "$REPO_DIR/instalador" "$INSTALL_DIR/"
+# ─── Asegurar permisos de ejecución ──────────────────────────────────────────
+# cp no garantiza permisos de ejecución en todos los sistemas,
+# así que los establecemos explícitamente.
 
-# =========================
-# ENTRYPOINT (GLOBAL COMMAND)
-# =========================
-cat <<EOF | sudo tee "$INSTALL_BIN" > /dev/null
+sudo chmod +x "$INSTALL_DIR/bin/genpy"
+sudo chmod +x "$INSTALL_DIR/generador/genpy.sh"
+sudo chmod +x "$INSTALL_DIR/instalador/actualizar.sh"
+sudo chmod +x "$INSTALL_DIR/instalador/desinstalar.sh"
+
+# ─── Crear el wrapper del sistema ────────────────────────────────────────────
+# Este es el script que se ejecuta cuando el usuario escribe "genpy" en la terminal.
+# Solo redirige la llamada a bin/genpy dentro de la instalación.
+# Usar 'exec' reemplaza el proceso actual en lugar de crear un subproceso hijo.
+
+sudo tee "$INSTALL_BIN" > /dev/null <<'EOF'
 #!/bin/bash
-
-BASE_DIR="/usr/local/share/genpy"
-
-if [[ ! -f "\$BASE_DIR/bin/genpy" ]]; then
-  echo "❌ GenPy corrupto: falta bin/genpy"
-  exit 1
-fi
-
-bash "\$BASE_DIR/bin/genpy" "\$@"
+set -euo pipefail
+exec bash "/usr/local/share/genpy/bin/genpy" "$@"
 EOF
 
 sudo chmod +x "$INSTALL_BIN"
 
-echo "✔ Instalado correctamente"
-echo "👉 Ejecuta: genpy create"
+echo "✔ GenPy instalado correctamente"
+echo "  Ejecuta: genpy create"
