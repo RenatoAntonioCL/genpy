@@ -1,17 +1,11 @@
 #!/bin/bash
-# Desinstalador de Genpy
-set -e
 
-INSTALL_PATH="/usr/local/bin/genpy"
+INSTALL_BIN="/usr/local/bin/genpy"
+INSTALL_DIR="/usr/local/share/genpy"
 
-if [[ -f "$INSTALL_PATH" ]]; then
-  echo "🧹 Eliminando Genpy..."
-  sudo rm "$INSTALL_PATH"
-else
-  echo "⚠️  Genpy no está instalado en $INSTALL_PATH"
-fi
+echo "🧹 Eliminando GenPy..."
 
-sed -i '' '/alias genpy=.*/d' ~/.zshrc 2>/dev/null || true
-sed -i '' '/alias genpy=.*/d' ~/.bash_profile 2>/dev/null || true
+sudo rm -f "$INSTALL_BIN"
+sudo rm -rf "$INSTALL_DIR"
 
-echo "✅ Desinstalación completada."
+echo "✔ GenPy eliminado completamente"

@@ -1,31 +1,30 @@
 #!/bin/bash
 
-BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$HOME/Developer/genpy"
-
-GENERATOR="$BASE_DIR/generador/genpy.sh"
+INSTALL_DIR="/usr/local/share/genpy"
+GENERATOR="$INSTALL_DIR/generador/genpy.sh"
+INSTALLER="$INSTALL_DIR/instalador"
 
 if [[ ! -f "$GENERATOR" ]]; then
   echo "❌ No se encontró el generador"
-  echo "$GENERATOR"
   exit 1
 fi
 
 case "$1" in
   create)
-    bash "$GENERATOR"
+    shift
+    bash "$GENERATOR" "$@"
     ;;
 
   update)
-    bash "$BASE_DIR/instalador/actualizar.sh"
+    bash "$INSTALLER/actualizar.sh"
     ;;
 
   uninstall)
-    bash "$BASE_DIR/instalador/desinstalar.sh"
+    bash "$INSTALLER/desinstalar.sh"
     ;;
 
   *)
-    echo "🚀 GenPy CLI"
+    echo "🛠️ GenPy CLI"
     echo "Uso: genpy create | update | uninstall"
     ;;
 esac

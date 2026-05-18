@@ -21,16 +21,6 @@ check_docker() {
   echo "✅ Docker listo"
 }
 
-build_docker() {
-  local dir=$1
-  local name=$(echo "$2" | tr '[:upper:]' '[:lower:]')
-
-  echo "🐳 Construyendo Docker en $dir"
-  echo "🐳 Imagen: $name"
-
-  docker build -t "$name" "$dir"
-}
-
 create_dockerfile() {
   local dir=$1
 
@@ -46,4 +36,14 @@ CMD ["python", "src/main.py"]
 EOF
 
   echo "🐳 Dockerfile creado"
+}
+
+build_docker() {
+  local dir=$1
+  local name=$(echo "$2" | tr '[:upper:]' '[:lower:]')
+
+  echo "🐳 Construyendo Docker en $dir"
+  echo "🐳 Imagen: $name"
+
+  docker build -t "$name" "$dir"
 }

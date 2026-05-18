@@ -1,18 +1,28 @@
 #!/bin/bash
-# Actualizador de Genpy desde un repositorio Git
 set -e
 
-REPO_URL="https://github.com/TU_USUARIO/genpy.git"
-TEMP_DIR=$(mktemp -d)
-INSTALL_PATH="/usr/local/bin/genpy"
+REPO_URL="https://github.com/RenatoAntonioCL/genpy.git"
+TMP_DIR=$(mktemp -d)
 
-echo "⬇️  Descargando última versión de Genpy..."
-git clone "$REPO_URL" "$TEMP_DIR"
+INSTALL_DIR="/usr/local/share/genpy"
+INSTALL_BIN="/usr/local/bin/genpy"
 
-echo "📦 Actualizando script en $INSTALL_PATH..."
-sudo cp "$TEMP_DIR/generador/pro_max_python_project_generator.sh" "$INSTALL_PATH"
-sudo chmod +x "$INSTALL_PATH"
+echo "⬇️ Actualizando GenPy..."
 
-rm -rf "$TEMP_DIR"
+git clone "$REPO_URL" "$TMP_DIR"
 
-echo "✅ Genpy actualizado correctamente."
+sudo rm -rf "$INSTALL_DIR"
+sudo mkdir -p "$INSTALL_DIR"
+
+sudo cp -R "$TMP_DIR/"* "$INSTALL_DIR/"
+
+cat <<EOF | sudo tee "$INSTALL_BIN" > /dev/null
+#!/bin/bash
+bash "$INSTALL_DIR/bin/genpy" "\$@"
+EOF
+
+sudo chmod +x "$INSTALL_BIN"
+
+rm -rf "$TMP_DIR"
+
+echo "✅ GenPy actualizado correctamente"
