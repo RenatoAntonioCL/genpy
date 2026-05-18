@@ -24,7 +24,11 @@ case "$1" in
     ;;
 
   *)
-    echo "🛠️ GenPy CLI"
-    echo "Uso: genpy create | update | uninstall"
+    echo "🛠️ GenPy v2.2.0"
+    echo ""
+    echo "Uso:"
+    echo "  genpy create [lang] [--git] [--docker] [--venv]"
+    echo "  genpy update"
+    echo "  genpy uninstall"
     ;;
 esac

@@ -20,7 +20,6 @@ check_docker() {
   DOCKER_AVAILABLE=true
   echo "✅ Docker listo"
 }
-
 create_dockerfile() {
   local dir=$1
 
@@ -28,6 +27,7 @@ create_dockerfile() {
 FROM python:3.10-slim
 
 WORKDIR /app
+
 COPY . /app
 
 RUN pip install --no-cache-dir -r requirements.txt

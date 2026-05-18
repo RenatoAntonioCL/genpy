@@ -9,31 +9,31 @@ INSTALL_DIR="/usr/local/share/genpy"
 echo "📦 Instalando GenPy..."
 
 # =========================
-# CLEAN
+# CLEAN INSTALL
 # =========================
-
 sudo rm -rf "$INSTALL_DIR"
 sudo rm -f "$INSTALL_BIN"
 
 sudo mkdir -p "$INSTALL_DIR"
 
 # =========================
-# COPY EVERYTHING (CRÍTICO)
+# COPY CORE SYSTEM
 # =========================
-
-sudo cp -R "$REPO_DIR"/. "$INSTALL_DIR/"
+sudo cp -R "$REPO_DIR/bin" "$INSTALL_DIR/"
+sudo cp -R "$REPO_DIR/lib" "$INSTALL_DIR/"
+sudo cp -R "$REPO_DIR/generador" "$INSTALL_DIR/"
+sudo cp -R "$REPO_DIR/instalador" "$INSTALL_DIR/"
 
 # =========================
-# ENTRYPOINT
+# ENTRYPOINT (GLOBAL COMMAND)
 # =========================
-
 cat <<EOF | sudo tee "$INSTALL_BIN" > /dev/null
 #!/bin/bash
 
 BASE_DIR="/usr/local/share/genpy"
 
 if [[ ! -f "\$BASE_DIR/bin/genpy" ]]; then
-  echo "❌ Instalación corrupta (faltan archivos)"
+  echo "❌ GenPy corrupto: falta bin/genpy"
   exit 1
 fi
 

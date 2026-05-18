@@ -10,32 +10,16 @@ source "$BASE_DIR/lib/git.sh"
 source "$BASE_DIR/lib/docker.sh"
 source "$BASE_DIR/lib/libs.sh"
 source "$BASE_DIR/lib/venv.sh"
+source "$BASE_DIR/lib/ui.sh"
 
-LANGUAGE=${1:-python}
-shift || true
-
-# =========================
-# FLAGS
-# =========================
-
-ENABLE_GIT=false
-ENABLE_DOCKER=false
-ENABLE_VENV=false
-
-for arg in "$@"; do
-  case "$arg" in
-    --git) ENABLE_GIT=true ;;
-    --docker) ENABLE_DOCKER=true ;;
-    --venv) ENABLE_VENV=true ;;
-  esac
-done
-
-# =========================
-# INPUT
-# =========================
-
-echo "🛠️ GenPy v2.2.0"
+echo "🛠️ GenPy v2.2.1"
 echo ""
+
+# =========================
+# 1. PROJECT NAME
+# =========================
+
+
 
 read -p "📁 Project name: " project_name
 
@@ -53,33 +37,112 @@ fi
 
 mkdir -p "$PROJECT_DIR"
 
-# =========================
-# CORE
-# =========================
-
-echo "📦 Creating structure..."
-create_structure "$PROJECT_DIR" "$LANGUAGE"
+echo ""
 
 # =========================
-# FEATURES
+# 2. FLAGS (collected early)
 # =========================
 
-if $ENABLE_GIT; then
-  echo "📁 Git enabled"
+
+ask_yes_no "🐳 ¿Usar Docker?" && RUN_DOCKER=true || RUN_DOCKER=false
+
+echo ""
+
+ask_yes_no "🐍 ¿Crear entorno virtual?" && RUN_VENV=true || RUN_VENV=false
+
+echo ""
+
+# =========================
+# PIPELINE (PROFESSIONAL ORDER)
+# =========================
+
+PIPELINE=(
+  "libs_select"
+  "structure"
+  "git"
+  "libs_install"
+  "build_envs"
+)
+
+run_step() {
+  case "$1" in
+    libs_select)
+      step_libs_select
+      ;;
+
+    structure)
+      step_structure
+      ;;
+
+    git)
+      step_git
+      ;;
+
+    libs_install)
+      step_libs_install
+      ;;
+
+    build_envs)
+      step_build_envs
+      ;;
+  esac
+}
+
+run_pipeline() {
+  for step in "${PIPELINE[@]}"; do
+    echo ""
+    echo "🚀 Step: $step"
+    run_step "$step"
+  done
+}
+
+# =========================
+# STEPS
+# =========================
+
+step_structure() {
+  echo "📦 Creating structure..."
+  create_structure "$PROJECT_DIR"
+}
+
+step_git() {
+  echo "📁 Git init..."
   init_git "$PROJECT_DIR"
-  first_commit "$PROJECT_DIR"
-fi
+}
 
-if $ENABLE_DOCKER; then
-  echo "🐳 Docker enabled"
-  create_dockerfile "$PROJECT_DIR"
-fi
+step_libs_select() {
+  echo "📚 Selecting libraries..."
+  select_libraries
+}
 
-if $ENABLE_VENV; then
-  echo "🐍 Venv enabled"
-  create_venv "$PROJECT_DIR"
-fi
+step_libs_install() {
+  echo "📦 Installing libraries..."
+  add_libraries "$PROJECT_DIR"
+}
+
+step_build_envs() {
+
+  if [[ "$RUN_DOCKER" == true ]]; then
+    echo "🐳 Docker enabled"
+    create_dockerfile "$PROJECT_DIR"
+
+    echo "🐳 Building Docker..."
+    build_docker "$PROJECT_DIR" "$project_name"
+  fi
+
+  if [[ "$RUN_VENV" == true ]]; then
+    echo "🐍 Venv enabled"
+    create_venv "$PROJECT_DIR"
+  fi
+}
+
+# =========================
+# EXECUTION
+# =========================
+
+run_pipeline
 
 echo ""
 echo "🎉 Project created at:"
 echo "$PROJECT_DIR"
+echo ""
