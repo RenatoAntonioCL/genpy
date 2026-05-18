@@ -36,3 +36,7 @@ ENV/
 # ── Archivos temporales ───────────────────────────────────────────────────────
 *.temp
 *.tmp
+
+# Proyectos generados localmente durante desarrollo/pruebas
+project*/
+test-*/
