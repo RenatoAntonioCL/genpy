@@ -52,9 +52,9 @@ sudo chmod +x "$INSTALL_DIR/instalador/desinstalar.sh"
 # Usar 'exec' reemplaza el proceso actual en lugar de crear un subproceso hijo.
 
 sudo tee "$INSTALL_BIN" > /dev/null <<'EOF'
-#!/bin/bash
+#!/opt/homebrew/bin/bash
 set -euo pipefail
-exec bash "/usr/local/share/genpy/bin/genpy" "$@"
+exec /opt/homebrew/bin/bash "/usr/local/share/genpy/bin/genpy" "$@"
 EOF
 
 sudo chmod +x "$INSTALL_BIN"

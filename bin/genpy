@@ -1,5 +1,4 @@
-```bash
-#!/bin/bash
+#!/opt/homebrew/bin/bash
 set -euo pipefail
 
 # =============================================================================
@@ -46,15 +45,15 @@ case "${1:-}" in
     # Remueve "create" de los argumentos y pasa el resto al generador
     # (útil cuando se agreguen flags como --no-git, --no-docker, etc.)
     shift
-    bash "$GENERATOR" "$@"
+    /opt/homebrew/bin/bash "$GENERATOR" "$@"
     ;;
 
   update)
-    bash "$INSTALLER_DIR/actualizar.sh"
+    /opt/homebrew/bin/bash "$INSTALLER_DIR/actualizar.sh"
     ;;
 
   uninstall)
-    bash "$INSTALLER_DIR/desinstalar.sh"
+    /opt/homebrew/bin/bash "$INSTALLER_DIR/desinstalar.sh"
     ;;
 
   version | --version | -v)
@@ -81,4 +80,3 @@ case "${1:-}" in
     ;;
 
 esac
-```

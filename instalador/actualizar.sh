@@ -55,9 +55,9 @@ sudo chmod +x "$INSTALL_DIR/instalador/desinstalar.sh"
 # Si bin/genpy cambia de ruta en el futuro, solo hay que actualizar aquí y en instalar.sh.
 
 sudo tee "$INSTALL_BIN" > /dev/null <<'EOF'
-#!/bin/bash
+#!/opt/homebrew/bin/bash
 set -euo pipefail
-exec bash "/usr/local/share/genpy/bin/genpy" "$@"
+exec /opt/homebrew/bin/bash "/usr/local/share/genpy/bin/genpy" "$@"
 EOF
 
 sudo chmod +x "$INSTALL_BIN"
