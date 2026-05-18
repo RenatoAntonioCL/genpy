@@ -2,155 +2,201 @@
 set -euo pipefail
 
 # =============================================================================
-# GenPy v2.3.0 — Generador principal de proyectos
+# GenPy v3.0.0 — Orquestador de Proyectos Multi-Stack
 #
-# Orquesta el pipeline completo de creación de un proyecto:
-#   1. Pide el nombre del proyecto y valida que sea seguro
-#   2. Pregunta qué entornos quiere el usuario (Docker, venv)
-#   3. Deja seleccionar librerías de una lista curada
-#   4. Crea la estructura de carpetas y archivos base
-#   5. Inicializa el repositorio git con un primer commit
-#   6. Escribe el requirements.txt con las librerías elegidas
-#   7. Construye los entornos seleccionados (Docker image, venv)
+# Lanza el flujo interactivo de configuración y procesa de forma secuencial
+# e idiopática la construcción de proyectos locales y despliegues remotos.
 # =============================================================================
 
-# BASE_DIR: raíz del proyecto GenPy instalado en el sistema.
-# Se resuelve de forma relativa al script para que funcione tanto
-# desde la instalación global como desde el repo local en desarrollo.
+# Raíz de la instalación de GenPy resuelta de manera dinámica y relativa
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# Directorio desde donde el usuario ejecuta el comando.
-# El proyecto nuevo se creará como subdirectorio aquí.
+# Directorio de ejecución desde donde el usuario invoca la herramienta
 WORKDIR="$(pwd)"
 
-# ─── Cargar módulos de la librería ───────────────────────────────────────────
-
-source "$BASE_DIR/lib/validate.sh"   # is_valid_name()
-source "$BASE_DIR/lib/structure.sh"  # create_structure()
-source "$BASE_DIR/lib/git.sh"        # git_init(), git_first_commit()
-source "$BASE_DIR/lib/docker.sh"     # create_dockerfile(), build_docker()
-source "$BASE_DIR/lib/libs.sh"       # select_libraries(), add_libraries()
-source "$BASE_DIR/lib/venv.sh"       # create_venv()
-source "$BASE_DIR/lib/ui.sh"         # ask_yes_no()
+# ─── Carga de Módulos Modulares (Librerías externas) ──────────────────────────
+source "$BASE_DIR/lib/validate.sh"   # Validación de strings (is_valid_name)
+source "$BASE_DIR/lib/language.sh"   # Gestión de stacks (select_language, get_template_dir)
+source "$BASE_DIR/lib/template.sh"   # Motor de clonación de plantillas (copy_template)
+source "$BASE_DIR/lib/git.sh"        # Inicialización de VCS (git_init, git_first_commit)
+source "$BASE_DIR/lib/docker.sh"     # Infraestructura de contenedores (create_dockerfile)
+source "$BASE_DIR/lib/libs.sh"       # Manejador de dependencias (select_libraries)
+source "$BASE_DIR/lib/venv.sh"       # Aislamiento Python (create_venv)
+source "$BASE_DIR/lib/github.sh"     # Integración remota API Cloud (push_to_github)
+source "$BASE_DIR/lib/ui.sh"         # Utilidades de terminal (ask_yes_no)
 
 echo ""
-echo "🛠️  GenPy v2.3.0"
+echo "🛠️  GenPy v3.0.0 (Core Multilenguaje)"
+echo "══════════════════════════════════════════════════"
 echo ""
 
 # =============================================================================
-# PASO 1 — Nombre del proyecto
+# FASE I — Captura y Validación de Entradas
 # =============================================================================
 
+# ── Paso 1: Identificador del Proyecto ───────────────────────────────────────
 read -rp "📁 Nombre del proyecto: " project_name
 
-# Validar que el nombre solo tenga caracteres seguros para carpetas y repos
+
 if ! is_valid_name "$project_name"; then
-  echo "❌ Nombre inválido. Usa solo letras, números, guiones (-) y guiones bajos (_)."
+  echo "❌ Formato inválido: Usa únicamente letras, números, guiones (-) o guiones bajos (_)"
   exit 1
 fi
 
-# Ruta absoluta donde se creará el nuevo proyecto
+
 PROJECT_DIR="$WORKDIR/$project_name"
 
-# Evitar sobrescribir un proyecto existente
+# Validación defensiva del sistema de archivos
 if [[ -d "$PROJECT_DIR" ]]; then
-  echo "❌ Ya existe un directorio con ese nombre: $PROJECT_DIR"
+  echo "❌ Conflicto de espacio: El directorio ya existe en $PROJECT_DIR"
   exit 1
 fi
 
-mkdir -p "$PROJECT_DIR"
+echo ""
+
+# ── Paso 2: Selección del Ecosistema de Desarrollo ───────────────────────────
+SELECTED_LANGUAGE=""
+select_language SELECTED_LANGUAGE
+
+TEMPLATE_DIR=""
+get_template_dir "$BASE_DIR" "$SELECTED_LANGUAGE" TEMPLATE_DIR
 
 echo ""
 
-# =============================================================================
-# PASO 2 — Opciones de entorno
-# Recolectadas antes del pipeline para no interrumpir el flujo de creación
-# =============================================================================
-
-ask_yes_no "🐳 ¿Usar Docker?" && USE_DOCKER=true || USE_DOCKER=false
-echo ""
-ask_yes_no "🐍 ¿Crear entorno virtual (venv)?" && USE_VENV=true || USE_VENV=false
+# ── Paso 3: Configuración de Entornos Locales y Remotos ──────────────────────
+ask_yes_no "🐳 ¿Deseas incluir soporte para Docker?" && USE_DOCKER=true || USE_DOCKER=false
 echo ""
 
+# El entorno venv nativo solo aplica si el stack técnico es Python
+USE_VENV=false
+if [[ "$SELECTED_LANGUAGE" == "python" ]]; then
+  ask_yes_no "🐍 ¿Deseas inicializar un entorno virtual aislado (venv)?" && USE_VENV=true || USE_VENV=false
+  echo ""
+fi
+
+ask_yes_no "🐙 ¿Deseas publicar este proyecto de forma automática en GitHub?" && PUSH_GITHUB=true || PUSH_GITHUB=false
+echo ""
+
+IS_PRIVATE_REPO=true
+if [[ "$PUSH_GITHUB" == true ]]; then
+  ask_yes_no "🔒 ¿El repositorio en GitHub debe ser PRIVADO?" && IS_PRIVATE_REPO=true || IS_PRIVATE_REPO=false
+  echo ""
+fi
+
 # =============================================================================
-# PIPELINE — Pasos en orden profesional
+# FASE II — Declaración del Pipeline Arquitectónico
 #
-# El orden importa:
-#   - Las librerías se eligen ANTES de crear la estructura,
-#     para que requirements.txt ya esté listo al hacer el primer commit.
-#   - Git se inicializa DESPUÉS de crear la estructura,
-#     para que el primer commit capture todos los archivos base.
-#   - Los entornos (Docker, venv) se construyen al final,
-#     ya que dependen de requirements.txt y de la estructura.
+# Nota de Diseño: El orden es milimétrico. Las variables de metadatos se inyectan 
+# DESPUÉS de escribir el Dockerfile para asegurar la limpieza mutua de placeholders, 
+# y los commits locales ocurren ANTES de subir los datos a la nube (Fase 3).
 # =============================================================================
 
 PIPELINE=(
-  "libs_select"    # 1. Elegir librerías
-  "structure"      # 2. Crear carpetas y archivos base
-  "libs_install"   # 3. Escribir requirements.txt con las librerías elegidas
-  "git"            # 4. git init + primer commit (captura todo lo anterior)
-  "build_envs"     # 5. Docker y/o venv
+  "libs_select"    # 1. Menú interactivo de paquetes del ecosistema
+  "template"       # 2. Despliegue de archivos base desde /templates
+  "docker_setup"   # 3. Inyección del Dockerfile adecuado (Estrategia B)
+  "inject_meta"    # 4. Reemplazo general in-place de {{PROJECT_NAME}}
+  "libs_install"   # 5. Volcado final de librerías al manifiesto del proyecto
+  "git"            # 6. Apertura del repositorio Git y congelamiento del primer commit
+  "build_envs"     # 7. Compilación de recursos pesados (Docker builds / venv installs)
+  "github_push"    # 8. Sincronización final con GitHub Cloud
 )
 
-# ─── Definición de cada step ─────────────────────────────────────────────────
+# =============================================================================
+# FASE III — Definición Atómica de Pasos (Steps)
+# =============================================================================
 
 step_libs_select() {
-  echo "📚 Seleccionando librerías..."
-
-  # PROJECT_LIBS es un array global para que step_libs_install pueda leerlo.
-  # Se declara con -g (global) porque las funciones en bash tienen scope local por defecto.
+  echo "📚 Evaluando dependencias para ${SELECTED_LANGUAGE^}..."
   declare -ga PROJECT_LIBS
   select_libraries PROJECT_LIBS
 }
 
-step_structure() {
-  echo "📦 Creando estructura de carpetas..."
-  create_structure "$PROJECT_DIR"
+step_template() {
+  echo "📦 Desplegando estructura base del template..."
+  # Creamos el directorio aquí para blindar el sistema de carpetas huérfanas si el usuario cancela antes
+  mkdir -p "$PROJECT_DIR"
+  copy_template "$TEMPLATE_DIR" "$PROJECT_DIR" "${project_name}"
+  }
+
+step_docker_setup() {
+  if [[ "$USE_DOCKER" == true ]]; then
+    echo "🐳 Inyectando manifiesto Docker..."
+    create_dockerfile "$PROJECT_DIR" "$SELECTED_LANGUAGE"
+  else
+    echo "🐳 Configuración de Docker omitida por el usuario"
+  fi
+}
+
+step_inject_meta() {
+  echo "🔧 Personalizando metadatos del proyecto..."
+  
+  # Escaneo iterativo seguro usando delimitador nulo (-print0) para evitar colisiones de rutas
+  local target_dir="$PROJECT_DIR"
+  while IFS= read -r -d '' filepath; do
+    [[ -s "$filepath" ]] || continue
+    
+    # El comando 'file' previene la alteración accidental de archivos binarios o imágenes
+    if file "$filepath" | grep -qE "text|JSON|source"; then
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|{{PROJECT_NAME}}|${project_name}|g" "$filepath"
+      else
+        sed -i "s|{{PROJECT_NAME}}|${project_name}|g" "$filepath"
+      fi
+    fi
+  done < <(find "$target_dir" -type f -print0)
+  
+  echo "   ✔ Marcadores de plantilla unificados con el nombre: $project_name"
 }
 
 step_libs_install() {
-  echo "📦 Escribiendo dependencias..."
-
-  # Pasa PROJECT_LIBS por nombre (nameref) para evitar tener una variable global suelta
+  echo "📦 Registrando librerías seleccionadas..."
   add_libraries "$PROJECT_DIR" PROJECT_LIBS
 }
 
 step_git() {
-  echo "📁 Inicializando repositorio git..."
+  echo "📁 Configurando Control de Versiones (Git)..."
   git_init "$PROJECT_DIR"
   git_first_commit "$PROJECT_DIR"
 }
 
 step_build_envs() {
-  # Docker — solo si el usuario lo pidió y está instalado en el sistema
-  if [[ "$USE_DOCKER" == true ]]; then
-    echo "🐳 Creando Dockerfile..."
-    create_dockerfile "$PROJECT_DIR"
 
-    echo "🐳 Construyendo imagen Docker..."
+  if [[ "$USE_DOCKER" == true ]]; then
+    echo "🐳 Construyendo imagen en el motor de Docker local..."
     build_docker "$PROJECT_DIR" "$project_name"
   fi
 
-  # Entorno virtual — solo si el usuario lo pidió
+
   if [[ "$USE_VENV" == true ]]; then
-    echo "🐍 Creando entorno virtual..."
+    echo "🐍 Inicializando entorno de ejecución Python..."
     create_venv "$PROJECT_DIR"
   fi
 }
 
-# ─── Runner del pipeline ─────────────────────────────────────────────────────
+step_github_push() {
+  if [[ "$PUSH_GITHUB" == true ]]; then
+    echo "🚀 Desplegando repositorio en GitHub Cloud..."
+    push_to_github "$PROJECT_DIR" "$project_name" "$IS_PRIVATE_REPO"
+  fi
+}
 
-# Despacha cada step por nombre. Centralizar el dispatch aquí
-# facilita agregar logging, manejo de errores o métricas de tiempo en el futuro.
+# =============================================================================
+# FASE IV — Motor de Ejecución (Runner Engine)
+# =============================================================================
+
 run_step() {
   case "$1" in
     libs_select)  step_libs_select  ;;
-    structure)    step_structure    ;;
+    template)     step_template     ;;
+    docker_setup) step_docker_setup ;;
+    inject_meta)  step_inject_meta  ;;
     libs_install) step_libs_install ;;
     git)          step_git          ;;
     build_envs)   step_build_envs   ;;
+    github_push)  step_github_push  ;;
     *)
-      echo "❌ Step desconocido: '$1'"
+      echo "❌ Despachador: Error crítico, paso desconocido '$1'"
       exit 1
       ;;
   esac
@@ -159,19 +205,20 @@ run_step() {
 run_pipeline() {
   for step in "${PIPELINE[@]}"; do
     echo ""
-    echo "── $step ──────────────────────────────────────────"
+    echo "── [$step] ──────────────────────────────────────────"
     run_step "$step"
   done
 }
 
-# =============================================================================
-# EJECUCIÓN
-# =============================================================================
-
+# ─── Lanzar el proceso unificado ─────────────────────────────────────────────
 run_pipeline
 
 echo ""
 echo "══════════════════════════════════════════════════"
-echo "🎉 Proyecto listo en:"
-echo "   $PROJECT_DIR"
+echo "🎉 ¡Ciclo de creación completado con éxito!"
+echo "   📍 Directorio Local: $PROJECT_DIR"
+if [[ "$PUSH_GITHUB" == true ]]; then
+  echo "   🌐 Nube Sincronizada: Repositorio disponible en tu cuenta de GitHub"
+fi
+echo "══════════════════════════════════════════════════"
 echo ""

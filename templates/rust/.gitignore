@@ -1,0 +1,8 @@
+# Artefactos de compilación
+target/
+
+# Variables de entorno
+.env
+
+# macOS
+.DS_Store
