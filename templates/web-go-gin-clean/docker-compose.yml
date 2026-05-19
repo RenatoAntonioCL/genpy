@@ -1,0 +1,49 @@
+services:
+
+  # ── API Go + Gin ─────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: {{PROJECT_NAME}}-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_PASSWORD: root
+      DB_NAME: "{{PROJECT_NAME}}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ── MySQL ─────────────────────────────────────────────────────────────────────
+  db:
+    image: mysql:8
+    container_name: {{PROJECT_NAME}}-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: "{{PROJECT_NAME}}"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  mysql_data:
+
+networks:
+  app-network:
+    driver: bridge

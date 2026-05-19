@@ -1,82 +1,55 @@
 #!/opt/homebrew/bin/bash
 set -euo pipefail
 
-# =============================================================================
-# GenPy — Punto de entrada principal del CLI
-#
-# Este script es el que el sistema ejecuta cuando el usuario corre "genpy".
-# Su única responsabilidad es leer el primer argumento y delegar al script
-# correspondiente. No contiene lógica de negocio.
-#
-# Comandos disponibles:
-#   genpy create      → lanza el generador de proyectos
-#   genpy update      → descarga la última versión desde GitHub
-#   genpy uninstall   → elimina GenPy del sistema
-#   genpy version     → muestra la versión instalada
-#   genpy help        → muestra esta ayuda
-# =============================================================================
+# ─── DETECCIÓN DE ENTORNO ────────────────────────────────────────────────────
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOCAL_LIB="$SCRIPT_DIR/../lib"
+LOCAL_SCRIPTS="$SCRIPT_DIR/../scripts"
+GLOBAL_LIB="/usr/local/share/genpy/lib"
+GLOBAL_SCRIPTS="/usr/local/share/genpy/scripts"
 
-# Ruta base donde se instala GenPy en el sistema (definida en instalar.sh)
-readonly INSTALL_DIR="/usr/local/share/genpy"
-
-# Script principal del generador de proyectos
-readonly GENERATOR="$INSTALL_DIR/generador/genpy.sh"
-
-# Carpeta que contiene los scripts de mantenimiento (instalar, actualizar, desinstalar)
-readonly INSTALLER_DIR="$INSTALL_DIR/instalador"
-
-# ─── Verificar que la instalación está íntegra ───────────────────────────────
-
-if [[ ! -f "$GENERATOR" ]]; then
-  echo "❌ Instalación corrupta: no se encontró el generador en $GENERATOR"
-  echo "   Reinstala GenPy con:"
-  echo "   curl -fsSL https://raw.githubusercontent.com/RenatoAntonioCL/genpy/main/instalador/instalar.sh | bash"
-  exit 1
+# Definir rutas según si estamos en modo local (desarrollo) o instalado (global)
+if [ -d "$LOCAL_LIB" ] && [ -d "$LOCAL_SCRIPTS" ]; then
+    LIB_DIR="$LOCAL_LIB"
+    SCRIPTS_DIR="$LOCAL_SCRIPTS"
+    TEMPLATE_BASE_DIR="$SCRIPT_DIR/../templates"
+else
+    LIB_DIR="$GLOBAL_LIB"
+    SCRIPTS_DIR="$GLOBAL_SCRIPTS"
+    TEMPLATE_BASE_DIR="/usr/local/share/genpy/templates"
 fi
 
-# ─── Router de comandos ───────────────────────────────────────────────────────
-#
-# ${1:-} usa el primer argumento si existe, o string vacío si no se pasó nada.
-# Sin el ":-", set -u lanzaría un error al correr "genpy" sin argumentos.
+export LIB_DIR TEMPLATE_BASE_DIR
 
-case "${1:-}" in
+# ─── MENÚ DE AYUDA GLOBAL ────────────────────────────────────────────────────
+show_help() {
+  echo -e "\n 🛠️  GenPy — project scaffolding tool v4.0.0\n"
+  echo " Uso:"
+  echo "   genpy create      Crear un nuevo proyecto"
+  echo "   genpy update      Actualizar GenPy a la última versión"
+  echo "   genpy uninstall   Desinstalar GenPy completamente"
+  echo "   genpy version     Ver la versión instalada"
+  echo ""
+}
 
+COMMAND="${1:-}"
+
+case "$COMMAND" in
   create)
-    # Remueve "create" de los argumentos y pasa el resto al generador
-    # (útil cuando se agreguen flags como --no-git, --no-docker, etc.)
-    shift
-    /opt/homebrew/bin/bash "$GENERATOR" "$@"
+    source "$LIB_DIR/wizard.sh"
     ;;
-
+    
   update)
-    /opt/homebrew/bin/bash "$INSTALLER_DIR/actualizar.sh"
+    bash "$SCRIPTS_DIR/update.sh"
     ;;
 
   uninstall)
-    /opt/homebrew/bin/bash "$INSTALLER_DIR/desinstalar.sh"
+    bash "$SCRIPTS_DIR/uninstall.sh"
     ;;
-
-  version | --version | -v)
-    # Extrae el número de versión del encabezado del generador
-    grep -m1 'GenPy v' "$GENERATOR" | grep -o 'v[0-9.]*' || echo "versión desconocida"
+  version)
+    echo "GenPy v4.0.0"
     ;;
-
-  help | --help | -h | "")
-    echo ""
-    echo "  🛠️  GenPy — project scaffolding tool"
-    echo ""
-    echo "  Uso:"
-    echo "    genpy create       Crear un nuevo proyecto"
-    echo "    genpy update       Actualizar GenPy a la última versión"
-    echo "    genpy uninstall    Desinstalar GenPy del sistema"
-    echo "    genpy version      Ver la versión instalada"
-    echo ""
-    ;;
-
   *)
-    echo "❌ Comando desconocido: '${1}'"
-    echo "   Ejecuta 'genpy help' para ver los comandos disponibles"
-    exit 1
+    show_help
     ;;
-
 esac

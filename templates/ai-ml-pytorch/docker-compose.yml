@@ -1,0 +1,26 @@
+services:
+
+  # ── Entorno ML con PyTorch ────────────────────────────────────────────────────
+  ml:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: {{PROJECT_NAME}}-ml
+    restart: unless-stopped
+    volumes:
+      - ./src:/app/src               # código fuente
+      - ./notebooks:/app/notebooks   # Jupyter notebooks
+      - model_data:/app/models       # modelos entrenados persistentes
+    ports:
+      - "8888:8888"    # Jupyter Lab
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+    networks:
+      - ml-network
+
+volumes:
+  model_data:
+
+networks:
+  ml-network:
+    driver: bridge

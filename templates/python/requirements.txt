@@ -1,2 +1,0 @@
-# Dependencias de {{PROJECT_NAME}}
-# Generado con GenPy

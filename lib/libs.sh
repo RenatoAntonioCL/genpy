@@ -2,158 +2,230 @@
 set -euo pipefail
 
 # =============================================================================
-# GenPy — lib/libs.sh
+# GenPy — lib/libs.sh (v4.0.0)
 #
-# Catálogo interactivo de dependencias. Explica de forma concisa y didáctica 
-# el propósito de cada herramienta para guiar al desarrollador.
+# Catálogo y motor de inyección de aditivos por blueprint.
+#
+# Bug corregido: inject_blueprint_addons recibía los keys del diccionario
+# asociativo (strings como "passlib python-jose") pero hacía case "$choice"
+# comparando contra números (1, 2, 3). Nunca hacía match. Ahora el motor
+# trabaja directamente con los strings de paquetes, sin re-mapear a números.
 # =============================================================================
 
-# ─── Catálogos Explicativos por Ecosistema ───────────────────────────────────
+# ─── Catálogos de aditivos por blueprint ─────────────────────────────────────
+#
+# Formato de cada entrada:
+#   key   = paquetes a instalar (separados por espacio si son varios)
+#   value = descripción para el menú
+#
+# Para agregar un aditivo nuevo: añadir una entrada al diccionario
+# y manejar su inyección en _inject_* correspondiente.
 
-readonly -A LIBS_PYTHON=(
-  [fastapi]="FastAPI      → Framework de alto rendimiento para desarrollo ágil de APIs"
-  [requests]="Requests     → Cliente HTTP intuitivo para consumir servicios y APIs externas"
-  [pytest]="Pytest       → Estándar para pruebas unitarias automatizadas y aserciones"
-  [pandas]="Pandas       → Biblioteca reina para ciencia de datos y manipulación de tablas"
+declare -A ADDONS_WEB_FASTAPI=(
+  ["passlib python-jose"]="🔐 JWT Auth       → Cifrado y tokens de sesión"
+  ["celery redis"]="⚡ Async Tasks    → Cola de tareas con Redis"
+  ["alembic"]="🗄️  Migrations     → Control de versiones de BD"
 )
+readonly ADDONS_WEB_FASTAPI
 
-readonly -A LIBS_NODE=(
-  [dotenv]="Dotenv       → Gestiona credenciales cargando variables desde archivos .env"
-  [cors]="CORS         → Controla la seguridad permitiendo peticiones cruzadas entre dominios"
-  [jsonwebtoken]="JWT          → Implementa autenticación basada en tokens seguros firmados"
-  [mongoose]="Mongoose     → Modelado de datos estructurado y elegante para MongoDB"
+declare -A ADDONS_WEB_NESTJS=(
+  ["@nestjs/jwt passport-jwt"]="🔐 Nest JWT       → Autenticación con tokens"
+  ["class-validator class-transformer"]="🛡️  Validation     → DTOs con decoradores"
+  ["@nestjs/swagger swagger-ui-express"]="📖 OpenAPI        → Documentación automática"
 )
+readonly ADDONS_WEB_NESTJS
 
-readonly -A LIBS_GO=(
-  [github.com/gin-gonic/gin]="Gin          → Framework HTTP minimalista enfocado en velocidad extrema"
-  [github.com/spf13/cobra]="Cobra        → El estándar de la industria para construir potentes herramientas CLI"
-  [github.com/stretchr/testify]="Testify      → Añade aserciones sagradas y mocks limpios al testing nativo"
+declare -A ADDONS_WEB_GO=(
+  ["github.com/golang-jwt/jwt/v5"]="🔐 JWT Auth       → Tokens de sesión"
+  ["gorm.io/gorm gorm.io/driver/postgres"]="🗄️  GORM           → ORM con PostgreSQL"
+  ["go.uber.org/zap"]="📋 Zap Logger     → Logging estructurado"
 )
+readonly ADDONS_WEB_GO
 
-readonly -A LIBS_RUST=(
-  [tokio]="Tokio        → Motor de ejecución asíncrono para aplicaciones concurrentes"
-  [serde]="Serde        → Framework de serialización y deserialización de datos a velocidad luz"
-  [reqwest]="Reqwest      → Cliente HTTP robusto para peticiones en red asíncronas"
+declare -A ADDONS_AI_PYTORCH=(
+  ["wandb"]="📊 Weights&Biases → Tracking de experimentos"
+  ["optuna"]="🔧 Optuna         → Optimización de hiperparámetros"
+  ["torchvision"]="🖼️  TorchVision    → Visión computacional"
 )
+readonly ADDONS_AI_PYTORCH
+
+declare -A ADDONS_AI_RAG=(
+  ["langchain openai"]="🦜 LangChain      → Framework RAG completo"
+  ["chromadb"]="🗄️  ChromaDB       → Vector store local"
+  ["sentence-transformers"]="🧠 Sentence Trans → Embeddings locales"
+)
+readonly ADDONS_AI_RAG
+
+# Security e Infra no tienen aditivos — sus blueprints son entornos cerrados
+
+# ─── Función pública: select_blueprint_addons ─────────────────────────────────
 
 # -----------------------------------------------------------------------------
-# select_libraries
-# Renders un menú numérico intuitivo adaptado al ecosistema técnico elegido.
+# select_blueprint_addons
+#
+# Muestra el menú de aditivos correspondiente al blueprint elegido y
+# guarda las selecciones en el array del llamador.
+#
+# Argumentos:
+#   $1 — nombre del array donde guardar los aditivos elegidos (nameref)
+#   $2 — blueprint: nombre del blueprint activo
 # -----------------------------------------------------------------------------
-select_libraries() {
+select_blueprint_addons() {
   local -n _dest_array="$1"
-  local lang="${SELECTED_LANGUAGE}"
-  local -n current_catalog
+  local blueprint="$2"
 
-  case "$lang" in
-    python) current_catalog=LIBS_PYTHON ;;
-    node)   current_catalog=LIBS_NODE   ;;
-    go)     current_catalog=LIBS_GO     ;;
-    rust)   current_catalog=LIBS_RUST   ;;
-    *)      return 0 ;;
+  # Seleccionar el catálogo correspondiente al blueprint
+  local -n current_catalog
+  case "$blueprint" in
+    "web-fastapi-postgres") current_catalog=ADDONS_WEB_FASTAPI  ;;
+    "web-node-nest-mongo")  current_catalog=ADDONS_WEB_NESTJS   ;;
+    "web-go-gin-clean")     current_catalog=ADDONS_WEB_GO       ;;
+    "ai-ml-pytorch")        current_catalog=ADDONS_AI_PYTORCH   ;;
+    "ai-llm-rag")           current_catalog=ADDONS_AI_RAG       ;;
+    *)
+      # Security e Infra no tienen aditivos configurables
+      return 0
+      ;;
   esac
 
-  if [[ ${#current_catalog[@]} -eq 0 ]]; then
-    echo "ℹ️  No hay librerías opcionales configuradas para ${lang^}."
-    return 0
-  fi
+  echo -e "\n⚡ ¿Deseas añadir aditivos a tu proyecto?"
 
-  echo "📦 Librerías disponibles para tu stack (${lang^}):"
-  echo ""
+  # Construir array ordenado de keys para el menú
+  local -a keys=("${!current_catalog[@]}")
 
-  # Array indexado para estabilizar el orden numérico de las claves
-  local -a lib_keys=("${!current_catalog[@]}")
-  local idx=1
-  for key in "${lib_keys[@]}"; do
-    printf "  %d) %s\n" "$idx" "${current_catalog[$key]}"
-    (( idx++ ))
+  for i in "${!keys[@]}"; do
+    printf "  %d) %s\n" "$((i+1))" "${current_catalog[${keys[$i]}]}"
   done
-  echo "  0) Ninguna — Continuar con el scaffolding limpio"
-  echo ""
+  echo "  0) Ninguno"
 
-  read -rp "👉 Elige una o más opciones (ej: 1 2): " user_input
-  echo ""
+  read -rp "👉 Selecciona (ej: 1 2): " input
 
-  for item in $user_input; do
-    if [[ "$item" =~ ^[0-9]+$ ]] && (( item >= 1 && item <= ${#lib_keys[@]} )); then
-      local selected_key="${lib_keys[$((item - 1))]}"
-      _dest_array+=("$selected_key")
-      echo "   ➕ Añadido a la lista: $selected_key"
+  for item in $input; do
+    # Validar que sea número en rango
+    if [[ "$item" == "0" ]]; then
+      break
+    elif [[ "$item" =~ ^[0-9]+$ ]] && (( item >= 1 && item <= ${#keys[@]} )); then
+      # Guardar el KEY del diccionario (los paquetes reales), no el número
+      _dest_array+=("${keys[$((item - 1))]}")
+    else
+      print_warning "Opción '$item' fuera de rango — ignorada"
     fi
   done
 }
 
-# -----------------------------------------------------------------------------
-# add_libraries
-# Inyecta las dependencias respetando la sintaxis de cada ecosistema técnico.
-# -----------------------------------------------------------------------------
-add_libraries() {
-  local project_dir="$1"
-  local -n _libs_list="$2"
-  local lang="${SELECTED_LANGUAGE}"
+# ─── Funciones internas de inyección ─────────────────────────────────────────
 
-  if [[ ${#_libs_list[@]} -eq 0 ]]; then
-    echo "✔ Sin librerías adicionales seleccionadas."
+# _inject_python_addons: agrega paquetes al requirements.txt
+_inject_python_addons() {
+  local target_dir="$1"
+  local packages="$2"   # string con paquetes separados por espacio
+
+  local req_file="$target_dir/backend/requirements.txt"
+  [[ ! -f "$req_file" ]] && req_file="$target_dir/requirements.txt"
+
+  if [[ ! -f "$req_file" ]]; then
+    print_warning "No se encontró requirements.txt — se omite inyección de: $packages"
     return 0
   fi
 
-  local previous_dir; previous_dir="$(pwd)"
-  cd "$project_dir"
-
-  case "$lang" in
-    python)
-      echo "📝 Actualizando 'requirements.txt'..."
-      for lib in "${_libs_list[@]}"; do
-        echo "$lib" >> "requirements.txt"
-      done
-      ;;
-
-    node)
-      echo "📝 Registrando dependencias en 'package.json'..."
-      for lib in "${_libs_list[@]}"; do
-        # Inyección quirúrgica con sed respetando el estándar JSON
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-          sed -i '' "/\"express\":/a\\
-    \"$lib\": \"latest\"," "package.json"
-        else
-          sed -i "/\"express\":/a\\    \"$lib\": \"latest\"," "package.json"
-        fi
-        echo "   ✔ $lib registrada."
-      done
-      ;;
-
-    go)
-      if command -v go &>/dev/null; then
-        echo "📥 Descargando módulos de Go localmente..."
-        for lib in "${_libs_list[@]}"; do
-          go get "$lib"
-        done
-      else
-        echo "⚠️  Go no está instalado en tu Mac. Las librerías se descargarán"
-        echo "   automáticamente dentro del contenedor de Docker durante el build."
-        
-        # Guardamos la lista temporalmente en un archivo oculto que leerá Dockerfile
-        for lib in "${_libs_list[@]}"; do
-          echo "$lib" >> ".genpy_packages"
-        done
-      fi
-      ;;
-
-    rust)
-      if command -v cargo &>/dev/null; then
-        echo "⚙️  Instalando crates de Rust localmente..."
-        for lib in "${_libs_list[@]}"; do
-          cargo add "$lib"
-        done
-      else
-        echo "⚠️  Rust no está instalado en tu Mac. Las crates se compilarán"
-        echo "   automáticamente dentro de Docker."
-        for lib in "${_libs_list[@]}"; do
-          echo "$lib" >> ".genpy_packages"
-        done
-      fi
-      ;;
-  esac
-
-  cd "$previous_dir"
+  for pkg in $packages; do
+    # Evitar duplicados
+    if ! grep -q "^${pkg}" "$req_file"; then
+      echo "$pkg" >> "$req_file"
+    fi
+  done
 }
+
+# _inject_node_addons: agrega paquetes al dependencies de package.json
+_inject_node_addons() {
+  local target_dir="$1"
+  local packages="$2"
+
+  local pkg_file="$target_dir/backend/package.json"
+  [[ ! -f "$pkg_file" ]] && pkg_file="$target_dir/package.json"
+
+  if [[ ! -f "$pkg_file" ]]; then
+    print_warning "No se encontró package.json — se omite inyección de: $packages"
+    return 0
+  fi
+
+  for pkg in $packages; do
+    if ! grep -q "\"$pkg\"" "$pkg_file"; then
+      _sed_inplace "/\"dependencies\": {/a\\
+    \"$pkg\": \"latest\"," "$pkg_file"
+    fi
+  done
+}
+
+# _inject_go_addons: agrega módulos al go.mod via go get (requiere go instalado)
+_inject_go_addons() {
+  local target_dir="$1"
+  local packages="$2"
+
+  local go_mod="$target_dir/backend/go.mod"
+  [[ ! -f "$go_mod" ]] && go_mod="$target_dir/go.mod"
+
+  if [[ ! -f "$go_mod" ]]; then
+    print_warning "No se encontró go.mod — se omite inyección de: $packages"
+    return 0
+  fi
+
+  if ! command -v go &>/dev/null; then
+    print_warning "Go no está instalado — registrando dependencias en .genpy_go_deps"
+    printf "%s\n" $packages > "$target_dir/.genpy_go_deps"
+    return 0
+  fi
+
+  local mod_dir
+  mod_dir="$(dirname "$go_mod")"
+
+  for pkg in $packages; do
+    (cd "$mod_dir" && go get "$pkg" 2>/dev/null) || \
+      print_warning "No se pudo instalar $pkg — agrégalo manualmente con: go get $pkg"
+  done
+}
+
+# ─── Función pública: inject_blueprint_addons ────────────────────────────────
+
+# -----------------------------------------------------------------------------
+# inject_blueprint_addons
+#
+# Inyecta los aditivos seleccionados en los archivos de dependencias
+# del proyecto según el lenguaje del blueprint.
+#
+# Bug corregido: ahora itera sobre los keys del diccionario (paquetes reales)
+# en lugar de números, eliminando el mismatch del case anterior.
+#
+# Argumentos:
+#   $1 — target_dir:     ruta absoluta al directorio del proyecto
+#   $2 — nombre del array con los aditivos seleccionados (nameref)
+#   $3 — blueprint:      nombre del blueprint activo
+# -----------------------------------------------------------------------------
+inject_blueprint_addons() {
+  local target_dir="$1"
+  local -n _addons_ref="$2"
+  local blueprint="$3"
+
+  [[ ${#_addons_ref[@]} -eq 0 ]] && return 0
+
+  echo -e "\n💉 Inyectando aditivos..."
+
+  for packages in "${_addons_ref[@]}"; do
+    echo "   + $packages"
+
+    case "$blueprint" in
+      "web-fastapi-postgres" | "ai-ml-pytorch" | "ai-llm-rag")
+        _inject_python_addons "$target_dir" "$packages"
+        ;;
+      "web-node-nest-mongo")
+        _inject_node_addons "$target_dir" "$packages"
+        ;;
+      "web-go-gin-clean")
+        _inject_go_addons "$target_dir" "$packages"
+        ;;
+    esac
+  done
+
+  print_success "Aditivos inyectados correctamente."
+}
+

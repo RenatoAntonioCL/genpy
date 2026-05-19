@@ -2,171 +2,46 @@
 set -euo pipefail
 
 # =============================================================================
-# GenPy — lib/docker.sh
-#
-# Gestiona la creación de Dockerfiles optimizados por ecosistema técnico.
-# Implementa builds multi-stage para optimizar drásticamente el peso en producción.
+# GenPy — lib/docker.sh (v4.0.0)
+# Diagnóstico de salud Docker y análisis de puertos.
 # =============================================================================
 
-# -----------------------------------------------------------------------------
-# create_dockerfile
-#
-# Escribe un Dockerfile adaptativo según el lenguaje del proyecto.
-# Si existen paquetes declarados en caliente sin compilador local, Docker
-# se encarga de resolverlos mediante la lectura de '.genpy_packages'.
-#
-# Argumentos:
-#   $1 — project_dir:      Ruta absoluta al directorio del proyecto
-#   $2 — selected_language: El identificador del stack (python, node, go, rust)
-# -----------------------------------------------------------------------------
-create_dockerfile() {
-  local project_dir="$1"
-  local selected_language="$2"
-
-  case "$selected_language" in
-  python)
-      cat > "$project_dir/Dockerfile" <<'EOF'
-FROM python:3.10-slim
-
-
-WORKDIR /app
-
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-
-COPY . .
-# Apunta al nuevo src/main.py
-CMD ["python", "src/main.py"]
-EOF
-      ;;
-
-    node)
-      cat > "$project_dir/Dockerfile" <<'EOF'
-FROM node:20-slim
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --production
-COPY . .
-# Asegúrate de que en tu template de package.json el script "start" ejecute: "node src/index.js"
-CMD ["npm", "start"]
-EOF
-      ;;
-
-    go)
-      cat > "$project_dir/Dockerfile" <<'EOF'
-FROM golang:1.22-alpine AS builder
-WORKDIR /app
-COPY go.mod ./
-COPY .genpy_packages* ./
-
-RUN if [ -f .genpy_packages ]; then \
-      while read -r lib; do \
-        clean_lib=$(echo "$lib" | xargs); \
-        if [ -n "$clean_lib" ]; then \
-          echo "📥 Docker instalando módulo: $clean_lib" && go get "$clean_lib"; \
-        fi; \
-      done < .genpy_packages; \
-    fi
-
-RUN go mod tidy
-COPY . .
-# ¡Aquí está la magia! Compila el archivo que movimos a src/
-RUN CGO_ENABLED=0 GOOS=linux go build -o /main ./src/main.go
-
-FROM alpine:3.19
-WORKDIR /
-COPY --from=builder /main /main
-EXPOSE 8080
-CMD ["/main"]
-EOF
-      ;;
-
-    rust)
-      cat > "$project_dir/Dockerfile" <<'EOF'
-FROM rust:1.76-slim AS builder
-WORKDIR /app
-COPY Cargo.toml ./
-COPY .genpy_packages* ./
-
-# El caché dummy ahora respeta la estructura src/
-RUN mkdir src && echo "fn main() {}" > src/main.rs \
-    && if [ -f .genpy_packages ]; then \
-         while read -r crate; do cargo add "$crate"; done < .genpy_packages; \
-       fi \
-    && cargo build --release
-
-COPY . .
-RUN cargo build --release
-
-FROM debian:bookworm-slim
-WORKDIR /app
-COPY --from=builder /app/target/release/{{PROJECT_NAME}} ./app_binary
-CMD ["./app_binary"]
-EOF
-      ;;
-    
-
-    *)
-      echo "❌ Error Crítico: Manifiesto Docker inexistente para '$selected_language'"
-      exit 1
-      ;;
-  esac
-
-  # ── Generación del .dockerignore Universal ────────────────────────────────
-  cat > "$project_dir/.dockerignore" <<'EOF'
-# Control de versiones
-.git/
-.gitignore
-
-# Python locales
-env/
-venv/
-
-
-__pycache__/
-*.pyc
-
-# Node locales
-node_modules/
-npm-debug.log
-
-# Compilados locales (Go y Rust)
-target/
-bin/
-
-# Archivos de configuración volátiles de GenPy
-.genpy_packages
-
-# Datos secretos locales
-.env
-EOF
-
-  echo "🐳 Dockerfile y .dockerignore creados para ${selected_language^}"
+check_docker_daemon() {
+  if ! command -v docker &>/dev/null; then
+    print_warning "Docker CLI no instalado. Diagnósticos saltados."
+    return 1
+  fi
+  if ! docker info &>/dev/null; then
+    print_warning "Docker Desktop apagado o demonio inactivo."
+    return 1
+  fi
+  return 0
 }
 
-# -----------------------------------------------------------------------------
-# build_docker
-#
-# Dispara la compilación de la imagen en el demonio local de Docker.
-#
-# Argumentos:
-#   $1 — project_dir:  Ruta absoluta al directorio del proyecto
-#   $2 — project_name: Nombre asignado a la etiqueta de la imagen (lowercase)
-# -----------------------------------------------------------------------------
-build_docker() {
-  local project_dir="$1"
+inspect_blueprint_ports() {
+  local blueprint="$1"
+  local -a target_ports=()
 
+  case "$blueprint" in
+    "web-fastapi-postgres") target_ports=(8000 5432) ;;
+    "web-node-nest-mongo")  target_ports=(3000 27017) ;;
+    "web-go-gin-clean")     target_ports=(8080 3306) ;;
+    "infra-local-cluster")  target_ports=(80 443 8080) ;;
+    "infra-monitoring-stack") target_ports=(9090 3000) ;;
+    *) return 0 ;;
+  esac
 
-  local image_name="${2,,}"
+  local conflict_found=0
+  for port in "${target_ports[@]}"; do
+    if lsof -Pi :"$port" -sTCP:LISTEN -t &>/dev/null; then
+      echo -e "   🚨 \033[1;31mColisión Detectada:\033[0m El puerto \033[1;33m$port\033[0m está ocupado."
+      conflict_found=1
+    fi
+  done
 
-
-  if ! command -v docker &>/dev/null; then
-    echo "⚠️  Docker no se encuentra activo o instalado — Se omite el build de la imagen"
-    return 0
+  if [ "$conflict_found" -eq 1 ]; then
+    echo -e "   💡 \033[1;36mTip:\033[0m Apaga los servicios locales antes de ejecutar el build.\n"
+  else
+    echo -e "   🛡️  \033[1;32mPuertos Libres:\033[0m Todo despejado para el despliegue."
   fi
-
-  echo "🐳 Construyendo imagen Docker: $image_name"
-  docker build -t "$image_name" "$project_dir"
 }

@@ -1,0 +1,3 @@
+GenPy es un CLI multilenguaje avanzado creado por Renato en el año 2026. 
+Su versión v4.0.0 incluye una arquitectura de fábrica universal capaz de desplegar 
+entornos complejos de desarrollo web, inteligencia artificial, ciberseguridad y DevOps en segundos.

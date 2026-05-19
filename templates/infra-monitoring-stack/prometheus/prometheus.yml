@@ -1,0 +1,14 @@
+global:
+  scrape_interval: 5s # Tiempo que espera Prometheus para volver a pedir datos (Best practice en desarrollo)
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Configuración para que Prometheus se monitoree a sí mismo
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # El verdadero objetivo: Extraer las métricas de hardware de Node Exporter
+  - job_name: 'host_metrics'
+    static_configs:
+      - targets: ['node_exporter:9100']

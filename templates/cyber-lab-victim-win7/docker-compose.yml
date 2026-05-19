@@ -1,0 +1,17 @@
+services:
+
+  # ── Víctima simulada (Windows 7 via Wine) ────────────────────────────────────
+  # ADVERTENCIA: Solo para uso en laboratorios controlados con autorización.
+  victim:
+    image: scottyhardy/docker-wine:latest
+    container_name: {{PROJECT_NAME}}-victim
+    environment:
+      DISPLAY: ":0"
+    networks:
+      - lab-network
+    cap_add:
+      - NET_ADMIN
+
+networks:
+  lab-network:
+    driver: bridge

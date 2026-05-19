@@ -1,0 +1,13 @@
+# Configuración global de Traefik v2
+api:
+  dashboard: true # Enciende el panel visual para ver tus rutas
+  insecure: true  # Permite ver el dashboard sin contraseña en local
+
+entryPoints:
+  web:
+    address: ":80" # Configura el puerto de entrada para el tráfico HTTP
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false # Buenas prácticas: Solo expone contenedores que tengan la etiqueta traefik.enable=true
