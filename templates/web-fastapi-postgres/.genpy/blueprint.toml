@@ -1,0 +1,35 @@
+# Contrato GenPy — web-fastapi-postgres (referencia Semana 2+)
+# Copiado al proyecto generado como <proyecto>/.genpy/blueprint.toml
+
+[meta]
+name        = "web-fastapi-postgres"
+version     = "1.0.0"
+language    = "python"
+runtime     = "python3.11"
+description = "API REST FastAPI con PostgreSQL y Docker Compose"
+
+[ai_context]
+editable_files               = ["backend/src/**/*.py"]
+protected_files              = [".env", "backend/requirements.txt", "docker-compose.yml"]
+include_decorators_in_chunk  = true
+include_block_comments       = true
+
+[[ai_context.dependency_map]]
+source  = "backend/src/models.py"
+affects = ["backend/src/schemas.py", "backend/src/crud.py", "backend/src/repository.py"]
+
+[[ai_context.dependency_map]]
+source  = "backend/src/schemas.py"
+affects = ["backend/src/routers/*.py"]
+
+[validation]
+syntax_check     = "python3 -m py_compile {file}"
+semantic_timeout = 60
+
+[review]
+default_goal    = "Mejorar claridad, tipos y manejo de errores sin cambiar la API pública."
+max_chunk_lines = 150
+
+[git]
+checkpoint_prefix    = "chore(genpy): checkpoint"
+review_branch_prefix = "genpy/review"

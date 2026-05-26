@@ -2,7 +2,7 @@
 
 > Cargar este archivo al inicio de cada sesión de trabajo.
 > Última actualización: 2026-05-26
-> Estado: Semana 1 completada — Checkpoint Docker/templates — Semana 2 pendiente
+> Estado: Semana 1 + checkpoint Docker — Limpieza estructural — Semana 2 en curso
 
 ---
 
@@ -97,18 +97,28 @@ No existe todavía:
     docker.sh               check_docker_daemon().
                             inspect_blueprint_ports() via
                             blueprint_meta(), _port_in_use().
-    review.sh               DESCARTADO. Reescribir desde cero.
+    review.sh               Stub Semana 3 (orquestador 10 pasos).
+    resolver.sh             Stub Semana 2.
+    guardians.sh            Stub Semana 2.
+    assembler.sh            Stub Semana 2.
+    review_strategies/      python.sh operativo; go/js Semana 5.
+    providers/              ollama.sh, api.sh — stubs Semana 3/5.
 
   scripts/
     install.sh              Instalador. Pendiente reescritura
                             con 4 fases.
     uninstall.sh            Funcional.
     update.sh               Funcional. Sin SHA256 todavía.
-    review.sh               DESCARTADO. Reescribir desde cero.
-    doctor.sh               NO EXISTE. Pendiente Semana 4.
+    doctor.sh               Stub Semana 4.
+
+  tests/                    fixtures/, unit/, integration/, mocks/
+  decisions/                ADRs pendientes (ver README).
+  docs/                     INSTALL, CONTRIBUTING, SECURITY.
+  .github/                  workflows/ci.yml, CONTEXT.md → enlace.
 
   templates/                9 blueprints oficiales.
-                            Ninguno tiene .genpy/ todavía.
+                            web-fastapi-postgres tiene
+                            .genpy/blueprint.toml (referencia).
 
 ---
 
@@ -272,8 +282,28 @@ No existe todavía:
      libs.sh usa sed -i '' (solo macOS) — corregir para Linux.
 
   No incluido en este checkpoint:
-     Semana 2 review (resolver, guardians, blueprint.toml).
      Seguridad capas OSI (roadmap futuro).
+
+---
+
+## Limpieza estructural 2026-05-26
+
+  Objetivo: alinear el árbol del repo con ARCHITECTURE.md.
+
+  Eliminado:
+    - Prototipos review (curl/Ollama) en scripts/ y lib/ viejos.
+    - Artefactos locales .aider* (gitignore).
+
+  Creado:
+    - tests/{fixtures,unit,integration,mocks/ollama_mock.sh}
+    - decisions/, docs/, .github/workflows/ci.yml
+    - Stubs Semana 2–5: resolver, guardians, assembler, providers
+    - lib/review.sh nuevo (stub Semana 3)
+    - templates/web-fastapi-postgres/.genpy/blueprint.toml
+    - CHANGELOG.md, README.md actualizado
+
+  Pendiente implementar (no solo stub):
+    resolver, guardians, assembler, genpy review, doctor, bats CI.
 
 ---
 
@@ -281,8 +311,8 @@ No existe todavía:
 
 Lo que construimos ahora, en orden:
 
-  1. .genpy/blueprint.toml en web-fastapi-postgres
-     Es el contrato que define todo lo demás.
+  1. .genpy/blueprint.toml en web-fastapi-postgres  ✅ (plantilla)
+     Falta copiarlo al flujo create y validar parseo.
 
   2. resolver.sh
      Resuelve rangos: --lines, --function, --class,

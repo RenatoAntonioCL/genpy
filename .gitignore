@@ -1,45 +1,29 @@
 # =============================================================================
-# GenPy — .gitignore
-#
-# Aplica a los proyectos generados por GenPy (Python).
-# Los archivos listados aquí no se incluirán en el repositorio git.
+# GenPy — repositorio de la herramienta CLI
 # =============================================================================
 
-# ── macOS ─────────────────────────────────────────────────────────────────────
-# Metadatos del Finder, se generan automáticamente en cualquier carpeta abierta
 .DS_Store
 **/.DS_Store
-
-# ── Python ────────────────────────────────────────────────────────────────────
-# Bytecode compilado por el intérprete (no necesario en el repo)
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# ── Entornos virtuales ────────────────────────────────────────────────────────
-# El entorno virtual se crea localmente y no debe compartirse
-env/
-venv/
-ENV/
-.venv/
-
-# ── Variables de entorno ──────────────────────────────────────────────────────
-# Contienen secretos (API keys, passwords) — NUNCA deben subirse al repo
-.env
-.env.local
-.env.*.local
-
-# ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
+.env
+.env.*
 
-# ── Archivos temporales ───────────────────────────────────────────────────────
-*.temp
-*.tmp
+# Herramientas locales (no versionar)
+.aider*
+.cursor/
 
-# Proyectos generados localmente durante desarrollo/pruebas
+# Proyectos generados en pruebas locales
 project*/
 test-*/
 
-# Herramientas locales de asistencia (no versionar)
-.aider*
+# =============================================================================
+# También aplicable a proyectos que genere el CLI (copiado en templates)
+# =============================================================================
+venv/
+.venv/
+env/
+ENV/
+*.temp
+*.tmp
