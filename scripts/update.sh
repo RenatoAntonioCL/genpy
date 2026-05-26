@@ -1,8 +1,8 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # =============================================================================
-# GenPy — Official System Updater v4.0.0 (Blindado)
+# GenPy — Official System Updater v1.0.0-alpha (Blindado)
 # =============================================================================
 
 readonly REPO_URL="https://github.com/RenatoAntonioCL/genpy.git"
@@ -30,7 +30,7 @@ sudo cp -R "$TMP_DIR/." "$INSTALL_DIR/"
 
 # 4. Recrear el wrapper global
 sudo tee "$INSTALL_BIN" > /dev/null <<'EOF'
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 exec /usr/local/share/genpy/bin/genpy "$@"
 EOF

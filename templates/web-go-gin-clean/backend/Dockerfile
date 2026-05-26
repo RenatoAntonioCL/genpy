@@ -1,14 +1,16 @@
 FROM golang:1.21-alpine AS builder
 
 WORKDIR /app
-COPY go.mod go.sum ./
+
+COPY go.mod ./
 RUN go mod download
 
 COPY . .
 RUN go build -o server ./src/main.go
 
-# ── Imagen final mínima ───────────────────────────────────────────────────────
-FROM alpine:latest
+FROM alpine:3.19
+RUN apk add --no-cache ca-certificates
+
 WORKDIR /app
 COPY --from=builder /app/server .
 

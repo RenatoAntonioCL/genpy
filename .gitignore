@@ -40,3 +40,6 @@ ENV/
 # Proyectos generados localmente durante desarrollo/pruebas
 project*/
 test-*/
+
+# Herramientas locales de asistencia (no versionar)
+.aider*

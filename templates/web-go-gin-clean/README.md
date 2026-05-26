@@ -18,6 +18,11 @@ docker compose up -d
 
 API disponible en `http://localhost:8080`
 
+## Red Docker
+
+- La API se publica solo en `127.0.0.1:8080` (no en todas las interfaces del host).
+- MySQL no expone puertos al host; la API se conecta por la red interna `app-network` (`db:3306`).
+
 ## Estructura
 
 ```

@@ -1,15 +1,15 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # =============================================================================
-# GenPy — Official System Installer v4.0.0
+# GenPy — Official System Installer v1.0.0-alpha
 # =============================================================================
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly INSTALL_DIR="/usr/local/share/genpy"
 readonly INSTALL_BIN="/usr/local/bin/genpy"
 
-echo "📦 Installing GenPy v4.0.0 globally..."
+echo "📦 Installing GenPy v1.0.0-alpha globally..."
 
 # 1. Clean previous installations
 sudo rm -rf "$INSTALL_DIR"
@@ -27,11 +27,11 @@ sudo chmod +x "$INSTALL_DIR/scripts/uninstall.sh"
 
 # 4. Create global wrapper
 sudo tee "$INSTALL_BIN" > /dev/null <<'EOF'
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 exec /usr/local/share/genpy/bin/genpy "$@"
 EOF
 sudo chmod +x "$INSTALL_BIN"
 
-echo "✔ GenPy v4.0.0 successfully installed!"
+echo "✔ GenPy v1.0.0-alpha successfully installed!"
 echo "  Run it from anywhere with: genpy create"

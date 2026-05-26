@@ -18,6 +18,11 @@ docker compose up -d
 
 API disponible en `http://localhost:3000`
 
+## Red Docker
+
+- La API se publica solo en `127.0.0.1:3000` (no en todas las interfaces del host).
+- MongoDB no expone puertos al host; la API se conecta por la red interna `app-network` (`mongo:27017`).
+
 ## Estructura
 
 ```

@@ -1,8 +1,8 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # =============================================================================
-# GenPy — lib/template.sh (v4.0.0)
+# GenPy — lib/template.sh (v1.0.0-alpha)
 #
 # Motor de copiado e inyección de variables en los templates.
 #
@@ -53,57 +53,26 @@ copy_template() {
   local target_dir="$2"
   local project_name="$3"
 
-  # Validar que el template exista antes de intentar copiar
-  if [[ ! -d "$template_dir" ]]; then
-    print_error "Template no encontrado en: $template_dir"
-    exit 1
-  fi
-
-  echo -e "\n  Fabricando entorno para: \033[1;36m$project_name\033[0m"
+  echo "📁 Copiando template desde $template_dir a $target_dir..."
   mkdir -p "$target_dir"
 
-  # Copiar archivos visibles y ocultos del template
-  # El "2>/dev/null || true" en los dotfiles evita error si no hay archivos ocultos
-  cp -R "$template_dir/"* "$target_dir/"
-  cp -R "$template_dir/."* "$target_dir/" 2>/dev/null || true
+  # Copia los archivos (respeta Modelo A: Dockerfile en raíz / Modelo B: en backend/)
+  rsync -av --delete --exclude='.git' --exclude='.DS_Store' --exclude='__pycache__' \
+    "$template_dir/" "$target_dir/"
 
-  echo "📂 Estructura de archivos copiada."
-  echo "⚙️  Inyectando variables del proyecto..."
+  echo "✅ Estructura copiada."
 
-  # Normalizar el nombre: minúsculas y caracteres especiales → guión
-  # Esto garantiza compatibilidad con Docker image names, npm, go modules, etc.
-  local clean_name
-  clean_name=$(echo "$project_name" \
-    | tr '[:upper:]' '[:lower:]' \
-    | sed 's/[^a-zA-Z0-9-]/-/g' \
-    | sed 's/--*/-/g'           \
-    | sed 's/^-//;s/-$//')
-
-  # Extensiones y archivos donde puede aparecer {{PROJECT_NAME}}
-  local -a patterns=(
-    "*.yml" "*.yaml"
-    "*.json" "*.toml" "*.mod"
-    "*.env" "*.txt" "*.md"
-    "*.go" "*.ts" "*.js" "*.py" "*.rs"
-    "Dockerfile"
-  )
-
-  # Procesar cada patrón de archivo
-  for pattern in "${patterns[@]}"; do
-    while IFS= read -r -d '' file; do
-
-      # Reemplazar {{PROJECT_NAME}} por el nombre limpio
-      _sed_inplace "s|{{PROJECT_NAME}}|${clean_name}|g" "$file"
-
-      # Limpiar campo "version:" obsoleto en docker-compose
-      # (deprecado en Compose v2, genera warnings innecesarios)
-      if [[ "$(basename "$file")" == "docker-compose.yml" ]]; then
-        _sed_inplace '/^version:/d' "$file"
-      fi
-
-    done < <(find "$target_dir" -type f -name "$pattern" -print0)
+  # --- NUEVO: Inyección de variables ---
+  echo "🔧 Inyectando nombre de proyecto: $project_name"
+  
+  # Buscar solo archivos de texto para evitar corromper binarios
+  find "$target_dir" -type f \( \
+    -name "*.md" -o -name "docker-compose.yml" -o -name "Dockerfile" \
+    -o -name "*.py" -o -name "*.sh" -o -name "*.go" -o -name "go.mod" \
+    -o -name "package.json" -o -name "nest-cli.json" -o -name "tsconfig.json" \
+    \) | while read -r file; do
+    _sed_inplace "s/{{PROJECT_NAME}}/$project_name/g" "$file"
   done
-
-  echo "📝 Variables inyectadas correctamente."
-  print_success "¡Proyecto $project_name generado exitosamente!"
+  
+  echo "✨ Configuración completada."
 }

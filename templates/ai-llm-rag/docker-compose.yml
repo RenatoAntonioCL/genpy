@@ -5,13 +5,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: {{PROJECT_NAME}}-rag
+    container_name: "{{PROJECT_NAME}}-rag"
     restart: unless-stopped
     volumes:
       - ./src:/app/src
       - ./data:/app/data        # documentos fuente para embeddings
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      CHROMA_PATH: /app/data/chroma
     networks:
       - rag-network
 

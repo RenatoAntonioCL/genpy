@@ -1,29 +1,39 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# ─── DETECCIÓN DE ENTORNO ────────────────────────────────────────────────────
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-LOCAL_LIB="$SCRIPT_DIR/../lib"
-LOCAL_SCRIPTS="$SCRIPT_DIR/../scripts"
-GLOBAL_LIB="/usr/local/share/genpy/lib"
-GLOBAL_SCRIPTS="/usr/local/share/genpy/scripts"
+# 1. Ubicación absoluta del script donde reside el código fuente (Developer/genpy/bin/genpy)
+BIN_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+PROJECT_ROOT="$(dirname "$(dirname "$BIN_PATH")")"
 
-# Definir rutas según si estamos en modo local (desarrollo) o instalado (global)
-if [ -d "$LOCAL_LIB" ] && [ -d "$LOCAL_SCRIPTS" ]; then
-    LIB_DIR="$LOCAL_LIB"
-    SCRIPTS_DIR="$LOCAL_SCRIPTS"
-    TEMPLATE_BASE_DIR="$SCRIPT_DIR/../templates"
-else
-    LIB_DIR="$GLOBAL_LIB"
-    SCRIPTS_DIR="$GLOBAL_SCRIPTS"
-    TEMPLATE_BASE_DIR="/usr/local/share/genpy/templates"
+# 2. Definir directorios apuntando SIEMPRE al proyecto raíz de desarrollo
+export LIB_DIR="$PROJECT_ROOT/lib"
+export SCRIPTS_DIR="$PROJECT_ROOT/scripts"
+export TEMPLATE_BASE_DIR="$PROJECT_ROOT/templates"
+
+# 3. Validación de integridad
+if [[ ! -d "$LIB_DIR" ]]; then
+    echo "❌ Error: No se encontró el directorio de librerías en $LIB_DIR"
+    exit 1
 fi
+
+source "$LIB_DIR/core/config.sh"  # 1. Cargar metadatos
+source "$LIB_DIR/core/compat.sh"  # 2. Validar entorno
+source "$LIB_DIR/utils.sh"        # 3. CARGAR COLORES (Añadir esta línea aquí) ✅
+
+# 4. Ahora sí, cargar el idioma
+export GENPY_LANG="${GENPY_LANG:-es}"
+if [[ -f "$LIB_DIR/i18n/${GENPY_LANG}.sh" ]]; then
+    source "$LIB_DIR/i18n/${GENPY_LANG}.sh"
+else
+    source "$LIB_DIR/i18n/es.sh"
+fi
+
 
 export LIB_DIR TEMPLATE_BASE_DIR
 
 # ─── MENÚ DE AYUDA GLOBAL ────────────────────────────────────────────────────
 show_help() {
-  echo -e "\n 🛠️  GenPy — project scaffolding tool v4.0.0\n"
+  echo -e "\n 🛠️  GenPy — project scaffolding tool v${GENPY_VERSION}\n"
   echo " Uso:"
   echo "   genpy create      Crear un nuevo proyecto"
   echo "   genpy update      Actualizar GenPy a la última versión"
@@ -35,21 +45,15 @@ show_help() {
 COMMAND="${1:-}"
 
 case "$COMMAND" in
-  create)
-    source "$LIB_DIR/wizard.sh"
-    ;;
-    
-  update)
-    bash "$SCRIPTS_DIR/update.sh"
-    ;;
-
-  uninstall)
-    bash "$SCRIPTS_DIR/uninstall.sh"
-    ;;
-  version)
-    echo "GenPy v4.0.0"
-    ;;
-  *)
-    show_help
-    ;;
+    create)
+        source "$LIB_DIR/wizard.sh" ;;
+    update)
+        bash "$SCRIPTS_DIR/update.sh" ;;
+    uninstall)
+        bash "$SCRIPTS_DIR/uninstall.sh" ;; 
+    version)
+        # Se elimina el texto hardcodeado para usar la constante de config.sh (R8)
+        echo "GenPy v${GENPY_VERSION}" ;;
+    *)
+        show_help ;;
 esac

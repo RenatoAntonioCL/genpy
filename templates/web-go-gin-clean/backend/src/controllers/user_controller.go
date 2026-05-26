@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"net/http"
-	"{{PROJECT_NAME}}/src/repository"
+	"app/src/repository"
 	"github.com/gin-gonic/gin"
 )
 

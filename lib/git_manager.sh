@@ -1,8 +1,8 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # =============================================================================
-# GenPy — lib/git_manager.sh (v4.1.0)
+# GenPy — lib/git_manager.sh (v1.0.0-alpha)
 #
 # Gestión del repositorio git del proyecto generado.
 # Git siempre se inicializa — la pregunta es solo sobre el remoto.
@@ -18,32 +18,6 @@ fi
 
 # Variable global que wizard.sh lee para el resumen previo a la confirmación
 GIT_MODE="local"
-
-# -----------------------------------------------------------------------------
-# select_git_mode
-#
-# Pregunta al usuario cómo quiere gestionar el repositorio y guarda
-# la elección en GIT_MODE. Se llama ANTES de fabricar el proyecto
-# para incluir la info en el resumen de confirmación.
-# -----------------------------------------------------------------------------
-select_git_mode() {
-  print_section "Control de Versiones (Git)"
-
-  echo -e "  ${WHITE}1)${NC} 💻  Solo local       ${DIM}— git init sin remoto${NC}"
-  echo -e "  ${WHITE}2)${NC} 🔐  Remoto privado    ${DIM}— push a repo privado en GitHub${NC}"
-  echo -e "  ${WHITE}3)${NC} 🌐  Remoto público    ${DIM}— push a repo público en GitHub${NC}"
-  echo ""
-
-  while true; do
-    read -rp "  >>> " git_choice
-    case "$git_choice" in
-      1) GIT_MODE="local";   break ;;
-      2) GIT_MODE="private"; break ;;
-      3) GIT_MODE="public";  break ;;
-      *) print_warning "Elige 1, 2 o 3." ;;
-    esac
-  done
-}
 
 # -----------------------------------------------------------------------------
 # setup_git_repository
@@ -107,7 +81,7 @@ EOF
   fi
 
   # Primer commit en formato Conventional Commits
-  git commit -m "feat: initial project scaffold — $project_name (GenPy v4.1.0)" -q
+  git commit -m "feat: initial project scaffold — $project_name (GenPy v1.0.0-alpha)" -q
   print_success "Repositorio inicializado en rama main"
 
   # ── Modo remoto ───────────────────────────────────────────────────────────

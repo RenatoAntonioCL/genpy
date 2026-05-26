@@ -1,4 +1,4 @@
-#!/opt/homebrew/bin/bash
+#!/usr/bin/env bash  
 set -euo pipefail
 
 # =============================================================================
@@ -18,4 +18,4 @@ fi
 sudo rm -f  "$INSTALL_BIN"
 sudo rm -rf "$INSTALL_DIR"
 
-echo "✔ GenPy has been uninstalled successfully."
+echo "✔ GenPy has been uninstalled successfully."  

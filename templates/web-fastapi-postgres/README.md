@@ -20,20 +20,25 @@ docker compose up -d
 La API estará disponible en `http://localhost:8000`
 Documentación interactiva en `http://localhost:8000/docs`
 
+## Red Docker
+
+- La API se publica solo en `127.0.0.1:8000` (no en todas las interfaces del host).
+- PostgreSQL no expone puertos al host; la API se conecta por la red interna `app-network` (`db:5432`).
+
 ## Estructura
 
 ```
 {{PROJECT_NAME}}/
 ├── backend/
 │   ├── Dockerfile
-│   └── requirements.txt
-├── src/
-│   ├── main.py         # App FastAPI y rutas
-│   ├── config.py       # Variables de entorno
-│   ├── database.py     # Conexión SQLAlchemy
-│   ├── models.py       # Modelos ORM
-│   ├── schemas.py      # Schemas Pydantic
-│   └── repository.py   # Capa de acceso a datos
+│   ├── requirements.txt
+│   └── src/
+│       ├── main.py         # App FastAPI y rutas
+│       ├── config.py       # Variables de entorno
+│       ├── database.py     # Conexión SQLAlchemy
+│       ├── models.py       # Modelos ORM
+│       ├── schemas.py      # Schemas Pydantic
+│       └── repository.py   # Capa de acceso a datos
 └── docker-compose.yml
 ```
 

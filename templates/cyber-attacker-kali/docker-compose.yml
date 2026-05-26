@@ -1,0 +1,18 @@
+services:
+
+  kali:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: "{{PROJECT_NAME}}-kali"
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./src:/workspace/src
+    networks:
+      - lab-network
+
+networks:
+  lab-network:
+    driver: bridge

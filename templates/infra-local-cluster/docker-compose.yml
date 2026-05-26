@@ -3,12 +3,12 @@ services:
   # 🌐 El Director de Orquesta: Proxy Inverso Traefik
   reverse_proxy:
     image: traefik:v2.10
-    container_name: ${PROJECT_NAME}_proxy
+    container_name: "{{PROJECT_NAME}}-proxy"
     command:
       - "--configfile=/etc/traefik/traefik.yml"
     ports:
-      - "80:80"       # Puerto para tus aplicaciones de desarrollo
-      - "8082:8080"   # Panel de control visual de Traefik
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:8082:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro # Permite a Traefik escuchar eventos de Docker
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
@@ -18,11 +18,11 @@ services:
   # ⚙️ Microservicio de Prueba A (Frontend ficticio)
   frontend_mock:
     image: nginxdemos/hello:plain-text
-    container_name: ${PROJECT_NAME}_service_frontend
+    container_name: "{{PROJECT_NAME}}-frontend"
     labels:
       - "traefik.enable=true"
       # Le dice a Traefik que si el usuario entra a app.localhost, lo mande aquí
-      - "traefik.http.routers.frontend.rule=Host(\`app.localhost\`)"
+      - 'traefik.http.routers.frontend.rule=Host(`app.localhost`)'
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
     networks:
       - cluster_network
@@ -30,11 +30,11 @@ services:
   # ⚙️ Microservicio de Prueba B (Backend ficticio)
   backend_mock:
     image: nginxdemos/hello:plain-text
-    container_name: ${PROJECT_NAME}_service_backend
+    container_name: "{{PROJECT_NAME}}-backend"
     labels:
       - "traefik.enable=true"
       # Le dice a Traefik que si el usuario entra a api.localhost, lo mande aquí
-      - "traefik.http.routers.backend.rule=Host(\`api.localhost\`)"
+      - 'traefik.http.routers.backend.rule=Host(`api.localhost`)'
       - "traefik.http.services.backend.loadbalancer.server.port=80"
     networks:
       - cluster_network

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from src.models import User, Post  # <--- Esto es vital
 from src.database import engine, Base
 from src.routers import users
 
@@ -6,7 +7,7 @@ from src.routers import users
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="{{PROJECT_NAME}}",
+    title="{{PROJECT_NAME}} API",
     description="API generada con GenPy",
     version="0.1.0",
 )
@@ -15,5 +16,6 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 
 
 @app.get("/")
-def health_check():
-    return {"status": "ok", "project": "{{PROJECT_NAME}}"}
+def read_root():
+    return {"status": "ok", "project": "{{PROJECT_NAME}}", "db": "Tablas creadas exitosamente"}
+    
