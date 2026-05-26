@@ -6,7 +6,7 @@ class Settings(BaseSettings):
 
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
-    POSTGRES_DB: str = "{{PROJECT_NAME}}"
+    POSTGRES_DB: str = "app"
     POSTGRES_HOST: str = "db"
     POSTGRES_PORT: int = 5432
 

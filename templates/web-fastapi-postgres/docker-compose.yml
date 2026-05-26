@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     environment:
       PYTHONPATH: /app
+      PROJECT_NAME: ${COMPOSE_PROJECT_NAME}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: ${COMPOSE_PROJECT_NAME}
