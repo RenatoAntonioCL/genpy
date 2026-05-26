@@ -8,7 +8,7 @@
 
 ```bash
 docker compose up -d
-docker exec -it {{PROJECT_NAME}}-kali bash
+docker compose exec kali bash
 ```
 
 ## Herramientas incluidas

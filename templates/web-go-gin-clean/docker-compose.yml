@@ -5,7 +5,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: "{{PROJECT_NAME}}-api"
+    container_name: "${COMPOSE_PROJECT_NAME}-api"
     restart: unless-stopped
     ports:
       - "127.0.0.1:8080:8080"
@@ -14,7 +14,7 @@ services:
       DB_PORT: "3306"
       DB_USER: root
       DB_PASSWORD: root
-      DB_NAME: "{{PROJECT_NAME}}"
+      DB_NAME: ${COMPOSE_PROJECT_NAME}
     depends_on:
       db:
         condition: service_healthy
@@ -24,11 +24,11 @@ services:
   # ── MySQL ─────────────────────────────────────────────────────────────────────
   db:
     image: mysql:8
-    container_name: "{{PROJECT_NAME}}-db"
+    container_name: "${COMPOSE_PROJECT_NAME}-db"
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: "{{PROJECT_NAME}}"
+      MYSQL_DATABASE: ${COMPOSE_PROJECT_NAME}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:

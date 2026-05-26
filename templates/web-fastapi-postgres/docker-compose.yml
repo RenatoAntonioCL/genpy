@@ -1,7 +1,7 @@
 services:
 
   api:
-    container_name: "{{PROJECT_NAME}}-api"
+    container_name: "${COMPOSE_PROJECT_NAME}-api"
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -10,7 +10,7 @@ services:
       PYTHONPATH: /app
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: "{{PROJECT_NAME}}"
+      POSTGRES_DB: ${COMPOSE_PROJECT_NAME}
       POSTGRES_HOST: db
       POSTGRES_PORT: "5432"
     ports:
@@ -26,12 +26,12 @@ services:
 
   db:
     image: postgres:15-alpine
-    container_name: "{{PROJECT_NAME}}-db"
+    container_name: "${COMPOSE_PROJECT_NAME}-db"
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: "{{PROJECT_NAME}}"
+      POSTGRES_DB: ${COMPOSE_PROJECT_NAME}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:

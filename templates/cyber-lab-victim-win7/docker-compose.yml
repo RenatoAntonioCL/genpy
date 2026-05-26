@@ -4,7 +4,7 @@ services:
   # ADVERTENCIA: Solo para uso en laboratorios controlados con autorización.
   victim:
     image: scottyhardy/docker-wine:latest
-    container_name: "{{PROJECT_NAME}}-victim"
+    container_name: "${COMPOSE_PROJECT_NAME}-victim"
     environment:
       DISPLAY: ":0"
     networks:

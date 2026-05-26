@@ -264,7 +264,10 @@ No existe todavía:
   ✅ READMEs web
      Sección "Red Docker" en FastAPI, NestJS y Go.
 
-  Pendiente verificar en host (no ejecutado en CI de esta sesión):
+  ✅ docker-compose usa ${COMPOSE_PROJECT_NAME} para nombres de
+     contenedor y BD (válido al probar templates/ sin genpy create).
+
+  Pendiente verificar en host:
      docker compose build && up en cada blueprint con Dockerfile.
      libs.sh usa sed -i '' (solo macOS) — corregir para Linux.
 

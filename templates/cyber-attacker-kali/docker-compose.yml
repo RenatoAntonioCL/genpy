@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: "{{PROJECT_NAME}}-kali"
+    container_name: "${COMPOSE_PROJECT_NAME}-kali"
     restart: unless-stopped
     stdin_open: true
     tty: true

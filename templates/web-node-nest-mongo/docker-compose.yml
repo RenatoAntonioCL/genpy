@@ -5,12 +5,12 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: "{{PROJECT_NAME}}-api"
+    container_name: "${COMPOSE_PROJECT_NAME}-api"
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:3000"
     environment:
-      MONGODB_URI: mongodb://mongo:27017/{{PROJECT_NAME}}
+      MONGODB_URI: mongodb://mongo:27017/${COMPOSE_PROJECT_NAME}
       NODE_ENV: development
     depends_on:
       - mongo
@@ -20,7 +20,7 @@ services:
   # ── MongoDB ───────────────────────────────────────────────────────────────────
   mongo:
     image: mongo:7
-    container_name: "{{PROJECT_NAME}}-mongo"
+    container_name: "${COMPOSE_PROJECT_NAME}-mongo"
     restart: unless-stopped
     volumes:
       - mongo_data:/data/db

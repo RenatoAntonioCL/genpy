@@ -3,7 +3,7 @@ services:
   # 🌐 El Director de Orquesta: Proxy Inverso Traefik
   reverse_proxy:
     image: traefik:v2.10
-    container_name: "{{PROJECT_NAME}}-proxy"
+    container_name: "${COMPOSE_PROJECT_NAME}-proxy"
     command:
       - "--configfile=/etc/traefik/traefik.yml"
     ports:
@@ -18,7 +18,7 @@ services:
   # ⚙️ Microservicio de Prueba A (Frontend ficticio)
   frontend_mock:
     image: nginxdemos/hello:plain-text
-    container_name: "{{PROJECT_NAME}}-frontend"
+    container_name: "${COMPOSE_PROJECT_NAME}-frontend"
     labels:
       - "traefik.enable=true"
       # Le dice a Traefik que si el usuario entra a app.localhost, lo mande aquí
@@ -30,7 +30,7 @@ services:
   # ⚙️ Microservicio de Prueba B (Backend ficticio)
   backend_mock:
     image: nginxdemos/hello:plain-text
-    container_name: "{{PROJECT_NAME}}-backend"
+    container_name: "${COMPOSE_PROJECT_NAME}-backend"
     labels:
       - "traefik.enable=true"
       # Le dice a Traefik que si el usuario entra a api.localhost, lo mande aquí

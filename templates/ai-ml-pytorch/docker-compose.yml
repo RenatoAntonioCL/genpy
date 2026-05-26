@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: "{{PROJECT_NAME}}-ml"
+    container_name: "${COMPOSE_PROJECT_NAME}-ml"
     restart: unless-stopped
     volumes:
       - ./src:/app/src

@@ -5,7 +5,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: "{{PROJECT_NAME}}-rag"
+    container_name: "${COMPOSE_PROJECT_NAME}-rag"
     restart: unless-stopped
     volumes:
       - ./src:/app/src
