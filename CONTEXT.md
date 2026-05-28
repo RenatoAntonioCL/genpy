@@ -1,7 +1,7 @@
 # genpy — AI Context Brief
 
 > Cargar este archivo al inicio de cada sesión de trabajo.
-> Última actualización: 2026-05-26
+> Última actualización: 2026-05-28
 > Estado: Semana 1 + checkpoint Docker — Limpieza estructural — Semana 2 en curso
 
 ---
@@ -28,7 +28,8 @@ Funciona hoy:
     - 9 blueprints con docker-compose alineados (Modelo A/B)
     - Política de puertos: APIs en 127.0.0.1, BD solo red interna
     - Aditivos inyectables por blueprint
-    - Git init automático (local/privado/público)
+    - Git init automático (local/privado/público → crea repo en GitHub vía API)
+    - Remapeo automático de puertos ocupados en docker-compose.yml
     - Templates web/AI con Dockerfiles corregidos y buildables
 
 No existe todavía:
@@ -48,7 +49,8 @@ No existe todavía:
 
   lib/core/
     compat.sh               Detecta OS, arquitectura, Bash 4+.
-                            Provee _port_in_use() portable.
+                            Provee _port_in_use() portable y
+                            _find_free_port() para auto-remapeo.
                             Exporta: GENPY_OS, GENPY_ARCH.
     config.sh               Fuente única de verdad del dominio.
                             Arrays: AREAS, AREA_BLUEPRINTS,
@@ -92,11 +94,18 @@ No existe todavía:
     wizard.sh               Orquestador genpy create (7 pasos).
                             Sin lógica de dominio ni UI propia.
     git_manager.sh          setup_git_repository().
+                            Crea repo en GitHub vía API REST
+                            (_get_github_token, _create_github_repo).
+                            Lee GITHUB_TOKEN / GH_TOKEN / gh CLI.
+                            Fallback: URL manual si no hay token.
                             select_git_mode() eliminada (vive
                             en menus.sh).
     docker.sh               check_docker_daemon().
                             inspect_blueprint_ports() via
                             blueprint_meta(), _port_in_use().
+                            Auto-remapea puertos ocupados con
+                            _find_free_port() y parchea
+                            docker-compose.yml en el acto.
     review.sh               Stub Semana 3 (orquestador 10 pasos).
     resolver.sh             Stub Semana 2.
     guardians.sh            Stub Semana 2.
@@ -283,6 +292,36 @@ No existe todavía:
 
   No incluido en este checkpoint:
      Seguridad capas OSI (roadmap futuro).
+
+---
+
+## Checkpoint 2026-05-28 — Puertos y GitHub automáticos
+
+  Objetivo: eliminar fricción manual en los dos pasos finales del wizard.
+
+  ✅ lib/core/compat.sh
+     Nueva función _find_free_port(port): itera desde port+1 hasta
+     encontrar un puerto libre (<= 65535). Vive junto a _port_in_use().
+
+  ✅ lib/docker.sh — inspect_blueprint_ports()
+     Acepta segundo argumento project_dir.
+     Cuando un puerto está ocupado: llama _find_free_port, informa
+     el remapeo al usuario y parchea docker-compose.yml con sed
+     (solo el puerto host; el del contenedor no cambia).
+     Wizard.sh actualizado para pasar $PROJECT_DIR.
+
+  ✅ lib/git_manager.sh — GitHub API
+     _get_github_token(): busca en GITHUB_TOKEN → GH_TOKEN → gh CLI.
+     _create_github_repo(): POST /user/repos vía curl; extrae ssh_url
+     con jq o grep; reporta error de la API si falla.
+     _push_to_remote(): conecta remote y hace push; instrucciones de
+     reintento si falla.
+     _fallback_manual_remote(): flujo anterior (URL manual), usado
+     cuando no hay curl, no hay token o la API falla.
+     setup_git_repository(): orquesta el flujo completo con degradación
+     grácil en cada punto de fallo.
+
+  Tag: v1.0.0-alpha
 
 ---
 
