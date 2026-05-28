@@ -97,10 +97,16 @@ _inject_python_addons() {
 _inject_node_addons() {
   local target_dir="$1"
   local packages="$2"
-  local pkg_file="$target_dir/package.json"
+
+  local pkg_file="$target_dir/backend/package.json"
+  [[ ! -f "$pkg_file" ]] && pkg_file="$target_dir/package.json"
+
+  if [[ ! -f "$pkg_file" ]]; then
+    print_warning "No se encontró package.json — omitiendo: $packages"
+    return 0
+  fi
 
   for pkg in $packages; do
-    # Aquí el comando que estaba suelto, ahora dentro de la función
     jq --arg pkg "$pkg" \
        '.dependencies[$pkg] = "latest"' "$pkg_file" > "$pkg_file.tmp" \
        && mv "$pkg_file.tmp" "$pkg_file"
