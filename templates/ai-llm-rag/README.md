@@ -7,9 +7,17 @@
 ```bash
 export OPENAI_API_KEY=sk-...
 docker compose build
-docker compose run --rm rag python src/embed.py
-docker compose run --rm rag python src/main.py
+docker compose up -d
+
+# 1. Indexar documentos (solo la primera vez o cuando cambie data/)
+docker exec -it {{PROJECT_NAME}}-rag python src/embed.py
+
+# 2. Iniciar el pipeline RAG de forma interactiva
+docker exec -it {{PROJECT_NAME}}-rag python src/main.py
 ```
+
+> El contenedor arranca en modo idle (`tail -f /dev/null`) para no hacer restart loop
+> cuando `main.py` requiere una terminal. Ejecuta los scripts con `docker exec -it`.
 
 Los vectores se guardan en `data/chroma` (volumen `./data`).
 

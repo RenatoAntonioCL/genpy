@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: "${COMPOSE_PROJECT_NAME}-rag"
-    restart: unless-stopped
+    command: ["tail", "-f", "/dev/null"]
     volumes:
       - ./src:/app/src
       - ./data:/app/data        # documentos fuente para embeddings
