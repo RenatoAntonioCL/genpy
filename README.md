@@ -1,8 +1,9 @@
 # GenPy
 
-CLI en Bash para generar proyectos desde **blueprints** Docker (9 stacks oficiales).
+CLI en Bash para generar proyectos desde **blueprints** Docker (9 stacks oficiales).  
+Cada proyecto generado recibe credenciales únicas — sin `changeme`, sin placeholders.
 
-Versión actual: **1.0.0-alpha** · Checkpoint Docker: tag `v1.0.0-alpha-docker`
+Versión actual: **1.0.0-alpha** · Fase 0 completada (flujo create estable)
 
 ```bash
 genpy create
@@ -10,7 +11,7 @@ genpy create
 
 ## Requisitos
 
-- Bash 4.0+, Git, Docker
+- Bash 4.3+, Git, Docker
 - macOS, Linux o WSL2
 
 ## Instalación
