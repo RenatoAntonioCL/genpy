@@ -10,7 +10,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
     environment:
-      MONGODB_URI: mongodb://mongo:27017/${COMPOSE_PROJECT_NAME}
+      MONGO_URI: mongodb://mongo:27017/${COMPOSE_PROJECT_NAME}
       NODE_ENV: development
     depends_on:
       - mongo
