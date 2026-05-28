@@ -13,16 +13,23 @@ if (( BASH_VERSINFO < 4 )); then
     exit 1
 fi
 
-# Shim portable para detectar si un puerto está en uso
+# Shim portable para detectar si un puerto está en uso.
+# Comprueba tanto listeners del SO como contenedores Docker activos.
 _port_in_use() {
     local port="$1"
+    # Listeners del sistema operativo
     if command -v ss &>/dev/null; then
-        ss -tuln | grep -q ":$port "
+        ss -tuln | grep -q ":$port " && return 0
     elif command -v netstat &>/dev/null; then
-        netstat -tuln | grep -q ":$port "
+        netstat -tuln | grep -q ":$port " && return 0
     else
-        (echo > /dev/tcp/localhost/"$port") &>/dev/null
+        (echo > /dev/tcp/localhost/"$port") &>/dev/null && return 0
     fi
+    # Puertos enlazados por contenedores Docker (de cualquier proyecto)
+    if command -v docker &>/dev/null; then
+        docker ps --format '{{.Ports}}' 2>/dev/null | grep -q ":$port->" && return 0
+    fi
+    return 1
 }
 
 # Devuelve el primer puerto >= $1 que esté libre.
