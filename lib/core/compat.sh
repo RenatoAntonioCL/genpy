@@ -13,8 +13,7 @@ if (( BASH_VERSINFO < 4 )); then
     exit 1
 fi
 
-# Shim para lsof (Reparación R4 integrada)
-# Esta función reemplaza a lsof en docker.sh para ser portable
+# Shim portable para detectar si un puerto está en uso
 _port_in_use() {
     local port="$1"
     if command -v ss &>/dev/null; then
@@ -22,7 +21,20 @@ _port_in_use() {
     elif command -v netstat &>/dev/null; then
         netstat -tuln | grep -q ":$port "
     else
-        # Fallback por si no hay herramientas de red (poco probable en Docker hosts)
         (echo > /dev/tcp/localhost/"$port") &>/dev/null
     fi
+}
+
+# Devuelve el primer puerto >= $1 que esté libre.
+# Imprime el puerto encontrado; retorna 1 si se agota el rango.
+_find_free_port() {
+    local port="$1"
+    while _port_in_use "$port"; do
+        (( port++ ))
+        if (( port > 65535 )); then
+            echo "0"
+            return 1
+        fi
+    done
+    echo "$port"
 }

@@ -102,7 +102,7 @@ setup_git_repository "$PROJECT_DIR" "$PROJECT_NAME"
 
 print_section "$MSG_STEP7_TITLE"
 if check_docker_daemon; then
-  inspect_blueprint_ports "$BLUEPRINT"
+  inspect_blueprint_ports "$BLUEPRINT" "$PROJECT_DIR"
 else
   print_info "Inicia Docker Desktop para poder ejecutar docker compose up."
 fi
