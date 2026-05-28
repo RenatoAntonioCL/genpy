@@ -2,7 +2,7 @@ import os
 
 import chromadb
 from langchain_community.document_loaders import TextLoader
-from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_text_splitters import CharacterTextSplitter
 
 
@@ -21,7 +21,7 @@ def run_ingestion():
     text_splitter = CharacterTextSplitter(chunk_size=200, chunk_overlap=20)
     docs = text_splitter.split_documents(documents)
 
-    embeddings_model = OpenAIEmbeddings()
+    embeddings_model = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
     collection = chroma_client.get_or_create_collection(name="genpy_knowledge")
 
     for i, doc in enumerate(docs):

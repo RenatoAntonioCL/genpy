@@ -2,7 +2,8 @@ import os
 import sys
 
 import chromadb
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_openai import ChatOpenAI
 
 
 def _chroma_client():
@@ -18,7 +19,7 @@ def ask_rag(question: str):
         print("⚠️  Colección vacía. Ejecuta primero: python src/embed.py")
         sys.exit(1)
 
-    query_vector = OpenAIEmbeddings().embed_query(question)
+    query_vector = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2").embed_query(question)
     results = collection.query(query_embeddings=[query_vector], n_results=1)
     context = (
         results["documents"][0][0]
