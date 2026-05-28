@@ -2,7 +2,7 @@
 
 > Cargar este archivo al inicio de cada sesión de trabajo.
 > Última actualización: 2026-05-28
-> Estado: Semana 1 + checkpoint Docker — Limpieza estructural — Semana 2 en curso
+> Estado: Fase 0 completada — flujo create estable y seguro — Semana 2 en curso
 
 ---
 
@@ -85,12 +85,20 @@ No existe todavía:
                             UI primitiva. Responsabilidad única.
     libs.sh                 Motor de aditivos. select y inject.
                             _inject_node_addons usa jq (no sed).
+                            Filtro Docker en requirements.txt
+                            usa _sed_inplace() (portable).
     template.sh             rsync + _sed_inplace() portable.
                             Respeta Modelo A/B (no mueve Dockerfiles).
                             Inyecta {{PROJECT_NAME}} en:
-                            *.md, docker-compose.yml, Dockerfile,
+                            .env, *.md, docker-compose.yml, Dockerfile,
                             *.py, *.sh, *.go, go.mod, package.json,
                             nest-cli.json, tsconfig.json
+                            _generate_secret(bytes): openssl rand -hex
+                            con fallback a /dev/urandom.
+                            _inject_env_secrets(env_file): dos pasadas —
+                            reemplaza {{SECRET_HEX_N}} y resuelve
+                            referencias cruzadas {{VAR_NAME}} en el mismo
+                            .env (ej: DATABASE_URL usa {{DB_PASSWORD}}).
     wizard.sh               Orquestador genpy create (7 pasos).
                             Sin lógica de dominio ni UI propia.
     git_manager.sh          setup_git_repository().
@@ -292,6 +300,110 @@ No existe todavía:
 
   No incluido en este checkpoint:
      Seguridad capas OSI (roadmap futuro).
+
+---
+
+## Checkpoint 2026-05-28 — Fase 0: estabilización del flujo create
+
+  Objetivo: eliminar bugs reales que hacían el flujo frágil en Linux
+  y en rutas de error. 8 fixes aplicados, uno descartado (falso positivo).
+
+  ✅ Fix 1 — config.sh descomentado en wizard.sh
+     Declaración explícita de dependencia. Include guard en config.sh
+     (_GENPY_CONFIG_LOADED) evita error con readonly en doble source.
+
+  ✅ Fix 2 — sed -i '' en libs.sh → _sed_inplace()
+     El filtro de seguridad de requirements.txt rompía en Linux.
+     Ahora usa la función portable del mismo módulo (template.sh).
+     Sourceo de template.sh desde libs.sh garantizado por carga
+     ordenada en wizard.sh (líneas 24-25).
+
+  ✅ Fix 3 — Dependencias implícitas de utils.sh
+     docker.sh, libs.sh y git_manager.sh ahora sourcean utils.sh
+     explícitamente vía LIB_DIR. Include guard en utils.sh
+     (_GENPY_UTILS_LOADED) evita redefinición doble.
+
+  ✅ Fix 4 — Validación del nombre del proyecto
+     Regex ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ en wizard.sh.
+     Rechaza: espacios, /, ., $, guion inicial, string vacío.
+     Nuevo mensaje en i18n: MSG_ERR_NAME_INVALID (es.sh y en.sh).
+
+  ✅ Fix 5 — copy_template() valida template y resultado
+     Falla con mensaje preciso si template_dir no existe.
+     Falla si rsync copió vacío (ls -A post-copia).
+     wizard.sh conserva el check secundario como segunda línea de defensa.
+
+  ✅ Fix 6 — Subshell en pipe de template.sh
+     | while read → while ... done < <(find ...) (process substitution).
+     Los errores de _sed_inplace propagan correctamente; variables del
+     loop persisten en el shell principal.
+
+  ✅ Fix 7 — Backticks en compat.sh
+     Falso positivo: el código ya usaba $() en todas partes.
+     No aplica.
+
+  ✅ Fix 8 — Git push silenciaba stderr
+     Eliminado 2>/dev/null de _push_to_remote(). El mensaje real de git
+     (ej: "Permission denied (publickey)") ahora es visible al usuario.
+     La estructura if/else ya existía y era correcta.
+
+  ✅ Fix extra — Ctrl+C no salía del wizard
+     errors.sh: separados los traps EXIT y INT/TERM.
+     INT/TERM llaman exit 130 después de limpiar; el loop while del
+     wizard ya no continúa tras Ctrl+C.
+
+---
+
+## Checkpoint 2026-05-28 — Secretos .env generados automáticamente
+
+  Objetivo: eliminar contraseñas hardcodeadas en los templates;
+  cada proyecto generado recibe credenciales únicas y seguras.
+
+  ✅ lib/template.sh — nuevas funciones
+     _generate_secret(bytes): usa openssl rand -hex con fallback
+     a LC_ALL=C tr < /dev/urandom. Output: hex puro [0-9a-f].
+     _inject_env_secrets(env_file): dos pasadas sobre el .env copiado.
+       Pasada 1: reemplaza {{SECRET_HEX_N}} con secreto de N bytes.
+                 Guarda var_name → secret en un mapa local.
+       Pasada 2: resuelve {{VAR_NAME}} (bash string substitution,
+                 no sed — evita bug de llaves dobles en BSD sed macOS).
+     Nota de implementación: ${#array[@]} con array asociativo vacío
+     dispara nounset en bash 5.3; se usa flag 'generated=0/1' en su lugar.
+     .env añadido a la lista de find para inyección de {{PROJECT_NAME}}.
+     _inject_env_secrets llamada al final de copy_template().
+
+  ✅ .gitignore — excepción para templates/
+     Regla añadida: !templates/**/.env
+     Los .env de templates son fuente del CLI, no secretos reales.
+
+  ✅ Templates actualizados:
+
+     web-fastapi-postgres:
+       DB_PASSWORD={{SECRET_HEX_32}}  (64 chars hex)
+       DATABASE_URL usa {{DB_PASSWORD}} como referencia cruzada
+       → ambas variables reciben el mismo secreto generado
+
+     web-go-gin-clean:
+       DB_PASSWORD={{SECRET_HEX_32}}
+
+     ai-ml-pytorch:
+       JUPYTER_TOKEN={{SECRET_HEX_24}}
+       Comentario "puedes cambiarlo" eliminado (ya no aplica)
+
+     web-node-nest-mongo:
+       JWT_SECRET={{SECRET_HEX_32}} (nueva variable)
+
+     infra-monitoring-stack:
+       .env creado con GF_SECURITY_ADMIN_PASSWORD={{SECRET_HEX_16}}
+       docker-compose.yml actualizado: ya no hardcodea "admin"
+       → GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+
+  Sin cambios (justificados):
+     ai-llm-rag: OPENAI_API_KEY es una clave de API externa,
+       no generada. No se puede automatizar.
+     cyber-attacker-kali: sin credenciales (AUDIT_MODE, TARGET_SUBNET).
+     infra-local-cluster: solo PROJECT_NAME.
+     cyber-lab-victim-win7: sin .env.
 
 ---
 

@@ -35,6 +35,79 @@ _sed_inplace() {
 }
 
 # -----------------------------------------------------------------------------
+# _generate_secret  (función interna)
+#
+# Genera un string hexadecimal aleatorio criptográficamente seguro.
+# Usa openssl rand si está disponible; cae a /dev/urandom como fallback.
+#
+# Argumentos:
+#   $1 — bytes: número de bytes aleatorios (la salida hex tendrá el doble de chars)
+# -----------------------------------------------------------------------------
+_generate_secret() {
+  local bytes="${1:-32}"
+  if command -v openssl &>/dev/null; then
+    openssl rand -hex "$bytes"
+  else
+    LC_ALL=C tr -dc 'a-f0-9' < /dev/urandom | head -c "$((bytes * 2))"
+  fi
+}
+
+# -----------------------------------------------------------------------------
+# _inject_env_secrets  (función interna)
+#
+# Reemplaza marcadores {{SECRET_HEX_N}} en el .env con valores aleatorios
+# generados por _generate_secret. Luego resuelve referencias cruzadas del
+# tipo {{VAR_NAME}} (usado por ejemplo en DATABASE_URL para referenciar
+# la contraseña generada).
+#
+# Argumentos:
+#   $1 — env_file: ruta al .env a procesar
+# -----------------------------------------------------------------------------
+_inject_env_secrets() {
+  local env_file="$1"
+  [[ -f "$env_file" ]] || return 0
+
+  local -A _secret_map
+  local tmp generated=0
+  tmp=$(mktemp)
+
+  # Pasada 1: generar secretos para cada {{SECRET_HEX_N}}.
+  # Guarda el valor generado en _secret_map keyed por nombre de variable.
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" =~ ^([A-Z_][A-Z0-9_]*)=.*\{\{SECRET_HEX_([0-9]+)\}\} ]]; then
+      local var_name="${BASH_REMATCH[1]}"
+      local bytes="${BASH_REMATCH[2]}"
+      local secret
+      secret=$(_generate_secret "$bytes")
+      _secret_map["$var_name"]="$secret"
+      line="${line//\{\{SECRET_HEX_${bytes}\}\}/$secret}"
+      generated=1
+    fi
+    printf '%s\n' "$line"
+  done < "$env_file" > "$tmp"
+
+  # Pasada 2: sustituir referencias cruzadas {{VAR_NAME}} (ej: en DATABASE_URL).
+  # Usa sustitución de strings en bash — ${#arr[@]} con arrays vacíos dispara
+  # nounset en bash 5.3; el flag 'generated' evita ese path para blueprints sin secretos.
+  if [[ "$generated" -eq 1 ]]; then
+    local content
+    content=$(< "$tmp")
+    for var_name in "${!_secret_map[@]}"; do
+      content="${content//\{\{${var_name}\}\}/${_secret_map[$var_name]}}"
+    done
+    printf '%s\n' "$content" > "$env_file"
+    local vars_list
+    vars_list=$(printf '%s, ' "${!_secret_map[@]}")
+    echo "🔐 Secretos generados en .env: ${vars_list%, }"
+  else
+    mv "$tmp" "$env_file"
+    return 0
+  fi
+
+  rm -f "$tmp"
+}
+
+# -----------------------------------------------------------------------------
 # copy_template
 #
 # Copia el template del blueprint elegido al directorio de destino e inyecta
@@ -53,12 +126,19 @@ copy_template() {
   local target_dir="$2"
   local project_name="$3"
 
+  [[ -d "$template_dir" ]] || { echo "Template no encontrado: $template_dir" >&2; return 1; }
+
   echo "📁 Copiando template desde $template_dir a $target_dir..."
   mkdir -p "$target_dir"
 
   # Copia los archivos (respeta Modelo A: Dockerfile en raíz / Modelo B: en backend/)
-  rsync -av --delete --exclude='.git' --exclude='.DS_Store' --exclude='__pycache__' \
+  rsync -a --delete --exclude='.git' --exclude='.DS_Store' --exclude='__pycache__' \
     "$template_dir/" "$target_dir/"
+
+  if [[ -z "$(ls -A "$target_dir")" ]]; then
+    echo "El template se copió vacío: $template_dir" >&2
+    return 1
+  fi
 
   echo "✅ Estructura copiada."
 
@@ -66,13 +146,16 @@ copy_template() {
   echo "🔧 Inyectando nombre de proyecto: $project_name"
   
   # Buscar solo archivos de texto para evitar corromper binarios
-  find "$target_dir" -type f \( \
+  while IFS= read -r file; do
+    _sed_inplace "s/{{PROJECT_NAME}}/$project_name/g" "$file"
+  done < <(find "$target_dir" -type f \( \
+    -name ".env" -o \
     -name "*.md" -o -name "docker-compose.yml" -o -name "Dockerfile" \
     -o -name "*.py" -o -name "*.sh" -o -name "*.go" -o -name "go.mod" \
     -o -name "package.json" -o -name "nest-cli.json" -o -name "tsconfig.json" \
-    \) | while read -r file; do
-    _sed_inplace "s/{{PROJECT_NAME}}/$project_name/g" "$file"
-  done
-  
+    \))
+
+  _inject_env_secrets "$target_dir/.env"
+
   echo "✨ Configuración completada."
 }

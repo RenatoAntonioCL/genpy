@@ -27,7 +27,8 @@ _genpy_cleanup() {
   fi
 }
 
-trap '_genpy_cleanup' EXIT INT TERM
+trap '_genpy_cleanup' EXIT
+trap 'echo -e "\n  Operación cancelada." >&2; exit 130' INT TERM
 
 # ─── Colores mínimos propios (sin depender de utils.sh) ──────────────────────
 

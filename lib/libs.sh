@@ -3,6 +3,8 @@
 # GenPy — lib/libs.sh (v1.0.0-alpha)
 #
 # Motor de selección e inyección de aditivos.
+
+source "${LIB_DIR:?}/utils.sh"
 #
 # Cambios respecto a v4:
 #   - Los diccionarios ADDONS_* hardcodeados fueron eliminados.
@@ -72,16 +74,12 @@ _inject_python_addons() {
   local req_file="$target_dir/backend/requirements.txt"
   [[ ! -f "$req_file" ]] && req_file="$target_dir/requirements.txt"
 
-  # --- NUEVO: FILTRO DE SEGURIDAD ---
   # Elimina líneas que contengan comandos de Docker o basura
   if [[ -f "$req_file" ]]; then
-      sed -i '' '/^FROM/d' "$req_file"
-      sed -i '' '/^WORKDIR/d' "$req_file"
-      sed -i '' '/^COPY/d' "$req_file"
-      sed -i '' '/^RUN/d' "$req_file"
-      sed -i '' '/^CMD/d' "$req_file"
+    for pattern in '/^FROM/d' '/^WORKDIR/d' '/^COPY/d' '/^RUN/d' '/^CMD/d'; do
+      _sed_inplace "$pattern" "$req_file"
+    done
   fi
-  # ----------------------------------
 
   if [[ ! -f "$req_file" ]]; then
     print_warning "No se encontró requirements.txt — omitiendo: $packages"

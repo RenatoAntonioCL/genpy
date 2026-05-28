@@ -4,6 +4,7 @@
 export MSG_STEP1_TITLE="Project Identification"
 export MSG_PROJECT_NAME_PROMPT="  📛 Project name: "
 export MSG_ERR_NAME_REQ="Project name is required."
+export MSG_ERR_NAME_INVALID="Only letters, numbers, hyphens, and underscores are allowed. Cannot start with a hyphen."
 export MSG_ERR_DIR_EXISTS="A directory with that name already exists: "
 export MSG_ERR_PREFLIGHT="The system does not meet the minimum requirements to proceed."
 

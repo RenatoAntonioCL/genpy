@@ -10,6 +10,9 @@
 #   - print_blueprint_card → lib/ui/card.sh
 # =============================================================================
 
+[[ -n "${_GENPY_UTILS_LOADED:-}" ]] && return 0
+_GENPY_UTILS_LOADED=1
+
 # ─── Paleta de colores ────────────────────────────────────────────────────────
 
 MAGENTA='\033[38;2;255;0;255m'

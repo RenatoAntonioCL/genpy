@@ -1,8 +1,8 @@
 # genpy — Architecture Document
 
 Version:       1.0.0-alpha
-Actualización: 2026-05-21
-Estado:        Semana 1 completada — Semana 2 iniciando
+Actualización: 2026-05-28
+Estado:        Fase 0 completada — flujo create estable y seguro — Semana 2 iniciando
 Autor:         Renato
 
 ---
@@ -48,7 +48,8 @@ Objetivos de v1.0.0:
 
 ## 3. Stack y Restricciones
 
-  Runtime:        Bash 4.0+ (validado por compat.sh)
+  Runtime:        Bash 4.3+ (namerefs usados en libs.sh y menus.sh;
+                  compat.sh valida Bash >= 4 en tiempo de ejecución)
   Plataformas:    Linux, macOS, Windows WSL2
   Dependencias:   Docker, Git, Ollama (solo review)
   Testing:        bats-core (pendiente)
@@ -148,8 +149,12 @@ Objetivos de v1.0.0:
     Regla: ningún módulo hardcodea datos de dominio
 
   errors.sh
-    Trap: EXIT INT TERM → _genpy_cleanup()
-    Cleanup: elimina GENPY_CLEANUP_DIR si hay error
+    Traps separados:
+      EXIT        → _genpy_cleanup() (limpia GENPY_CLEANUP_DIR)
+      INT / TERM  → imprime "Operación cancelada" + exit 130
+    El trap de INT llama exit, que dispara el de EXIT como cadena.
+    Sin separación: Ctrl+C no salía del wizard (el handler retornaba
+    y el while true continuaba desde el read interrumpido).
     Colores propios: _ERR_RED, _ERR_NC (autónomo)
     Funciones: die(), require_command(), require_dir()
 
@@ -255,14 +260,28 @@ Objetivos de v1.0.0:
 ### 5.5 El Flujo genpy create (7 Pasos, Estable)
 
   [1]  Banner + nombre del proyecto
+         Validación: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+         Rechaza: espacios, /, ., $, guion inicial
   [2]  preflight_mode_create()
   [3]  select_git_mode()
   [4]  select_area() → select_blueprint()
   [5]  select_blueprint_addons()
   [6]  print_blueprint_card() + confirm_creation()
-  [7]  copy_template() → inject_blueprint_addons()
+  [7]  copy_template()
+         → rsync del template al directorio destino
+         → _sed_inplace {{PROJECT_NAME}} en .env y archivos de texto
+         → _inject_env_secrets(): genera secretos para {{SECRET_HEX_N}}
+              y resuelve referencias cruzadas {{VAR_NAME}} en el mismo .env
+       → inject_blueprint_addons()
        → setup_git_repository()
        → check_docker_daemon() + inspect_blueprint_ports()
+
+  Secretos .env por blueprint:
+    web-fastapi-postgres  DB_PASSWORD (32 bytes), DATABASE_URL consistente
+    web-go-gin-clean      DB_PASSWORD (32 bytes)
+    ai-ml-pytorch         JUPYTER_TOKEN (24 bytes)
+    web-node-nest-mongo   JWT_SECRET (32 bytes)
+    infra-monitoring-stack GF_SECURITY_ADMIN_PASSWORD (16 bytes)
 
 ### 5.6 Chunking con Sort Semántico (Semana 5)
 
@@ -357,6 +376,19 @@ Objetivos de v1.0.0:
     compat.sh, errors.sh, preflight.sh (modo create)
     i18n/en.sh + es.sh
     CONTEXT.md + ARCHITECTURE.md
+
+  Fase 0 — Estabilización flujo create ✅ Completada (2026-05-28)
+    Fix Ctrl+C: traps EXIT e INT/TERM separados en errors.sh.
+    Fix config.sh: include guard + source explícito en wizard.sh.
+    Fix sed Linux: _sed_inplace() en libs.sh (filtro requirements.txt).
+    Fix dependencias implícitas: utils.sh sourceado en docker.sh,
+      libs.sh, git_manager.sh con include guard.
+    Fix validación nombre de proyecto: regex + i18n.
+    Fix rsync: copy_template() valida template_dir y copia no vacía.
+    Fix subshell: pipe → process substitution en template.sh.
+    Fix git push: 2>/dev/null eliminado, error real visible.
+    Secretos .env: _generate_secret() + _inject_env_secrets() en
+      template.sh. 5 blueprints con credenciales únicas por proyecto.
 
   Semana 2 — Motor de Review sin IA 🔄 Iniciando
     blueprint.toml (web-fastapi-postgres primero)

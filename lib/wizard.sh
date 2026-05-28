@@ -15,7 +15,7 @@
 #   6. Fabricación: copy_template → inject_addons → git → diagnóstico Docker
 # =============================================================================
 
-# source "$LIB_DIR/core/config.sh"
+source "$LIB_DIR/core/config.sh"
 source "$LIB_DIR/core/errors.sh"
 source "$LIB_DIR/utils.sh"
 source "$LIB_DIR/ui/banner.sh"
@@ -32,9 +32,16 @@ print_banner
 
 print_section "$MSG_STEP1_TITLE"
 PROJECT_NAME=""
-while [[ -z "$PROJECT_NAME" ]]; do
+while true; do
   read -rp "  $MSG_PROJECT_NAME_PROMPT" PROJECT_NAME
-  [[ -z "$PROJECT_NAME" ]] && print_error "$MSG_ERR_NAME_REQ"
+  if [[ -z "$PROJECT_NAME" ]]; then
+    print_error "$MSG_ERR_NAME_REQ"
+  elif [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ ]]; then
+    print_error "$MSG_ERR_NAME_INVALID"
+    PROJECT_NAME=""
+  else
+    break
+  fi
 done
 
 PROJECT_DIR="$(pwd)/$PROJECT_NAME"

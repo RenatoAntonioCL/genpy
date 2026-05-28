@@ -10,6 +10,8 @@ set -euo pipefail
 # Los lee desde BLUEPRINT_META[blueprint.ports] en core/config.sh.
 # =============================================================================
 
+source "${LIB_DIR:?}/utils.sh"
+
 check_docker_daemon() {
   if ! command -v docker &>/dev/null; then
     print_warning "Docker CLI no instalado. Diagnósticos saltados."

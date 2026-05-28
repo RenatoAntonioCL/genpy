@@ -11,10 +11,7 @@ set -euo pipefail
 # para que wizard.sh pueda mostrarla en la tarjeta de resumen antes de fabricar.
 # =============================================================================
 
-# Importar utils solo si aún no fue cargado
-if ! declare -f print_success &>/dev/null; then
-  source "$LIB_DIR/utils.sh"
-fi
+source "${LIB_DIR:?}/utils.sh"
 
 # Variable global que wizard.sh lee para el resumen previo a la confirmación
 GIT_MODE="local"
@@ -100,7 +97,7 @@ _push_to_remote() {
   git branch -M main
 
   echo -e "  📤 Subiendo a repositorio $visibility..."
-  if git push -u origin main -q 2>/dev/null; then
+  if git push -u origin main -q; then
     print_success "Código subido a repositorio $visibility: $repo_url"
   else
     print_error "Fallo al subir. Verifica tus llaves SSH o token de acceso."

@@ -4,6 +4,7 @@
 export MSG_STEP1_TITLE="Identificación del Proyecto"
 export MSG_PROJECT_NAME_PROMPT="  📛 Nombre del proyecto: "
 export MSG_ERR_NAME_REQ="El nombre es obligatorio."
+export MSG_ERR_NAME_INVALID="Solo se permiten letras, números, guiones y guiones bajos. No puede empezar con guion."
 export MSG_ERR_DIR_EXISTS="Ya existe un directorio con ese nombre: "
 export MSG_ERR_PREFLIGHT="El sistema no cumple los requisitos mínimos para continuar."
 

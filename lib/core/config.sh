@@ -10,6 +10,9 @@ set -euo pipefail
 # puertos, stacks o descripciones. Todo se lee desde aquí.
 # =============================================================================
 
+[[ -n "${_GENPY_CONFIG_LOADED:-}" ]] && return 0
+_GENPY_CONFIG_LOADED=1
+
 # ─── Versión ──────────────────────────────────────────────────────────────────
 
 readonly GENPY_VERSION="1.0.0-alpha"
