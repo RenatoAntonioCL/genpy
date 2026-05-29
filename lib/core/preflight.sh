@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # lib/core/preflight.sh
 
-# Reutilizar validadores de comando de errors.sh
 source "$LIB_DIR/core/errors.sh"
+source "$LIB_DIR/docker.sh"
 
 preflight_mode_create() {
     local status=0

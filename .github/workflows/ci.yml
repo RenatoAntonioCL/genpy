@@ -24,10 +24,15 @@ jobs:
             docker compose -f "$f" config -q
           done
 
-  # tests (bats-core) — habilitar en Semana 2
-  # unit:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - run: sudo apt-get install -y bats
-  #     - run: bats tests/unit
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run unit tests
+        run: |
+          export GUARDIAN_NON_INTERACTIVE=1
+          bash tests/unit/test_resolver.sh
+          bash tests/unit/test_guardians.sh
+          bash tests/unit/test_assembler.sh
+          bash tests/unit/test_checkpoint.sh

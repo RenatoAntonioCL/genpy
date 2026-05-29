@@ -354,6 +354,7 @@ rollback_to_checkpoint() {
   # ── Eliminar rama de revisión (force — puede tener trabajo sin commitear) ─
 
   local deleted_branch="$CHECKPOINT_BRANCH"
+  local original_branch="$CHECKPOINT_ORIGINAL_BRANCH"
   if git -C "$project_dir" show-ref --verify --quiet \
       "refs/heads/${CHECKPOINT_BRANCH}" 2>/dev/null; then
     git -C "$project_dir" branch -D "$CHECKPOINT_BRANCH" -q 2>/dev/null || true
@@ -362,6 +363,6 @@ rollback_to_checkpoint() {
   CHECKPOINT_BRANCH=""
   CHECKPOINT_ORIGINAL_BRANCH=""
 
-  print_success "Rollback: de vuelta en '${CHECKPOINT_ORIGINAL_BRANCH}', rama '${deleted_branch}' eliminada"
+  print_success "Rollback: de vuelta en '${original_branch}', rama '${deleted_branch}' eliminada"
   return 0
 }

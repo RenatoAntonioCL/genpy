@@ -2,7 +2,23 @@
 set -euo pipefail
 
 # 1. Ubicación absoluta del script donde reside el código fuente (Developer/genpy/bin/genpy)
-BIN_PATH="$(readlink -f "${BASH_SOURCE[0]}")"
+# _resolve_path: shim portable para readlink -f (GNU) vs macOS stock (BSD readlink sin -f).
+# Consistente con el patrón _sed_inplace/_port_in_use del proyecto.
+_resolve_path() {
+  local target="$1"
+  if command -v realpath &>/dev/null; then
+    realpath "$target"
+  elif readlink -f "$target" &>/dev/null 2>&1; then
+    readlink -f "$target"
+  else
+    # Fallback manual: cd al directorio del archivo y capturar pwd
+    local dir file
+    dir="$(cd "$(dirname "$target")" && pwd)"
+    file="$(basename "$target")"
+    echo "$dir/$file"
+  fi
+}
+BIN_PATH="$(_resolve_path "${BASH_SOURCE[0]}")"
 PROJECT_ROOT="$(dirname "$(dirname "$BIN_PATH")")"
 
 # 2. Definir directorios apuntando SIEMPRE al proyecto raíz de desarrollo
