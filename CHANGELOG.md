@@ -2,6 +2,28 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
+## [Unreleased — Semana 2] — 2026-05-28
+
+### Added
+
+- `lib/resolver.sh` — `resolve_range()`: traduce `--lines N-M`, `--function`,
+  `--class`, `--method Clase.método` a `RESOLVE_START`/`RESOLVE_END` (1-based).
+  Bash/grep/awk primero; fallback python3 ast (decisión C2). 24 tests.
+- `lib/guardians.sh` — `run_guardians()` + cinco gates independientes:
+  G1 not-empty, G2 no-markdown, G3 line-count 70–130%, G4 validate_syntax,
+  G5 firmas públicas. Retorna 0/1/2; interacción [R]/[A]/[E].
+  `GUARDIAN_MAX_RETRIES`, `GUARDIAN_NON_INTERACTIVE`. 44 tests.
+- `lib/assembler.sh` — tres funciones para el flujo review:
+  `build_review_context()` (imports + firmas → context blob),
+  `assemble_prompt()` (4 secciones), `reassemble_file()` (head+chunk+tail).
+  48 tests.
+- `lib/template.sh` — `_validate_blueprint_toml()`: valida sección `[meta]`,
+  `version` y `language` en bash puro. Llamada desde `copy_template()` si
+  `.genpy/blueprint.toml` existe en el proyecto generado.
+- `tests/unit/test_resolver.sh`, `test_guardians.sh`, `test_assembler.sh`
+  — 116 tests en bash puro (sin bats). Estrategia mock sin python3.
+- `tests/fixtures/sample.py`, `tests/fixtures/sample_assembler.txt`
+
 ## [Unreleased — Fase 0] — 2026-05-28
 
 ### Added

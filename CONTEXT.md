@@ -2,7 +2,7 @@
 
 > Cargar este archivo al inicio de cada sesión de trabajo.
 > Última actualización: 2026-05-28
-> Estado: Fase 0 completada — flujo create estable y seguro — Semana 2 en curso
+> Estado: Semana 2 casi completa — motor de review sin IA operativo
 
 ---
 
@@ -33,11 +33,15 @@ Funciona hoy:
     - Templates web/AI con Dockerfiles corregidos y buildables
 
 No existe todavía:
-  genpy review  → descartado, reescribir desde cero
-  genpy doctor  → pendiente Semana 4
-  tests/        → pendiente Semana 1 (próximo paso)
-  decisions/    → pendiente (ADRs por generar)
-  .genpy/blueprint.toml → en ningún blueprint todavía
+  genpy review  → Semana 3 (orchestrador 10 pasos, requiere providers IA)
+  genpy doctor  → Semana 4
+  decisions/    → ADRs pendientes
+  tests bats    → los tests actuales son bash puro; bats-core pendiente
+
+En progreso (Semana 2):
+  Motor de review sin IA — resolver ✅, guardians ✅, assembler ✅
+  git_manager.sh: create_checkpoint() / rollback_to_checkpoint() (pendiente)
+  review_strategies/python.sh: funcional; go/js Semana 5
 
 ---
 
@@ -115,10 +119,16 @@ No existe todavía:
                             _find_free_port() y parchea
                             docker-compose.yml en el acto.
     review.sh               Stub Semana 3 (orquestador 10 pasos).
-    resolver.sh             Stub Semana 2.
-    guardians.sh            Stub Semana 2.
-    assembler.sh            Stub Semana 2.
-    review_strategies/      python.sh operativo; go/js Semana 5.
+    resolver.sh             resolve_range(): --lines, --function,
+                            --class, --method Clase.método.
+                            Bash + python3 ast fallback (C2).
+    guardians.sh            run_guardians() + G1–G5. Retorna
+                            0=ok / 1=abort / 2=retry.
+                            GUARDIAN_NON_INTERACTIVE para CI.
+    assembler.sh            build_review_context(), assemble_prompt(),
+                            reassemble_file(). Pasos [4][5][8].
+    review_strategies/      python.sh: validate_syntax, extract_signatures,
+                            get_prompt_rules. go/js Semana 5.
     providers/              ollama.sh, api.sh — stubs Semana 3/5.
 
   scripts/
@@ -128,7 +138,10 @@ No existe todavía:
     update.sh               Funcional. Sin SHA256 todavía.
     doctor.sh               Stub Semana 4.
 
-  tests/                    fixtures/, unit/, integration/, mocks/
+  tests/                    fixtures/sample.py, fixtures/sample_assembler.txt
+                            unit/: test_resolver.sh (24), test_guardians.sh (44),
+                                   test_assembler.sh (48) — bash puro, sin bats
+                            mocks/ollama_mock.sh
   decisions/                ADRs pendientes (ver README).
   docs/                     INSTALL, CONTRIBUTING, SECURITY.
   .github/                  workflows/ci.yml, CONTEXT.md → enlace.
@@ -453,8 +466,10 @@ No existe todavía:
     - templates/web-fastapi-postgres/.genpy/blueprint.toml
     - CHANGELOG.md, README.md actualizado
 
-  Pendiente implementar (no solo stub):
-    resolver, guardians, assembler, genpy review, doctor, bats CI.
+  Implementado desde entonces:
+    resolver.sh ✅, guardians.sh ✅, assembler.sh ✅
+  Pendiente implementar:
+    genpy review (Semana 3), git_manager checkpoints, doctor, bats CI.
 
 ---
 
@@ -480,21 +495,64 @@ Lo que construimos ahora, en orden:
      conserva dunders (__init__). Interacción [R]/[A]/[E] con GUARDIAN_MAX_RETRIES.
      44 tests en tests/unit/test_guardians.sh (44 PASS / 0 FAIL).
 
-  4. assembler.sh
-     Extrae contexto (imports + firmas).
-     Construye el prompt.
-     Re-ensambla el archivo completo.
+  4. assembler.sh  ✅
+     build_review_context(): extrae imports + firmas → context blob.
+     assemble_prompt(): 4 secciones con rol, goal, contexto y chunk.
+     reassemble_file(): head + chunk_revisado + tail → stdout.
+     48 tests en tests/unit/test_assembler.sh (48 PASS / 0 FAIL).
 
-  5. review_strategies/python.sh
-     validate_syntax(), extract_signatures(),
-     get_prompt_rules()
+  5. review_strategies/python.sh  ✅ (funcional)
+     validate_syntax(): python3 -m py_compile.
+     extract_signatures(): grep ^def / ^async def / ^class.
+     get_prompt_rules(): indentación, type hints, f-strings, decoradores.
 
-  6. git_manager.sh robustecer
+  6. git_manager.sh robustecer  ⏳ pendiente
      create_checkpoint(), rollback_to_checkpoint()
 
   Criterio de salida:
     El flujo completo funciona con ollama_mock.sh.
     Sin Ollama real todavía.
+
+---
+
+## Checkpoint 2026-05-28 — Semana 2: motor de review sin IA
+
+  Objetivo: construir y testar los módulos que el orquestador review.sh
+  necesitará en Semana 3. Sin IA real; todo testeable con mocks.
+
+  ✅ lib/template.sh — integración blueprint.toml en genpy create
+     _validate_blueprint_toml(): verifica [meta], version y language
+     en bash puro (grep). copy_template() la invoca si el archivo existe.
+
+  ✅ lib/resolver.sh — resolve_range()
+     Cuatro modos: --lines N-M, --function, --class, --method Clase.método.
+     Bash/grep/awk como camino principal; python3 ast como fallback (C2).
+     Produce globals RESOLVE_START y RESOLVE_END (1-based, inclusive).
+     Include guard _GENPY_RESOLVER_LOADED.
+     24 tests — 24 PASS / 0 FAIL.
+
+  ✅ lib/guardians.sh — run_guardians() + G1–G5
+     G1 not-empty, G2 no-markdown, G3 line-count 70–130%,
+     G4 validate_syntax (skip en métodos indentados),
+     G5 firmas públicas presentes (ignora _privados, conserva __dunders__).
+     run_guardians retorna 0/1/2; interacción [R]/[A]/[E].
+     GUARDIAN_MAX_RETRIES, GUARDIAN_NON_INTERACTIVE para CI.
+     44 tests — 44 PASS / 0 FAIL.
+
+  ✅ lib/assembler.sh — build_review_context / assemble_prompt / reassemble_file
+     build_review_context: extrae imports y firmas → context blob con marcadores.
+     assemble_prompt: 4 secciones (rol, goal, contexto RO, fragmento objetivo).
+     reassemble_file: head(1..START-1) + chunk_revisado + tail(END+1..EOF) → stdout.
+     48 tests — 48 PASS / 0 FAIL.
+
+  ✅ lib/review_strategies/python.sh — funcional
+     validate_syntax: python3 -m py_compile.
+     extract_signatures: grep ^def / ^async def / ^class.
+     get_prompt_rules: cuatro reglas de estilo Python.
+
+  Pendiente para cierre de Semana 2:
+     git_manager.sh: create_checkpoint() / rollback_to_checkpoint()
+     Tests de integración con ollama_mock.sh
 
 ---
 

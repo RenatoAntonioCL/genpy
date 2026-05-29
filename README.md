@@ -3,7 +3,7 @@
 CLI en Bash para generar proyectos desde **blueprints** Docker (9 stacks oficiales).  
 Cada proyecto generado recibe credenciales únicas — sin `changeme`, sin placeholders.
 
-Versión actual: **1.0.0-alpha** · Fase 0 completada (flujo create estable)
+Versión actual: **1.0.0-alpha** · Semana 2 — motor de review sin IA casi completo
 
 ```bash
 genpy create
@@ -31,7 +31,7 @@ Más detalle: [docs/INSTALL.md](docs/INSTALL.md).
 | `genpy create` | Estable |
 | `genpy version` | Estable |
 | `genpy update` / `genpy uninstall` | Estable |
-| `genpy review` | Semana 3 (pendiente) |
+| `genpy review` | Semana 3 — motor sin IA listo, providers pendientes |
 | `genpy doctor` | Semana 4 (pendiente) |
 
 ## Blueprints

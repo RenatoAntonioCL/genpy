@@ -2,7 +2,7 @@
 
 Version:       1.0.0-alpha
 Actualización: 2026-05-28
-Estado:        Fase 0 completada — flujo create estable y seguro — Semana 2 iniciando
+Estado:        Semana 2 casi completa — motor de review sin IA operativo
 Autor:         Renato
 
 ---
@@ -390,12 +390,14 @@ Objetivos de v1.0.0:
     Secretos .env: _generate_secret() + _inject_env_secrets() en
       template.sh. 5 blueprints con credenciales únicas por proyecto.
 
-  Semana 2 — Motor de Review sin IA 🔄 Iniciando
-    blueprint.toml (web-fastapi-postgres primero)
-    resolver.sh, guardians.sh, assembler.sh
-    review_strategies/python.sh
-    git_manager.sh robustecer
-    tests/unit/ + ollama_mock.sh
+  Semana 2 — Motor de Review sin IA 🔄 Casi completa
+    blueprint.toml integrado en genpy create ✅
+    resolver.sh — resolve_range() con 4 modos ✅ (24 tests)
+    guardians.sh — G1-G5 + run_guardians() ✅ (44 tests)
+    assembler.sh — context/prompt/reassemble ✅ (48 tests)
+    review_strategies/python.sh funcional ✅
+    git_manager.sh: create_checkpoint/rollback ⏳
+    tests integración con ollama_mock.sh ⏳
 
   Semana 3 — Integración IA ⏳ Pendiente
     providers/ollama.sh + api.sh
@@ -430,6 +432,7 @@ Objetivos de v1.0.0:
   - blueprints infra y cyber no tienen strategy
     de review (language = infra).
   - Blueprints de terceros no soportados en v1.
-  - tests/ y CI pendientes.
+  - tests/ en bash puro (116 tests); bats-core y CI pendientes.
   - doctor.sh pendiente Semana 4.
+  - git_manager.sh checkpoints pendientes (cierre Semana 2).
 
