@@ -462,12 +462,16 @@ No existe todavía:
 
 Lo que construimos ahora, en orden:
 
-  1. .genpy/blueprint.toml en web-fastapi-postgres  ✅ (plantilla)
-     Falta copiarlo al flujo create y validar parseo.
+  1. .genpy/blueprint.toml en web-fastapi-postgres  ✅ (plantilla + flujo create)
+     rsync copia .genpy/ al proyecto generado.
+     _validate_blueprint_toml() valida existencia, sección [meta],
+     version y language en bash puro (grep). Llamada desde copy_template().
 
-  2. resolver.sh
-     Resuelve rangos: --lines, --function, --class,
-     --method Class.method para Python top-level.
+  2. resolver.sh  ✅
+     resolve_range() implementado: --lines N-M, --function,
+     --class, --method Clase.método para Python top-level.
+     Estrategia: grep/awk primero, python3 ast como fallback (C2).
+     24 tests en tests/unit/test_resolver.sh (24 PASS / 0 FAIL).
 
   3. guardians.sh
      G1: output no vacío

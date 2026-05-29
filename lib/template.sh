@@ -157,5 +157,58 @@ copy_template() {
 
   _inject_env_secrets "$target_dir/.env"
 
+  local blueprint_toml="$target_dir/.genpy/blueprint.toml"
+  if [[ -f "$blueprint_toml" ]]; then
+    if ! _validate_blueprint_toml "$blueprint_toml"; then
+      echo "Error: blueprint.toml inválido en el proyecto generado." >&2
+      return 1
+    fi
+    echo "✅ blueprint.toml validado."
+  fi
+
   echo "✨ Configuración completada."
+}
+
+# -----------------------------------------------------------------------------
+# _validate_blueprint_toml  (función interna)
+#
+# Verifica que el blueprint.toml copiado existe, no está vacío y contiene
+# los campos mínimos requeridos por el contrato GenPy (sección [meta] con
+# language y version). Usa solo grep/bash — sin dependencias externas.
+#
+# Argumentos:
+#   $1 — toml_file: ruta al .genpy/blueprint.toml a validar
+# Retorna:
+#   0 — válido y parseable
+#   1 — inválido (imprime motivo a stderr)
+# -----------------------------------------------------------------------------
+_validate_blueprint_toml() {
+  local toml_file="$1"
+
+  if [[ ! -f "$toml_file" ]]; then
+    echo "Error: blueprint.toml no encontrado: $toml_file" >&2
+    return 1
+  fi
+
+  if [[ ! -s "$toml_file" ]]; then
+    echo "Error: blueprint.toml está vacío: $toml_file" >&2
+    return 1
+  fi
+
+  if ! grep -q '^\[meta\]' "$toml_file"; then
+    echo "Error: blueprint.toml: falta sección [meta]" >&2
+    return 1
+  fi
+
+  if ! grep -qE '^version[[:space:]]*=' "$toml_file"; then
+    echo "Error: blueprint.toml: falta campo version" >&2
+    return 1
+  fi
+
+  if ! grep -qE '^language[[:space:]]*=[[:space:]]*"(python|go|javascript|bash|infra)"' "$toml_file"; then
+    echo "Error: blueprint.toml: campo language ausente o valor desconocido" >&2
+    return 1
+  fi
+
+  return 0
 }
