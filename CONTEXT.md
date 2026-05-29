@@ -2,7 +2,7 @@
 
 > Cargar este archivo al inicio de cada sesión de trabajo.
 > Última actualización: 2026-05-28
-> Estado: Semana 2 casi completa — motor de review sin IA operativo
+> Estado: Semana 2 completa — motor de review sin IA operativo (148 tests)
 
 ---
 
@@ -38,10 +38,10 @@ No existe todavía:
   decisions/    → ADRs pendientes
   tests bats    → los tests actuales son bash puro; bats-core pendiente
 
-En progreso (Semana 2):
-  Motor de review sin IA — resolver ✅, guardians ✅, assembler ✅
-  git_manager.sh: create_checkpoint() / rollback_to_checkpoint() (pendiente)
+Semana 2 completa:
+  resolver ✅, guardians ✅, assembler ✅, git_manager checkpoints ✅
   review_strategies/python.sh: funcional; go/js Semana 5
+  148 tests en bash puro (24 resolver + 44 guardians + 48 assembler + 32 checkpoint)
 
 ---
 
@@ -506,8 +506,13 @@ Lo que construimos ahora, en orden:
      extract_signatures(): grep ^def / ^async def / ^class.
      get_prompt_rules(): indentación, type hints, f-strings, decoradores.
 
-  6. git_manager.sh robustecer  ⏳ pendiente
-     create_checkpoint(), rollback_to_checkpoint()
+  6. git_manager.sh robustecer  ✅
+     create_checkpoint(project_dir, [branch_prefix]): valida repo, HEAD no
+     detached, árbol limpio; crea rama genpy/review/<YYYYMMDD_HHMMSS> y cambia
+     a ella. Sets CHECKPOINT_BRANCH, CHECKPOINT_ORIGINAL_BRANCH.
+     rollback_to_checkpoint(project_dir): vuelve a la rama original y elimina
+     la de revisión con -D (force). Limpia los globals.
+     32 tests en tests/unit/test_checkpoint.sh (32 PASS / 0 FAIL).
 
   Criterio de salida:
     El flujo completo funciona con ollama_mock.sh.
@@ -550,9 +555,7 @@ Lo que construimos ahora, en orden:
      extract_signatures: grep ^def / ^async def / ^class.
      get_prompt_rules: cuatro reglas de estilo Python.
 
-  Pendiente para cierre de Semana 2:
-     git_manager.sh: create_checkpoint() / rollback_to_checkpoint()
-     Tests de integración con ollama_mock.sh
+  Semana 2 completa. Siguiente: Semana 3 — review.sh + providers Ollama/API.
 
 ---
 

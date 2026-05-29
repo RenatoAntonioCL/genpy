@@ -234,3 +234,134 @@ _fallback_manual_remote() {
 
   _push_to_remote "$repo_url" "$visibility"
 }
+
+# =============================================================================
+# Checkpoint de revisión IA — pasos [2] y [10] del flujo genpy review
+# (ARCHITECTURE.md §5.4)
+#
+# Globals de salida:
+#   CHECKPOINT_BRANCH           — rama de revisión creada (genpy/review/<ts>)
+#   CHECKPOINT_ORIGINAL_BRANCH  — rama donde estaba antes del checkpoint
+# =============================================================================
+
+CHECKPOINT_BRANCH=""
+CHECKPOINT_ORIGINAL_BRANCH=""
+
+# -----------------------------------------------------------------------------
+# create_checkpoint
+#
+# Crea una rama de revisión desde la rama actual y cambia a ella.
+# La rama actúa como punto seguro de retorno: si la revisión IA falla o
+# el usuario la rechaza, rollback_to_checkpoint devuelve el proyecto al
+# estado anterior sin tocar ningún archivo vivo.
+#
+# Argumentos:
+#   $1 — project_dir:    ruta absoluta al repositorio del proyecto
+#   $2 — branch_prefix:  prefijo de la rama (default: genpy/review)
+#
+# Sets: CHECKPOINT_BRANCH, CHECKPOINT_ORIGINAL_BRANCH
+# Returns: 0=ok, 1=error
+# -----------------------------------------------------------------------------
+create_checkpoint() {
+  local project_dir="$1"
+  local branch_prefix="${2:-genpy/review}"
+
+  # ── Validaciones ──────────────────────────────────────────────────────────
+
+  if [[ ! -d "$project_dir" ]]; then
+    echo "Error: directorio no encontrado: $project_dir" >&2
+    return 1
+  fi
+
+  if ! git -C "$project_dir" rev-parse --git-dir &>/dev/null 2>&1; then
+    echo "Error: no es un repositorio git: $project_dir" >&2
+    return 1
+  fi
+
+  if ! git -C "$project_dir" rev-parse --verify HEAD &>/dev/null 2>&1; then
+    echo "Error: el repositorio no tiene commits — haz al menos un commit antes." >&2
+    return 1
+  fi
+
+  local original_branch
+  original_branch=$(git -C "$project_dir" branch --show-current 2>/dev/null)
+  if [[ -z "$original_branch" ]]; then
+    echo "Error: HEAD en estado detached — cambia a una rama antes de crear el checkpoint." >&2
+    return 1
+  fi
+
+  if ! git -C "$project_dir" diff --quiet HEAD 2>/dev/null; then
+    echo "Error: el árbol de trabajo tiene cambios sin commitear — haz commit o stash primero." >&2
+    return 1
+  fi
+
+  # ── Crear rama de revisión ────────────────────────────────────────────────
+
+  local timestamp review_branch
+  timestamp=$(date +%Y%m%d_%H%M%S)
+  review_branch="${branch_prefix}/${timestamp}"
+
+  if ! git -C "$project_dir" checkout -b "$review_branch" -q 2>/dev/null; then
+    echo "Error: no se pudo crear la rama '${review_branch}'." >&2
+    return 1
+  fi
+
+  CHECKPOINT_BRANCH="$review_branch"
+  CHECKPOINT_ORIGINAL_BRANCH="$original_branch"
+
+  print_success "Checkpoint: rama '${review_branch}' creada desde '${original_branch}'"
+  return 0
+}
+
+# -----------------------------------------------------------------------------
+# rollback_to_checkpoint
+#
+# Vuelve a la rama original y elimina la rama de revisión.
+# Seguro incluso si la rama de revisión tiene cambios sin commitear:
+# usa -D (force delete) porque el árbol original permanece intacto en HEAD.
+#
+# Argumentos:
+#   $1 — project_dir: ruta absoluta al repositorio del proyecto
+#
+# Requires: CHECKPOINT_BRANCH y CHECKPOINT_ORIGINAL_BRANCH (set by create_checkpoint)
+# Returns: 0=ok, 1=error
+# -----------------------------------------------------------------------------
+rollback_to_checkpoint() {
+  local project_dir="$1"
+
+  if [[ ! -d "$project_dir" ]]; then
+    echo "Error: directorio no encontrado: $project_dir" >&2
+    return 1
+  fi
+
+  if [[ -z "${CHECKPOINT_BRANCH:-}" ]]; then
+    echo "Error: CHECKPOINT_BRANCH no definido — llama create_checkpoint primero." >&2
+    return 1
+  fi
+
+  if [[ -z "${CHECKPOINT_ORIGINAL_BRANCH:-}" ]]; then
+    echo "Error: CHECKPOINT_ORIGINAL_BRANCH no definido." >&2
+    return 1
+  fi
+
+  # ── Volver a la rama original ─────────────────────────────────────────────
+
+  if ! git -C "$project_dir" checkout "$CHECKPOINT_ORIGINAL_BRANCH" -q 2>/dev/null; then
+    echo "Error: no se pudo volver a la rama '${CHECKPOINT_ORIGINAL_BRANCH}'." >&2
+    return 1
+  fi
+
+  # ── Eliminar rama de revisión (force — puede tener trabajo sin commitear) ─
+
+  local deleted_branch="$CHECKPOINT_BRANCH"
+  if git -C "$project_dir" show-ref --verify --quiet \
+      "refs/heads/${CHECKPOINT_BRANCH}" 2>/dev/null; then
+    git -C "$project_dir" branch -D "$CHECKPOINT_BRANCH" -q 2>/dev/null || true
+  fi
+
+  CHECKPOINT_BRANCH=""
+  CHECKPOINT_ORIGINAL_BRANCH=""
+
+  print_success "Rollback: de vuelta en '${CHECKPOINT_ORIGINAL_BRANCH}', rama '${deleted_branch}' eliminada"
+  return 0
+}
