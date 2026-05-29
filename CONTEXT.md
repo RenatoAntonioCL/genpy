@@ -473,12 +473,12 @@ Lo que construimos ahora, en orden:
      Estrategia: grep/awk primero, python3 ast como fallback (C2).
      24 tests en tests/unit/test_resolver.sh (24 PASS / 0 FAIL).
 
-  3. guardians.sh
-     G1: output no vacío
-     G2: sin markdown ni texto conversacional
-     G3: line count entre 70% y 130% del original
-     G4: validate_syntax() de la strategy
-     G5: firmas públicas presentes
+  3. guardians.sh  ✅
+     run_guardians() + G1–G5 implementados.
+     G4 omite chunks de métodos indentados (validación completa en paso [8]).
+     G5 verifica firmas top-level e indentadas; ignora privados (_foo),
+     conserva dunders (__init__). Interacción [R]/[A]/[E] con GUARDIAN_MAX_RETRIES.
+     44 tests en tests/unit/test_guardians.sh (44 PASS / 0 FAIL).
 
   4. assembler.sh
      Extrae contexto (imports + firmas).
