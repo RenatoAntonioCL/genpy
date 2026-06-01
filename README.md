@@ -1,18 +1,52 @@
+<div align="center">
+
 # GenPy
+
+### Proyectos Docker listos para correr, en una sola orden.
+
+GenPy genera **9 stacks oficiales** (web · AI · infra · security) con **credenciales
+únicas por proyecto** ya inyectadas. Sin `changeme`, sin placeholders, sin cablear el
+`.env` a mano.
 
 [![CI](https://github.com/RenatoAntonioCL/genpy/actions/workflows/ci.yml/badge.svg)](https://github.com/RenatoAntonioCL/genpy/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
 [![Version](https://img.shields.io/badge/version-1.0.0--alpha-blue.svg)](./CHANGELOG.md)
 [![Bash](https://img.shields.io/badge/bash-4.3%2B-lightgrey.svg)](#requisitos)
 
-CLI en Bash para generar proyectos desde **blueprints** Docker (9 stacks oficiales).  
-Cada proyecto generado recibe credenciales únicas — sin `changeme`, sin placeholders.
+[**🌐 Sitio**](https://genpy-cli.vercel.app/) · [Instalación](#instalación) · [Blueprints](#blueprints) · [Arquitectura](ARCHITECTURE.md)
 
-Versión actual: **1.0.0-alpha** · Semana 2 — motor de review sin IA casi completo
+</div>
+
+---
+
+## El problema
+
+Arrancar un proyecto nuevo son 30 minutos de copiar `docker-compose`, inventar
+contraseñas, cablear variables de entorno y cruzar los dedos para que levante a la
+primera. **GenPy lo resuelve en una orden** y te entrega un proyecto que ya corre.
 
 ```bash
 genpy create
+#  ├─ elegís un stack            (ej. FastAPI + PostgreSQL)
+#  ├─ GenPy lo genera            con credenciales únicas ya inyectadas en el .env
+#  └─ queda listo para levantar:
+cd mi-proyecto && docker compose up -d --build
+curl localhost:8000              # ✅ responde
 ```
+
+## Por qué GenPy
+
+- 🔐 **Credenciales únicas por proyecto** — secretos generados con `openssl rand` e
+  inyectados en el `.env`. Cero `changeme`, cero placeholders.
+- 📦 **9 blueprints oficiales** listos para `docker compose up` — web, AI/LLM, infra y
+  labs de seguridad.
+- 🧩 **Sin dependencias en el host** más allá de Bash, Docker y Git. La CLI no necesita
+  Python, Node ni Go.
+- 🛡️ **Determinista y testeado** — preflight de entorno, 148 tests en bash puro y CI en
+  verde.
+- 🌎 **Bilingüe (es/en)** desde la v1.
+
+> Estado: **v1.0.0-alpha** · el motor de review sin IA está casi completo (Semana 2).
 
 ## Requisitos
 
