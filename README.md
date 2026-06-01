@@ -54,6 +54,7 @@ Más detalle: [docs/INSTALL.md](docs/INSTALL.md).
 
 - [CONTEXT.md](CONTEXT.md) — brief para agentes / sesiones de trabajo
 - [ARCHITECTURE.md](ARCHITECTURE.md) — diseño, flujos, roadmap
+- [decisions/](decisions/) — ADRs (decisiones de arquitectura, A1–D3)
 - [CHANGELOG.md](CHANGELOG.md) — historial de versiones
 
 ## Estructura del repositorio
@@ -70,7 +71,7 @@ genpy/
 ├── scripts/           # install, update, uninstall, doctor (stub)
 ├── templates/         # 9 blueprints
 ├── tests/             # bats + mocks (en progreso)
-├── decisions/         # ADRs (pendiente)
+├── decisions/         # ADRs formales (A1–D3)
 └── docs/
 ```
 

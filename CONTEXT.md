@@ -35,7 +35,7 @@ Funciona hoy:
 No existe todavía:
   genpy review  → Semana 3 (orchestrador 10 pasos, requiere providers IA)
   genpy doctor  → Semana 4
-  decisions/    → ADRs pendientes
+  decisions/    → ADRs formales A1–D3 (migrados; ver decisions/README.md)
   tests bats    → los tests actuales son bash puro; bats-core pendiente
 
 Semana 2 completa:
@@ -142,7 +142,7 @@ Semana 2 completa:
                             unit/: test_resolver.sh (24), test_guardians.sh (44),
                                    test_assembler.sh (48) — bash puro, sin bats
                             mocks/ollama_mock.sh
-  decisions/                ADRs pendientes (ver README).
+  decisions/                ADRs formales A1–D3 migrados (ver README).
   docs/                     INSTALL, CONTRIBUTING, SECURITY.
   .github/                  workflows/ci.yml, CONTEXT.md → enlace.
 
@@ -222,6 +222,9 @@ Semana 2 completa:
 ---
 
 ## Decisiones Cerradas
+
+  > Versión formal y detallada en `decisions/` (ADR-0001…0012). Esta lista es el
+  > resumen rápido; ante diferencias, manda el ADR.
 
   A1  Bash 4.0+ mínimo. compat.sh detecta y valida.
   A2  Linux + macOS + WSL2 desde v1.
