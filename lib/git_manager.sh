@@ -55,9 +55,12 @@ _create_github_repo() {
 
   local tmpfile http_code body
   tmpfile=$(mktemp)
-  http_code=$(curl -s -o "$tmpfile" -w "%{http_code}" \
+  # El header con el token se pasa por stdin (-H @-), no como argumento, para que
+  # NO quede visible en la lista de procesos (ps). El body POST va por -d.
+  http_code=$(printf 'Authorization: token %s\n' "$token" \
+    | curl -s -o "$tmpfile" -w "%{http_code}" \
     -X POST \
-    -H "Authorization: token $token" \
+    -H @- \
     -H "Accept: application/vnd.github.v3+json" \
     -H "Content-Type: application/json" \
     -d "$json_body" \

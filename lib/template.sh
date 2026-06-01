@@ -96,11 +96,13 @@ _inject_env_secrets() {
       content="${content//\{\{${var_name}\}\}/${_secret_map[$var_name]}}"
     done
     printf '%s\n' "$content" > "$env_file"
+    chmod 600 "$env_file"   # el .env contiene secretos reales: solo el dueño lo lee
     local vars_list
     vars_list=$(printf '%s, ' "${!_secret_map[@]}")
     echo "🔐 Secretos generados en .env: ${vars_list%, }"
   else
     mv "$tmp" "$env_file"
+    chmod 600 "$env_file"   # permisos restrictivos también para .env sin secretos generados
     return 0
   fi
 
