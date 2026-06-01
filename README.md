@@ -83,6 +83,14 @@ docker compose up -d --build
 curl -s http://127.0.0.1:8000/
 ```
 
+## Problemas conocidos
+
+- `lib/resolver.sh` puede disparar un **falso positivo** de here-document bajo
+  `bash -n` (un heredoc de Python embebido en una sustitución de comando). Es un
+  *warning*, no un error.
+- **No afecta el comportamiento en runtime**: `bash -n` retorna 0 y el CI queda verde.
+- Cubierto por tests (`tests/unit/test_resolver.sh`).
+
 ## Licencia
 
 MIT © [Renato Antonio](https://github.com/RenatoAntonioCL)
