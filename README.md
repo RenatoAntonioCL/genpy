@@ -1,5 +1,10 @@
 # GenPy
 
+[![CI](https://github.com/RenatoAntonioCL/genpy/actions/workflows/ci.yml/badge.svg)](https://github.com/RenatoAntonioCL/genpy/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0--alpha-blue.svg)](./CHANGELOG.md)
+[![Bash](https://img.shields.io/badge/bash-4.3%2B-lightgrey.svg)](#requisitos)
+
 CLI en Bash para generar proyectos desde **blueprints** Docker (9 stacks oficiales).  
 Cada proyecto generado recibe credenciales únicas — sin `changeme`, sin placeholders.
 
