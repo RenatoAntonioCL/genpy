@@ -20,9 +20,10 @@ original** (A1–D3) tal como se referencia en `CONTEXT.md` y en comentarios del
 | [0008](0008-hybrid-semantic-detection.md) | C2 | Detección semántica híbrida (bash + ast) | Aceptada |
 | [0009](0009-decorators-comments-default.md) | C3 | Decoradores y comentarios por defecto | Aceptada |
 | [0010](0010-i18n-en-es.md) | D1 | i18n inglés + español | Aceptada |
-| [0011](0011-testing-and-ci.md) | D2 | Tests + CI GitHub Actions | Aceptada (revisada) |
+| [0011](0011-testing-and-ci.md) | D2 | Tests bash puro (sin bats) + CI GitHub Actions | Aceptada |
 | [0012](0012-official-blueprints-only.md) | D3 | Solo blueprints oficiales en v1 | Aceptada |
 
 > Migración completada: las decisiones A1–D3 que vivían en `CONTEXT.md` están ahora como
-> ADRs formales. ADR-0011 documenta una divergencia entre lo decidido (bats-core) y la
-> implementación vigente (bash puro sin bats) que conviene reconciliar.
+> ADRs formales. ADR-0001 fija el mínimo real de Bash en 4.3 (namerefs) y ADR-0011
+> registra la estrategia vigente de tests en bash puro (sin bats); ambas reconciliadas
+> con el código y el resto de los documentos.

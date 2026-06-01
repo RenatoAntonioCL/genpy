@@ -2,7 +2,7 @@
 
 ## Requisitos
 
-- Bash 4.0+
+- Bash 4.3+
 - Git
 - Docker (para blueprints con contenedores)
 - macOS, Linux o WSL2

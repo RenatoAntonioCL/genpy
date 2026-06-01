@@ -70,7 +70,7 @@ genpy/
 ├── lib/providers/
 ├── scripts/           # install, update, uninstall, doctor (stub)
 ├── templates/         # 9 blueprints
-├── tests/             # bats + mocks (en progreso)
+├── tests/             # bash puro + mocks (148 tests, sin bats)
 ├── decisions/         # ADRs formales (A1–D3)
 └── docs/
 ```

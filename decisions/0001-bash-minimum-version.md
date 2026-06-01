@@ -5,23 +5,25 @@
 
 ## Contexto
 
-GenPy es una CLI escrita en Bash. Necesita fijar un intérprete mínimo soportado para
-poder usar características modernas (arrays asociativos, `${var,,}`, etc.) sin romper en
-entornos viejos.
+GenPy es una CLI escrita en Bash. Necesita fijar un intérprete mínimo soportado. El
+código usa **namerefs** (`local -n`) en `lib/libs.sh`, `lib/guardians.sh` y
+`lib/ui/menus.sh`. Los namerefs existen **desde Bash 4.3**, así que ese es el piso real,
+no 4.0.
 
 ## Decisión
 
-Bash **4.x** como mínimo. `lib/core/compat.sh` detecta la versión y la valida en el
-preflight.
+Bash **4.3+** como mínimo. `lib/core/compat.sh` lo valida en el preflight y aborta con
+un mensaje claro (con tip de `brew install bash` en macOS).
 
 ## Consecuencias
 
-- (+) Permite usar features de Bash 4 sin guardas por todos lados.
+- (+) Permite usar namerefs y demás features de Bash 4.3 sin guardas.
 - (−) Excluye el Bash 3.2 que macOS trae por defecto: el usuario debe instalar Bash
   moderno (Homebrew). `compat.sh` lo detecta y avisa.
 
-## Nota
+## Historial
 
-Hay una inconsistencia a resolver: `CONTEXT.md` registra "Bash 4.0+" mientras que
-`README.md` (sección Requisitos) y el badge piden "Bash 4.3+". Conviene unificar el
-número exacto en código (`compat.sh`), README y este ADR.
+- Inicialmente se documentó "Bash 4.0+" y `compat.sh` solo chequeaba el *major*
+  (`BASH_VERSINFO < 4`). Eso era un **bug**: permitía pasar con Bash 4.0–4.2 y luego
+  fallaba al ejecutar namerefs. Corregido para exigir 4.3 (major+minor). README, badge,
+  `docs/INSTALL.md` y `ARCHITECTURE.md` quedaron unificados en 4.3+.

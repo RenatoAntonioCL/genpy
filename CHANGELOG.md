@@ -20,8 +20,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 - `lib/template.sh` — `_validate_blueprint_toml()`: valida sección `[meta]`,
   `version` y `language` en bash puro. Llamada desde `copy_template()` si
   `.genpy/blueprint.toml` existe en el proyecto generado.
-- `tests/unit/test_resolver.sh`, `test_guardians.sh`, `test_assembler.sh`
-  — 116 tests en bash puro (sin bats). Estrategia mock sin python3.
+- `tests/unit/test_resolver.sh`, `test_guardians.sh`, `test_assembler.sh`,
+  `test_checkpoint.sh` — 148 tests en bash puro (sin bats). Estrategia mock sin python3.
 - `tests/fixtures/sample.py`, `tests/fixtures/sample_assembler.txt`
 
 ## [Unreleased — Fase 0] — 2026-05-28

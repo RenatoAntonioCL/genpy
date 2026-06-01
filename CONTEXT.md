@@ -36,7 +36,7 @@ No existe todavía:
   genpy review  → Semana 3 (orchestrador 10 pasos, requiere providers IA)
   genpy doctor  → Semana 4
   decisions/    → ADRs formales A1–D3 (migrados; ver decisions/README.md)
-  tests bats    → los tests actuales son bash puro; bats-core pendiente
+  (bats-core descartado → la suite es bash puro, 148 tests, ya existen)
 
 Semana 2 completa:
   resolver ✅, guardians ✅, assembler ✅, git_manager checkpoints ✅
@@ -52,7 +52,7 @@ Semana 2 completa:
                             carga i18n, define comandos.
 
   lib/core/
-    compat.sh               Detecta OS, arquitectura, Bash 4+.
+    compat.sh               Detecta OS, arquitectura, Bash 4.3+.
                             Provee _port_in_use() portable y
                             _find_free_port() para auto-remapeo.
                             Exporta: GENPY_OS, GENPY_ARCH.
@@ -140,7 +140,8 @@ Semana 2 completa:
 
   tests/                    fixtures/sample.py, fixtures/sample_assembler.txt
                             unit/: test_resolver.sh (24), test_guardians.sh (44),
-                                   test_assembler.sh (48) — bash puro, sin bats
+                                   test_assembler.sh (48), test_checkpoint.sh (32)
+                                   — 148 tests, bash puro, sin bats
                             mocks/ollama_mock.sh
   decisions/                ADRs formales A1–D3 migrados (ver README).
   docs/                     INSTALL, CONTRIBUTING, SECURITY.
@@ -179,7 +180,7 @@ Semana 2 completa:
     Funciones con responsabilidad única.
     trap en todos los puntos de fallo.
     Sin dependencias del host más allá de
-    Bash 4+, Docker, Git y Ollama.
+    Bash 4.3+, Docker, Git y Ollama.
 
   P3 — CONTENEDORES AISLADOS
     Cada blueprint es autónomo via docker-compose.yml.
@@ -226,7 +227,7 @@ Semana 2 completa:
   > Versión formal y detallada en `decisions/` (ADR-0001…0012). Esta lista es el
   > resumen rápido; ante diferencias, manda el ADR.
 
-  A1  Bash 4.0+ mínimo. compat.sh detecta y valida.
+  A1  Bash 4.3+ mínimo (namerefs). compat.sh detecta y valida.
   A2  Linux + macOS + WSL2 desde v1.
   A3  git clone + install.sh Y package managers.
   B1  Modelo: detectar lo disponible en Ollama.
@@ -240,7 +241,7 @@ Semana 2 completa:
   C3  Decoradores y comentarios: incluidos por defecto,
       configurables en blueprint.toml.
   D1  i18n: inglés + español desde v1.
-  D2  Tests con bats-core + CI GitHub Actions.
+  D2  Tests en bash puro (sin bats) + CI GitHub Actions.
   D3  Solo blueprints oficiales del repo en v1.
 
 ---
@@ -472,7 +473,7 @@ Semana 2 completa:
   Implementado desde entonces:
     resolver.sh ✅, guardians.sh ✅, assembler.sh ✅
   Pendiente implementar:
-    genpy review (Semana 3), git_manager checkpoints, doctor, bats CI.
+    genpy review (Semana 3), doctor (Semana 4).
 
 ---
 

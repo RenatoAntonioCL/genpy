@@ -38,7 +38,7 @@ Objetivos de v1.0.0:
   P3 — CONTENEDORES AISLADOS
     Blueprints autónomos via docker-compose.yml.
     Sin dependencias globales en el host más allá de
-    Bash 4+, Docker, Git y Ollama.
+    Bash 4.3+, Docker, Git y Ollama.
 
   P4 — PROGRESO INCREMENTAL
     El sistema valida el entorno antes de avanzar.
@@ -48,12 +48,12 @@ Objetivos de v1.0.0:
 
 ## 3. Stack y Restricciones
 
-  Runtime:        Bash 4.3+ (namerefs usados en libs.sh y menus.sh;
-                  compat.sh valida Bash >= 4 en tiempo de ejecución)
+  Runtime:        Bash 4.3+ (namerefs usados en libs.sh, guardians.sh y menus.sh;
+                  compat.sh valida Bash >= 4.3 en tiempo de ejecución)
   Plataformas:    Linux, macOS, Windows WSL2
   Dependencias:   Docker, Git, Ollama (solo review)
-  Testing:        bats-core (pendiente)
-  CI:             GitHub Actions (pendiente)
+  Testing:        bash puro, sin bats (148 tests)
+  CI:             GitHub Actions (activo)
   Versioning:     Semver estricto
 
   Restricciones:
@@ -116,7 +116,7 @@ Objetivos de v1.0.0:
   │   │   └── ollama_mock.sh
   │   ├── unit/
   │   └── integration/
-  ├── decisions/               ← Pendiente
+  ├── decisions/               ← ADRs 0001–0012
   ├── docs/
   │   ├── INSTALL.md
   │   ├── CONTRIBUTING.md
@@ -137,7 +137,7 @@ Objetivos de v1.0.0:
 
   compat.sh
     Detecta: OS (GENPY_OS), arquitectura (GENPY_ARCH)
-    Valida: Bash >= 4.0, aborta con mensaje si no
+    Valida: Bash >= 4.3, aborta con mensaje si no
     Provee: _port_in_use() portable
             (ss → netstat → /dev/tcp fallback)
 
@@ -432,6 +432,6 @@ Objetivos de v1.0.0:
   - blueprints infra y cyber no tienen strategy
     de review (language = infra).
   - Blueprints de terceros no soportados en v1.
-  - tests/ en bash puro (148 tests); bats-core y CI pendientes.
+  - tests/ en bash puro (148 tests); bats-core descartado, CI activo.
   - doctor.sh pendiente Semana 4.
 
