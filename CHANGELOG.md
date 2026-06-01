@@ -90,6 +90,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/).
 
 - Prototipos descartados `scripts/review.sh` (curl directo a Ollama)
 
-## [Historial anterior]
+## Procedencia (1ª generación)
 
-Ver commits previos a la refactorización `1.0.0-alpha`.
+GenPy nació como un **generador multi-lenguaje** que evolucionó hasta **v3.0.0**
+(soporte Docker dinámico para Go, Rust, Python y Node). La línea actual es una
+**reescritura completa en Bash** con blueprints, que reinicia el versionado en
+`1.0.0-alpha`.
+
+Por eso el versionado actual no continúa desde v3: es una nueva generación. La primera
+se conserva en el tag **`legacy/v3.0.0`** (y en el historial de `main`), para preservar
+de dónde viene el proyecto.
