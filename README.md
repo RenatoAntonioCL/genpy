@@ -13,7 +13,7 @@ GenPy genera **9 stacks oficiales** (web · AI · infra · security) con **crede
 [![Version](https://img.shields.io/badge/version-1.0.0--alpha-blue.svg)](./CHANGELOG.md)
 [![Bash](https://img.shields.io/badge/bash-4.3%2B-lightgrey.svg)](#requisitos)
 
-[**🌐 Sitio**](https://genpy-cli.vercel.app/) · [Instalación](#instalación) · [Blueprints](#blueprints) · [Arquitectura](ARCHITECTURE.md)
+[**🌐 Sitio**](https://genpy-cli.vercel.app/) · [Instalación](#instalación) · [Prueba en 60 segundos](#prueba-en-60-segundos) · [Blueprints](#blueprints)
 
 </div>
 
@@ -27,7 +27,7 @@ primera. **GenPy lo resuelve en una orden** y te entrega un proyecto que ya corr
 
 ```bash
 genpy create
-#  ├─ elegís un stack            (ej. FastAPI + PostgreSQL)
+#  ├─ eliges un stack            (ej. FastAPI + PostgreSQL)
 #  ├─ GenPy lo genera            con credenciales únicas ya inyectadas en el .env
 #  └─ queda listo para levantar:
 cd mi-proyecto && docker compose up -d --build
@@ -62,6 +62,47 @@ bash scripts/install.sh
 ```
 
 Más detalle: [docs/INSTALL.md](docs/INSTALL.md).
+
+## Prueba en 60 segundos
+
+Con GenPy instalado, un solo comando te deja un proyecto corriendo. El wizard te guía en
+6 pasos:
+
+```bash
+genpy create
+#  1) Nombre del proyecto     → mi-api
+#  2) Modo git                → local
+#  3) Área y blueprint        → Web · FastAPI + PostgreSQL
+#  4) Aditivos (opcional)
+#  5) Confirmas el resumen
+#  6) GenPy fabrica el proyecto e inyecta las credenciales
+```
+
+El `.env` del blueprint trae **placeholders**; tu proyecto generado trae **secretos
+reales y únicos** (`openssl rand -hex 32`):
+
+```diff
+# plantilla del blueprint
+- DB_PASSWORD={{SECRET_HEX_32}}
+
+# tu proyecto generado (mi-api/.env)
++ DB_PASSWORD=9f2c4b1e7a...  (64 hex únicos, distintos en cada proyecto)
+```
+
+Y queda listo para levantar y verificar:
+
+```bash
+cd mi-api
+docker compose up -d --build
+curl localhost:8000        # ✅ responde
+```
+
+> ¿Quieres verlo sin instalar nada? Cualquier blueprint corre por sí solo:
+> ```bash
+> cd templates/web-fastapi-postgres
+> docker compose up -d --build
+> curl -s http://127.0.0.1:8000/
+> ```
 
 ## Comandos
 
@@ -107,14 +148,6 @@ genpy/
 ├── tests/             # bash puro + mocks (148 tests, sin bats)
 ├── decisions/         # ADRs formales (A1–D3)
 └── docs/
-```
-
-## Desarrollo local (smoke Docker)
-
-```bash
-cd templates/web-fastapi-postgres
-docker compose up -d --build
-curl -s http://127.0.0.1:8000/
 ```
 
 ## Problemas conocidos
