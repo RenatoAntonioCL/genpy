@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build tarball
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          git archive \
+            --format=tar.gz \
+            --prefix="genpy-${VERSION}/" \
+            HEAD > "genpy-${VERSION}.tar.gz"
+          sha256sum "genpy-${VERSION}.tar.gz" > "genpy-${VERSION}.tar.gz.sha256"
+
+      - name: Create GitHub Release
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          gh release create "$VERSION" \
+            --title "genpy ${VERSION}" \
+            --generate-notes \
+            "genpy-${VERSION}.tar.gz" \
+            "genpy-${VERSION}.tar.gz.sha256"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

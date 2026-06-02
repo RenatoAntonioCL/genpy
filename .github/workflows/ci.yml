@@ -7,27 +7,68 @@ on:
     branches: [main]
 
 jobs:
-  lint-shell:
+  # ── ShellCheck ──────────────────────────────────────────────────────────────
+  shellcheck:
+    name: ShellCheck
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify Bash syntax
-        run: |
-          find bin lib scripts tests -name '*.sh' -print0 | while IFS= read -r -d '' f; do
-            bash -n "$f"
-          done
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
 
-      - name: Validate docker-compose templates
+      - name: Run ShellCheck
+        run: |
+          # SC1090/SC1091: source con ruta dinámica (patrón del proyecto)
+          # SC2034: variables exportadas para scripts sourciados
+          find lib scripts tests -name '*.sh' -print0 \
+            | xargs -0 shellcheck --severity=warning \
+                -e SC1090,SC1091,SC2034
+          shellcheck --severity=warning -e SC1090,SC1091,SC2034 bin/genpy
+
+  # ── Sintaxis Bash ────────────────────────────────────────────────────────────
+  bash-syntax:
+    name: Bash syntax (bash -n)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify bash -n on all shell files
+        run: |
+          find bin lib scripts tests -name '*.sh' -print0 \
+            | xargs -0 -n1 bash -n
+          bash -n bin/genpy
+
+  # ── Validación de templates Docker ──────────────────────────────────────────
+  docker-compose:
+    name: docker-compose validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate all docker-compose templates
         run: |
           for f in templates/*/docker-compose.yml; do
+            echo "  Validando: $f"
             docker compose -f "$f" config -q
           done
 
+  # ── Tests unitarios ──────────────────────────────────────────────────────────
   unit:
-    runs-on: ubuntu-latest
+    name: Unit tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install bash 4+ (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bash || true
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
 
       - name: Run unit tests
         run: |
@@ -36,3 +77,32 @@ jobs:
           bash tests/unit/test_guardians.sh
           bash tests/unit/test_assembler.sh
           bash tests/unit/test_checkpoint.sh
+          bash tests/unit/test_ollama_provider.sh
+
+  # ── Tests de integración ─────────────────────────────────────────────────────
+  integration:
+    name: Integration tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git identity for temp repos
+        run: |
+          git config --global user.email "ci@genpy.test"
+          git config --global user.name "GenPy CI"
+
+      - name: Install bash 4+ (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install bash || true
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
+
+      - name: Run integration tests
+        run: |
+          export GUARDIAN_NON_INTERACTIVE=1
+          export GENPY_REVIEW_NON_INTERACTIVE=1
+          bash tests/integration/test_review_flow.sh

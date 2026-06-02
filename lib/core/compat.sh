@@ -2,8 +2,10 @@
 # lib/core/compat.sh
 
 # Detectar OS y Arquitectura
-export GENPY_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
-export GENPY_ARCH="$(uname -m)"
+GENPY_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+export GENPY_OS
+GENPY_ARCH="$(uname -m)"
+export GENPY_ARCH
 
 # Validar versión de Bash (Invariante A1 / ADR-0001)
 # Mínimo 4.3: se usan namerefs (local -n) en libs.sh, guardians.sh y menus.sh.
