@@ -1,8 +1,8 @@
 # genpy — AI Context Brief
 
 > Cargar este archivo al inicio de cada sesión de trabajo.
-> Última actualización: 2026-05-28
-> Estado: Semana 2 completa — motor de review sin IA operativo (148 tests)
+> Última actualización: 2026-06-02
+> Estado: Semana 3 completa — genpy review funcional con Ollama (177 tests)
 
 ---
 
@@ -32,16 +32,26 @@ Funciona hoy:
     - Remapeo automático de puertos ocupados en docker-compose.yml
     - Templates web/AI con Dockerfiles corregidos y buildables
 
-No existe todavía:
-  genpy review  → Semana 3 (orchestrador 10 pasos, requiere providers IA)
-  genpy doctor  → Semana 4
-  decisions/    → ADRs formales A1–D3 (migrados; ver decisions/README.md)
-  (bats-core descartado → la suite es bash puro, 148 tests, ya existen)
+  genpy review → flujo de 10 pasos funcional con Ollama
+    - Selectores: --lines N-M, --function, --class, --method Clase.método
+    - Provider Ollama (localhost:11434) con detección automática de modelo
+    - Preflight: árbol git limpio + Ollama accesible
+    - Git checkpoint automático + rollback en caso de abort/error
+    - 5 guardianes de validación del output IA (G1–G5)
+    - Diff visual + confirmación [A]ceptar/[R]echazar/[E]ditar
+    - Opciones: --goal, --provider, --model
 
-Semana 2 completa:
-  resolver ✅, guardians ✅, assembler ✅, git_manager checkpoints ✅
-  review_strategies/python.sh: funcional; go/js Semana 5
-  148 tests en bash puro (24 resolver + 44 guardians + 48 assembler + 32 checkpoint)
+No existe todavía:
+  genpy doctor  → Semana 4
+  providers/api.sh → Semana 5 (API externa: OpenAI/Anthropic/custom)
+  review_strategies/go.sh y javascript.sh → Semana 5 (stubs no-bloqueantes)
+  Chunking semántico (§5.6) → Semana 5 (archivos > 500 líneas)
+
+Semana 3 completa:
+  ollama.sh ✅, review.sh ✅, preflight_mode_review ✅, bin/genpy review ✅
+  177 tests en bash puro:
+    24 resolver + 44 guardians + 48 assembler + 32 checkpoint
+    13 ollama_provider + 16 review_flow (integración)
 
 ---
 
@@ -118,7 +128,13 @@ Semana 2 completa:
                             Auto-remapea puertos ocupados con
                             _find_free_port() y parchea
                             docker-compose.yml en el acto.
-    review.sh               Stub Semana 3 (orquestador 10 pasos).
+    review.sh               genpy_review() — orquestador 10 pasos.
+                            Selectores: --lines N-M, --function,
+                            --class, --method Clase.método.
+                            Opciones: --goal, --provider, --model.
+                            Permite inyección de mock en tests
+                            (check declare -f ai_complete antes de
+                            sourcear el provider).
     resolver.sh             resolve_range(): --lines, --function,
                             --class, --method Clase.método.
                             Bash + python3 ast fallback (C2).
@@ -127,9 +143,15 @@ Semana 2 completa:
                             GUARDIAN_NON_INTERACTIVE para CI.
     assembler.sh            build_review_context(), assemble_prompt(),
                             reassemble_file(). Pasos [4][5][8].
-    review_strategies/      python.sh: validate_syntax, extract_signatures,
-                            get_prompt_rules. go/js Semana 5.
-    providers/              ollama.sh, api.sh — stubs Semana 3/5.
+    review_strategies/      python.sh: funcional.
+                            go.sh, javascript.sh: stubs no-bloqueantes
+                            (validate_syntax retorna 0). Semana 5.
+    providers/              ollama.sh: ai_complete() funcional.
+                              POST /api/generate, stream:false.
+                              Detección modelo: GENPY_MODEL >
+                              ollama list > qwen2.5:3b (fallback).
+                              jq con fallback python3.
+                            api.sh: stub Semana 5.
 
   scripts/
     install.sh              Instalador. Pendiente reescritura
@@ -140,9 +162,13 @@ Semana 2 completa:
 
   tests/                    fixtures/sample.py, fixtures/sample_assembler.txt
                             unit/: test_resolver.sh (24), test_guardians.sh (44),
-                                   test_assembler.sh (48), test_checkpoint.sh (32)
-                                   — 148 tests, bash puro, sin bats
+                                   test_assembler.sh (48), test_checkpoint.sh (32),
+                                   test_ollama_provider.sh (13)
+                            integration/: test_review_flow.sh (16)
+                                   — 177 tests, bash puro, sin bats
                             mocks/ollama_mock.sh
+                              Extrae Sección 4 del prompt ensamblado
+                              (marcador: "=== SECCIÓN 4: FRAGMENTO OBJETIVO ===")
   decisions/                ADRs formales A1–D3 migrados (ver README).
   docs/                     INSTALL, CONTRIBUTING, SECURITY.
   .github/                  workflows/ci.yml, CONTEXT.md → enlace.
@@ -560,6 +586,67 @@ Lo que construimos ahora, en orden:
      get_prompt_rules: cuatro reglas de estilo Python.
 
   Semana 2 completa. Siguiente: Semana 3 — review.sh + providers Ollama/API.
+
+---
+
+## Checkpoint 2026-06-02 — Semana 3: genpy review funcional
+
+  Objetivo: implementar el orquestador de 10 pasos y el provider Ollama.
+  El flujo completo genpy review funciona con Ollama real o con mock.
+
+  ✅ lib/providers/ollama.sh — ai_complete() funcional
+     POST http://localhost:11434/api/generate con stream:false.
+     Detección de modelo: GENPY_MODEL > primer modelo en ollama list
+     > fallback qwen2.5:3b (decisión B1).
+     JSON encode/decode: jq con fallback python3.
+     Códigos de retorno: 0=ok, 1=fallo servicio, 2=vacío/malformado, 3=timeout.
+     curl exit 28 → return 3 (timeout). Conexión rechazada → return 1.
+     13 tests — 13 PASS / 0 FAIL.
+
+  ✅ lib/review.sh — genpy_review() orquestador 10 pasos
+     Pasos [0]–[10] según ARCHITECTURE.md §5.4.
+     Selectores: --lines N-M, --function, --class, --method Clase.método.
+     Opciones: --goal, --provider (ollama|api), --model.
+     Inyección de mock: si ai_complete está definida antes de llamar
+     genpy_review, no se sourcea el provider (permite tests sin Ollama).
+     Mismo patrón para preflight_mode_review.
+     GENPY_REVIEW_NON_INTERACTIVE=1: auto-acepta el diff (tests/CI).
+     Camino sin-cambios: diff vacío → rollback + rc=0.
+     Camino con-cambios: diff → [A]ceptar/[R]echazar/[E]ditar → commit.
+
+  ✅ lib/core/preflight.sh — preflight_mode_review()
+     Valida: curl disponible, árbol git limpio, Ollama accesible.
+     OLLAMA_HOST configurable vía env (default: http://localhost:11434).
+
+  ✅ bin/genpy — comando review
+     shift antes del case → $@ pasa los args a genpy_review.
+     show_help() actualizado con genpy review.
+
+  ✅ lib/review_strategies/go.sh, javascript.sh — stubs no-bloqueantes
+     validate_syntax retorna 0 (no aborta el flujo).
+     extract_signatures con grep real (^func / ^export).
+     get_prompt_rules con reglas básicas del lenguaje.
+
+  ✅ tests/unit/test_ollama_provider.sh — 13 tests
+     _ollama_detect_model: GENPY_MODEL, fallback sin Ollama.
+     _ollama_json_encode: texto simple, newlines, comillas, backslash.
+     _ollama_extract_response: JSON válido, vacío, sin campo, malformado.
+     ai_complete con mock: Sección 4, sin sección, archivo inexistente.
+
+  ✅ tests/integration/test_review_flow.sh — 16 tests
+     _review_detect_strategy: .py/.go/.ts/desconocida.
+     Flujo sin-cambios: mock devuelve código idéntico → rollback, rc=0.
+     Flujo con-cambios: mock añade comentario → diff → commit aplicado.
+     Verificación de rama y commits tras apply.
+     Manejo de errores: archivo inexistente, sin args, opción desconocida.
+     preflight_mode_review: Ollama caído, árbol sucio.
+
+  Bugs corregidos en esta sesión:
+     tests/mocks/ollama_mock.sh: marcador ^### FOCAL → Sección 4 real.
+     bin/genpy: comentario de tarea obsoleto eliminado.
+
+  Total de tests: 177 (148 Semana 2 + 29 Semana 3) — 177 PASS / 0 FAIL.
+  Semana 3 completa. Siguiente: Semana 4 — genpy doctor.
 
 ---
 

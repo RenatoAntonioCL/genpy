@@ -11,9 +11,12 @@ ai_complete() {
 
   [[ -f "$prompt_file" ]] || return 1
 
-  # Simula respuesta: devuelve el bloque FOCAL del prompt o el archivo completo.
-  if grep -q '^### FOCAL' "$prompt_file" 2>/dev/null; then
-    awk '/^### FOCAL$/{flag=1;next} /^### END_FOCAL$/{flag=0} flag' "$prompt_file" >"$output_file"
+  # Simula respuesta: extrae el contenido de la Sección 4 (FRAGMENTO OBJETIVO)
+  # que es lo que el modelo devolvería: solo el código, sin el prompt completo.
+  local section4_marker="=== SECCIÓN 4: FRAGMENTO OBJETIVO ==="
+  if grep -qF "$section4_marker" "$prompt_file" 2>/dev/null; then
+    awk -v marker="$section4_marker" 'found{print} $0==marker{found=1}' \
+      "$prompt_file" >"$output_file"
   else
     cp "$prompt_file" "$output_file"
   fi

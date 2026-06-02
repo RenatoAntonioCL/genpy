@@ -34,7 +34,7 @@ fi
 
 source "$LIB_DIR/core/config.sh"  # 1. Cargar metadatos
 source "$LIB_DIR/core/compat.sh"  # 2. Validar entorno
-source "$LIB_DIR/utils.sh"        # 3. CARGAR COLORES (Añadir esta línea aquí) ✅
+source "$LIB_DIR/utils.sh"
 
 # 4. Ahora sí, cargar el idioma
 export GENPY_LANG="${GENPY_LANG:-es}"
@@ -52,6 +52,7 @@ show_help() {
   echo -e "\n 🛠️  GenPy — project scaffolding tool v${GENPY_VERSION}\n"
   echo " Uso:"
   echo "   genpy create      Crear un nuevo proyecto"
+  echo "   genpy review      Revisar código con IA (requiere Ollama)"
   echo "   genpy update      Actualizar GenPy a la última versión"
   echo "   genpy uninstall   Desinstalar GenPy completamente"
   echo "   genpy version     Ver la versión instalada"
@@ -59,16 +60,19 @@ show_help() {
 }
 
 COMMAND="${1:-}"
+shift 2>/dev/null || true
 
 case "$COMMAND" in
     create)
         source "$LIB_DIR/wizard.sh" ;;
+    review)
+        source "$LIB_DIR/review.sh"
+        genpy_review "$@" ;;
     update)
         bash "$SCRIPTS_DIR/update.sh" ;;
     uninstall)
-        bash "$SCRIPTS_DIR/uninstall.sh" ;; 
+        bash "$SCRIPTS_DIR/uninstall.sh" ;;
     version)
-        # Se elimina el texto hardcodeado para usar la constante de config.sh (R8)
         echo "GenPy v${GENPY_VERSION}" ;;
     *)
         show_help ;;

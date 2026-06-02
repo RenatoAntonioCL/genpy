@@ -4,6 +4,31 @@
 source "$LIB_DIR/core/errors.sh"
 source "$LIB_DIR/docker.sh"
 
+preflight_mode_review() {
+  local status=0
+  print_section "Preflight — genpy review"
+
+  require_command "curl" "curl es necesario para comunicarse con el provider IA."
+
+  # Árbol de trabajo limpio — create_checkpoint lo verifica también, pero
+  # es mejor fallar aquí con un mensaje claro antes de crear la rama.
+  local git_dirty
+  git_dirty=$(git status --porcelain 2>/dev/null || true)
+  if [[ -n "$git_dirty" ]]; then
+    print_error "El árbol de trabajo tiene cambios sin commitear. Haz commit o stash primero."
+    status=1
+  fi
+
+  # Ollama accesible
+  local ollama_host="${OLLAMA_HOST:-http://localhost:11434}"
+  if ! curl -s --max-time 3 "${ollama_host}/api/tags" &>/dev/null; then
+    print_error "Ollama no responde en ${ollama_host}. Verifica que esté en ejecución."
+    status=1
+  fi
+
+  return "$status"
+}
+
 preflight_mode_create() {
     local status=0
     echo -e "\n🔍 Ejecutando chequeos preventivos..."
