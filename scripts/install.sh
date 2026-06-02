@@ -2,14 +2,19 @@
 set -euo pipefail
 
 # =============================================================================
-# GenPy — Official System Installer v1.0.0-alpha
+# GenPy — Official System Installer
 # =============================================================================
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly INSTALL_DIR="/usr/local/share/genpy"
 readonly INSTALL_BIN="/usr/local/bin/genpy"
 
-echo "📦 Installing GenPy v1.0.0-alpha globally..."
+# Leer la versión desde la fuente única de verdad
+GENPY_VERSION=$(grep -m1 'GENPY_VERSION=' "$REPO_DIR/lib/core/config.sh" \
+  | grep -oE '"[^"]+"' | tr -d '"')
+readonly GENPY_VERSION
+
+echo "📦 Installing GenPy v${GENPY_VERSION} globally..."
 
 # 1. Clean previous installations
 sudo rm -rf "$INSTALL_DIR"
@@ -33,5 +38,5 @@ exec /usr/local/share/genpy/bin/genpy "$@"
 EOF
 sudo chmod +x "$INSTALL_BIN"
 
-echo "✔ GenPy v1.0.0-alpha successfully installed!"
+echo "✔ GenPy v${GENPY_VERSION} installed!"
 echo "  Run it from anywhere with: genpy create"

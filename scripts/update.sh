@@ -12,11 +12,24 @@ readonly INSTALL_BIN="/usr/local/bin/genpy"
 
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-echo "⬇️  Actualizando GenPy desde el repositorio..."
+echo "⬇️  Buscando la última versión de GenPy..."
 
-# 1. Clonar la nueva versión por HTTPS (rama main explícita, no el default del remoto).
-#    La autenticidad la aporta TLS de GitHub.
-git clone --depth 1 --branch main "$REPO_URL" "$TMP_DIR"
+# 1. Detectar el tag del último release publicado en GitHub.
+#    Si no hay acceso a la API, clonar desde main como fallback.
+TARGET_REF="main"
+if command -v curl &>/dev/null; then
+  LATEST_TAG=$(curl -sf \
+    "https://api.github.com/repos/RenatoAntonioCL/genpy/releases/latest" \
+    | grep '"tag_name"' | cut -d'"' -f4 || true)
+  if [[ -n "$LATEST_TAG" ]]; then
+    TARGET_REF="$LATEST_TAG"
+    echo "  → Última versión: $LATEST_TAG"
+  else
+    echo "  → No se pudo detectar el último release; usando rama main."
+  fi
+fi
+
+git clone --depth 1 --branch "$TARGET_REF" "$REPO_URL" "$TMP_DIR"
 
 # 2. Verificar la integridad del clon ANTES de tocar la instalación actual.
 #    Si viene incompleto o corrupto, se aborta sin destruir lo que ya funciona.

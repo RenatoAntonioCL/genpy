@@ -42,11 +42,11 @@ curl localhost:8000              # ✅ responde
   labs de seguridad.
 - 🧩 **Sin dependencias en el host** más allá de Bash, Docker y Git. La CLI no necesita
   Python, Node ni Go.
-- 🛡️ **Determinista y testeado** — preflight de entorno, 148 tests en bash puro y CI en
-  verde.
+- 🛡️ **Determinista y testeado** — preflight de entorno, 177 tests en bash puro y CI en
+  verde (Ubuntu + macOS).
 - 🌎 **Bilingüe (es/en)** desde la v1.
 
-> Estado: **v1.0.0-alpha** · el motor de review sin IA está casi completo (Semana 2).
+> Estado: **v1.0.0-alpha** · `genpy create` y `genpy review` (Ollama) son funcionales.
 
 ## Requisitos
 
@@ -109,10 +109,9 @@ curl localhost:8000        # ✅ responde
 | Comando | Estado |
 |---------|--------|
 | `genpy create` | Estable |
+| `genpy review` | Estable — requiere Ollama en `localhost:11434` |
 | `genpy version` | Estable |
 | `genpy update` / `genpy uninstall` | Estable |
-| `genpy review` | Semana 3 — motor sin IA listo, providers pendientes |
-| `genpy doctor` | Semana 4 (pendiente) |
 
 ## Blueprints
 
@@ -143,9 +142,9 @@ genpy/
 ├── lib/               # wizard, template, docker, git_manager, …
 ├── lib/review_strategies/
 ├── lib/providers/
-├── scripts/           # install, update, uninstall, doctor (stub)
+├── scripts/           # install, update, uninstall
 ├── templates/         # 9 blueprints
-├── tests/             # bash puro + mocks (148 tests, sin bats)
+├── tests/             # bash puro + mocks (177 tests, sin bats)
 ├── decisions/         # ADRs formales (A1–D3)
 └── docs/
 ```
