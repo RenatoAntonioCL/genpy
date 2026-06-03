@@ -4,21 +4,21 @@ set -euo pipefail
 # =============================================================================
 # GenPy — lib/docker.sh (v1.0.0-alpha)
 #
-# Diagnóstico de salud Docker y análisis de puertos.
+# Docker health diagnostics and port analysis.
 #
-# Cambio v1.0.0-alpha: inspect_blueprint_ports ya no tiene puertos hardcodeados.
-# Los lee desde BLUEPRINT_META[blueprint.ports] en core/config.sh.
+# Change v1.0.0-alpha: inspect_blueprint_ports no longer has hardcoded ports.
+# It reads them from BLUEPRINT_META[blueprint.ports] in core/config.sh.
 # =============================================================================
 
 source "${LIB_DIR:?}/utils.sh"
 
 check_docker_daemon() {
   if ! command -v docker &>/dev/null; then
-    print_warning "Docker CLI no instalado. Diagnósticos saltados."
+    print_warning "Docker CLI not installed. Diagnostics skipped."
     return 1
   fi
   if ! docker info &>/dev/null; then
-    print_warning "Docker Desktop apagado o demonio inactivo."
+    print_warning "Docker Desktop is off or daemon is inactive."
     return 1
   fi
   return 0
@@ -49,12 +49,12 @@ inspect_blueprint_ports() {
       local free_port
       free_port=$(_find_free_port "$(( port + 1 ))")
       if [[ "$free_port" == "0" ]]; then
-        echo -e "   🚨 \033[1;31mColisión:\033[0m Puerto \033[1;33m$port\033[0m ocupado (sin puerto libre disponible)."
+        echo -e "   🚨 \033[1;31mCollision:\033[0m Port \033[1;33m$port\033[0m occupied (no free port available)."
         conflict_found=1
         continue
       fi
 
-      echo -e "   🔀 \033[1;33mPuerto $port ocupado\033[0m → reasignado a \033[1;32m$free_port\033[0m"
+      echo -e "   🔀 \033[1;33mPort $port occupied\033[0m → remapped to \033[1;32m$free_port\033[0m"
 
       if [[ -n "$compose_file" && -f "$compose_file" ]]; then
         local tmpfile
@@ -62,7 +62,7 @@ inspect_blueprint_ports() {
         sed "s|127\.0\.0\.1:${port}:|127.0.0.1:${free_port}:|g" "$compose_file" > "$tmpfile" \
           && mv "$tmpfile" "$compose_file" \
           || rm -f "$tmpfile"
-        echo -e "   ✅ \033[1;32mdocker-compose.yml actualizado\033[0m (host: $free_port → contenedor: $port)"
+        echo -e "   ✅ \033[1;32mdocker-compose.yml updated\033[0m (host: $free_port → container: $port)"
       fi
 
       conflict_found=1
@@ -70,6 +70,6 @@ inspect_blueprint_ports() {
   done
 
   if [[ "$conflict_found" -eq 0 ]]; then
-    echo -e "   🛡️  \033[1;32mPuertos Libres:\033[0m Todo despejado para el despliegue."
+    echo -e "   🛡️  \033[1;32mFree Ports:\033[0m All clear for deployment."
   fi
 }

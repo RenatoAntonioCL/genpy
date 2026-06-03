@@ -4,23 +4,23 @@ set -euo pipefail
 # =============================================================================
 # GenPy — lib/git_manager.sh (v1.0.0-alpha)
 #
-# Gestión del repositorio git del proyecto generado.
-# Git siempre se inicializa — la pregunta es solo sobre el remoto.
+# Git repository management for the generated project.
+# Git is always initialized — the question is only about the remote.
 #
-# Retorna la elección del usuario en GIT_MODE (local | private | public)
-# para que wizard.sh pueda mostrarla en la tarjeta de resumen antes de fabricar.
+# Returns the user's choice in GIT_MODE (local | private | public)
+# so that wizard.sh can show it on the summary card before building.
 # =============================================================================
 
 source "${LIB_DIR:?}/utils.sh"
 
-# Variable global que wizard.sh lee para el resumen previo a la confirmación
+# Global variable that wizard.sh reads for the pre-confirmation summary
 GIT_MODE="local"
 
 # -----------------------------------------------------------------------------
 # _get_github_token
 #
-# Busca un token de GitHub en: GITHUB_TOKEN, GH_TOKEN, o el CLI `gh`.
-# Imprime el token si lo encuentra; retorna 1 si no hay ninguno disponible.
+# Searches for a GitHub token in: GITHUB_TOKEN, GH_TOKEN, or the `gh` CLI.
+# Prints the token if found; returns 1 if none is available.
 # -----------------------------------------------------------------------------
 _get_github_token() {
   [[ -n "${GITHUB_TOKEN:-}" ]] && { printf '%s' "$GITHUB_TOKEN"; return 0; }
@@ -35,14 +35,14 @@ _get_github_token() {
 # -----------------------------------------------------------------------------
 # _create_github_repo
 #
-# Crea un repositorio en GitHub via API REST.
+# Creates a repository on GitHub via REST API.
 #
-# Argumentos:
-#   $1 — token:        Personal Access Token con permisos 'repo'
-#   $2 — repo_name:    nombre del repositorio a crear
-#   $3 — private_flag: "true" o "false"
+# Arguments:
+#   $1 — token:        Personal Access Token with 'repo' permissions
+#   $2 — repo_name:    name of the repository to create
+#   $3 — private_flag: "true" or "false"
 #
-# Imprime la SSH URL del repositorio creado; retorna 1 en caso de error.
+# Prints the SSH URL of the created repository; returns 1 on error.
 # -----------------------------------------------------------------------------
 _create_github_repo() {
   local token="$1"
@@ -55,8 +55,8 @@ _create_github_repo() {
 
   local tmpfile http_code body
   tmpfile=$(mktemp)
-  # El header con el token se pasa por stdin (-H @-), no como argumento, para que
-  # NO quede visible en la lista de procesos (ps). El body POST va por -d.
+  # The token header is passed via stdin (-H @-), not as an argument, so that
+  # it does NOT appear in the process list (ps). The POST body is passed via -d.
   http_code=$(printf 'Authorization: token %s\n' "$token" \
     | curl -s -o "$tmpfile" -w "%{http_code}" \
     -X POST \
@@ -90,7 +90,7 @@ _create_github_repo() {
 # -----------------------------------------------------------------------------
 # _push_to_remote
 #
-# Conecta el remoto y hace push. Muestra instrucciones de reintento si falla.
+# Connects the remote and pushes. Shows retry instructions on failure.
 # -----------------------------------------------------------------------------
 _push_to_remote() {
   local repo_url="$1"
@@ -99,56 +99,56 @@ _push_to_remote() {
   git remote add origin "$repo_url"
   git branch -M main
 
-  echo -e "  📤 Subiendo a repositorio $visibility..."
+  echo -e "  📤 Pushing to $visibility repository..."
   if git push -u origin main -q; then
-    print_success "Código subido a repositorio $visibility: $repo_url"
+    print_success "Code pushed to $visibility repository: $repo_url"
   else
-    print_error "Fallo al subir. Verifica tus llaves SSH o token de acceso."
-    echo -e "  ${DIM}Para reintentar: git push -u origin main${NC}"
+    print_error "Push failed. Verify your SSH keys or access token."
+    echo -e "  ${DIM}To retry: git push -u origin main${NC}"
   fi
 }
 
 # -----------------------------------------------------------------------------
 # setup_git_repository
 #
-# Ejecuta el flujo git completo en el directorio del proyecto ya creado.
-# Para modo privado/público intenta crear el repo en GitHub vía API
-# (leyendo GITHUB_TOKEN / GH_TOKEN / gh CLI). Si no hay token disponible
-# pregunta al usuario; si prefiere omitirlo, cae al flujo manual con URL.
+# Runs the full git flow in the already-created project directory.
+# For private/public mode it tries to create the repo on GitHub via API
+# (reading GITHUB_TOKEN / GH_TOKEN / gh CLI). If no token is available
+# it asks the user; if they prefer to skip it, falls back to the manual URL flow.
 #
-# Argumentos:
-#   $1 — target_dir:    ruta absoluta al directorio del proyecto
-#   $2 — project_name:  nombre del proyecto
+# Arguments:
+#   $1 — target_dir:    absolute path to the project directory
+#   $2 — project_name:  name of the project
 # -----------------------------------------------------------------------------
 setup_git_repository() {
   local target_dir="$1"
   local project_name="$2"
 
-  print_section "Inicializando Repositorio"
+  print_section "Initializing Repository"
 
   cd "$target_dir" || {
-    print_error "No se pudo acceder al directorio: $target_dir"
+    print_error "Could not access directory: $target_dir"
     return 1
   }
 
   git init -b main -q
 
   cat > .gitignore <<'EOF'
-# Dependencias
+# Dependencies
 node_modules/
 vendor/
 
-# Builds y compilados
+# Builds and compiled output
 dist/
 target/
 *.exe
 
-# Variables de entorno — nunca subir al repositorio
+# Environment variables — never commit to the repository
 .env
 .env.local
 .env.*.local
 
-# Entornos virtuales Python
+# Python virtual environments
 env/
 venv/
 
@@ -158,37 +158,37 @@ venv/
 # Logs
 *.log
 
-# GenPy — archivos de trabajo interno
+# GenPy — internal working files
 .genpy_*
 EOF
 
   git add .
 
   if git diff --cached --quiet; then
-    print_warning "Sin cambios para commitear — directorio vacío"
+    print_warning "No changes to commit — empty directory"
     return 0
   fi
 
   git commit -m "feat: initial project scaffold — $project_name (GenPy v1.0.0-alpha)" -q
-  print_success "Repositorio inicializado en rama main"
+  print_success "Repository initialized on branch main"
 
-  # ── Modo remoto ───────────────────────────────────────────────────────────
+  # ── Remote mode ───────────────────────────────────────────────────────────
   [[ "$GIT_MODE" != "private" && "$GIT_MODE" != "public" ]] && return 0
 
   local visibility private_flag
   if [[ "$GIT_MODE" == "private" ]]; then
-    visibility="PRIVADO"
+    visibility="PRIVATE"
     private_flag="true"
   else
-    visibility="PÚBLICO"
+    visibility="PUBLIC"
     private_flag="false"
   fi
 
   echo ""
 
-  # ── Intentar crear el repositorio automáticamente via API ─────────────────
+  # ── Try to create the repository automatically via API ─────────────────────
   if ! command -v curl &>/dev/null; then
-    print_warning "curl no está instalado — se omite la creación automática."
+    print_warning "curl is not installed — automatic creation skipped."
     _fallback_manual_remote "$visibility"
     return 0
   fi
@@ -197,8 +197,8 @@ EOF
   token=$(_get_github_token 2>/dev/null) || true
 
   if [[ -z "$token" ]]; then
-    echo -e "  ${DIM}No se encontró GITHUB_TOKEN. Ingresa tu Personal Access Token${NC}"
-    echo -e "  ${DIM}(permisos 'repo' requeridos — deja vacío para ingresar URL manualmente):${NC}"
+    echo -e "  ${DIM}GITHUB_TOKEN not found. Enter your Personal Access Token${NC}"
+    echo -e "  ${DIM}('repo' permissions required — leave blank to enter URL manually):${NC}"
     IFS= read -rsp "  >>> " token
     echo ""
   fi
@@ -208,28 +208,28 @@ EOF
     return 0
   fi
 
-  echo -e "  🌐 Creando repositorio $visibility en GitHub..."
+  echo -e "  🌐 Creating $visibility repository on GitHub..."
   local repo_url
   if repo_url=$(_create_github_repo "$token" "$project_name" "$private_flag"); then
     _push_to_remote "$repo_url" "$visibility"
   else
-    print_warning "Creación automática fallida — ingresa la URL manualmente."
+    print_warning "Automatic creation failed — enter the URL manually."
     _fallback_manual_remote "$visibility"
   fi
 }
 
 # -----------------------------------------------------------------------------
-# _fallback_manual_remote  (interno)
+# _fallback_manual_remote  (internal)
 # -----------------------------------------------------------------------------
 _fallback_manual_remote() {
   local visibility="$1"
   echo ""
-  echo -e "  ${DIM}Ingresa la URL del repositorio remoto:${NC}"
-  echo -e "  ${DIM}(ej: git@github.com:usuario/repo.git)${NC}"
+  echo -e "  ${DIM}Enter the remote repository URL:${NC}"
+  echo -e "  ${DIM}(e.g.: git@github.com:user/repo.git)${NC}"
   read -rp "  >>> " repo_url
 
   if [[ -z "$repo_url" ]]; then
-    print_warning "URL vacía — se omite el push. Puedes conectarlo manualmente:"
+    print_warning "Empty URL — push skipped. You can connect it manually:"
     echo -e "  ${DIM}git remote add origin <url>${NC}"
     echo -e "  ${DIM}git push -u origin main${NC}"
     return 0
@@ -239,12 +239,12 @@ _fallback_manual_remote() {
 }
 
 # =============================================================================
-# Checkpoint de revisión IA — pasos [2] y [10] del flujo genpy review
+# AI review checkpoint — steps [2] and [10] of the genpy review flow
 # (ARCHITECTURE.md §5.4)
 #
-# Globals de salida:
-#   CHECKPOINT_BRANCH           — rama de revisión creada (genpy/review/<ts>)
-#   CHECKPOINT_ORIGINAL_BRANCH  — rama donde estaba antes del checkpoint
+# Output globals:
+#   CHECKPOINT_BRANCH           — review branch created (genpy/review/<ts>)
+#   CHECKPOINT_ORIGINAL_BRANCH  — branch that was current before the checkpoint
 # =============================================================================
 
 CHECKPOINT_BRANCH=""
@@ -253,14 +253,14 @@ CHECKPOINT_ORIGINAL_BRANCH=""
 # -----------------------------------------------------------------------------
 # create_checkpoint
 #
-# Crea una rama de revisión desde la rama actual y cambia a ella.
-# La rama actúa como punto seguro de retorno: si la revisión IA falla o
-# el usuario la rechaza, rollback_to_checkpoint devuelve el proyecto al
-# estado anterior sin tocar ningún archivo vivo.
+# Creates a review branch from the current branch and switches to it.
+# The branch acts as a safe return point: if the AI review fails or
+# the user rejects it, rollback_to_checkpoint returns the project to
+# the previous state without touching any live files.
 #
-# Argumentos:
-#   $1 — project_dir:    ruta absoluta al repositorio del proyecto
-#   $2 — branch_prefix:  prefijo de la rama (default: genpy/review)
+# Arguments:
+#   $1 — project_dir:    absolute path to the project repository
+#   $2 — branch_prefix:  branch prefix (default: genpy/review)
 #
 # Sets: CHECKPOINT_BRANCH, CHECKPOINT_ORIGINAL_BRANCH
 # Returns: 0=ok, 1=error
@@ -269,92 +269,92 @@ create_checkpoint() {
   local project_dir="$1"
   local branch_prefix="${2:-genpy/review}"
 
-  # ── Validaciones ──────────────────────────────────────────────────────────
+  # ── Validations ───────────────────────────────────────────────────────────
 
   if [[ ! -d "$project_dir" ]]; then
-    echo "Error: directorio no encontrado: $project_dir" >&2
+    echo "Error: directory not found: $project_dir" >&2
     return 1
   fi
 
   if ! git -C "$project_dir" rev-parse --git-dir &>/dev/null 2>&1; then
-    echo "Error: no es un repositorio git: $project_dir" >&2
+    echo "Error: not a git repository: $project_dir" >&2
     return 1
   fi
 
   if ! git -C "$project_dir" rev-parse --verify HEAD &>/dev/null 2>&1; then
-    echo "Error: el repositorio no tiene commits — haz al menos un commit antes." >&2
+    echo "Error: repository has no commits — make at least one commit first." >&2
     return 1
   fi
 
   local original_branch
   original_branch=$(git -C "$project_dir" branch --show-current 2>/dev/null)
   if [[ -z "$original_branch" ]]; then
-    echo "Error: HEAD en estado detached — cambia a una rama antes de crear el checkpoint." >&2
+    echo "Error: HEAD is in detached state — switch to a branch before creating the checkpoint." >&2
     return 1
   fi
 
   if ! git -C "$project_dir" diff --quiet HEAD 2>/dev/null; then
-    echo "Error: el árbol de trabajo tiene cambios sin commitear — haz commit o stash primero." >&2
+    echo "Error: working tree has uncommitted changes — commit or stash them first." >&2
     return 1
   fi
 
-  # ── Crear rama de revisión ────────────────────────────────────────────────
+  # ── Create review branch ──────────────────────────────────────────────────
 
   local timestamp review_branch
   timestamp=$(date +%Y%m%d_%H%M%S)
   review_branch="${branch_prefix}/${timestamp}"
 
   if ! git -C "$project_dir" checkout -b "$review_branch" -q 2>/dev/null; then
-    echo "Error: no se pudo crear la rama '${review_branch}'." >&2
+    echo "Error: could not create branch '${review_branch}'." >&2
     return 1
   fi
 
   CHECKPOINT_BRANCH="$review_branch"
   CHECKPOINT_ORIGINAL_BRANCH="$original_branch"
 
-  print_success "Checkpoint: rama '${review_branch}' creada desde '${original_branch}'"
+  print_success "Checkpoint: branch '${review_branch}' created from '${original_branch}'"
   return 0
 }
 
 # -----------------------------------------------------------------------------
 # rollback_to_checkpoint
 #
-# Vuelve a la rama original y elimina la rama de revisión.
-# Seguro incluso si la rama de revisión tiene cambios sin commitear:
-# usa -D (force delete) porque el árbol original permanece intacto en HEAD.
+# Returns to the original branch and deletes the review branch.
+# Safe even if the review branch has uncommitted changes:
+# uses -D (force delete) because the original tree remains intact at HEAD.
 #
-# Argumentos:
-#   $1 — project_dir: ruta absoluta al repositorio del proyecto
+# Arguments:
+#   $1 — project_dir: absolute path to the project repository
 #
-# Requires: CHECKPOINT_BRANCH y CHECKPOINT_ORIGINAL_BRANCH (set by create_checkpoint)
+# Requires: CHECKPOINT_BRANCH and CHECKPOINT_ORIGINAL_BRANCH (set by create_checkpoint)
 # Returns: 0=ok, 1=error
 # -----------------------------------------------------------------------------
 rollback_to_checkpoint() {
   local project_dir="$1"
 
   if [[ ! -d "$project_dir" ]]; then
-    echo "Error: directorio no encontrado: $project_dir" >&2
+    echo "Error: directory not found: $project_dir" >&2
     return 1
   fi
 
   if [[ -z "${CHECKPOINT_BRANCH:-}" ]]; then
-    echo "Error: CHECKPOINT_BRANCH no definido — llama create_checkpoint primero." >&2
+    echo "Error: CHECKPOINT_BRANCH not set — call create_checkpoint first." >&2
     return 1
   fi
 
   if [[ -z "${CHECKPOINT_ORIGINAL_BRANCH:-}" ]]; then
-    echo "Error: CHECKPOINT_ORIGINAL_BRANCH no definido." >&2
+    echo "Error: CHECKPOINT_ORIGINAL_BRANCH not set." >&2
     return 1
   fi
 
-  # ── Volver a la rama original ─────────────────────────────────────────────
+  # ── Return to the original branch ────────────────────────────────────────
 
   if ! git -C "$project_dir" checkout "$CHECKPOINT_ORIGINAL_BRANCH" -q 2>/dev/null; then
-    echo "Error: no se pudo volver a la rama '${CHECKPOINT_ORIGINAL_BRANCH}'." >&2
+    echo "Error: could not switch back to branch '${CHECKPOINT_ORIGINAL_BRANCH}'." >&2
     return 1
   fi
 
-  # ── Eliminar rama de revisión (force — puede tener trabajo sin commitear) ─
+  # ── Delete review branch (force — may have uncommitted work) ─────────────
 
   local deleted_branch="$CHECKPOINT_BRANCH"
   local original_branch="$CHECKPOINT_ORIGINAL_BRANCH"
@@ -366,6 +366,6 @@ rollback_to_checkpoint() {
   CHECKPOINT_BRANCH=""
   CHECKPOINT_ORIGINAL_BRANCH=""
 
-  print_success "Rollback: de vuelta en '${original_branch}', rama '${deleted_branch}' eliminada"
+  print_success "Rollback: back on '${original_branch}', branch '${deleted_branch}' deleted"
   return 0
 }

@@ -1,21 +1,21 @@
-# ADR-0004: Detección de modelo en Ollama (B1)
+# ADR-0004: Model Detection in Ollama (B1)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (B1)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (B1)
 
-## Contexto
+## Context
 
-El motor de review puede usar modelos locales vía Ollama, pero no se puede asumir qué
-modelo tiene instalado el usuario.
+The review engine can use local models via Ollama, but it cannot assume which model
+the user has installed.
 
-## Decisión
+## Decision
 
-**Detectar el modelo disponible** en Ollama en tiempo de ejecución, con un **fallback
-garantizado a `qwen2.5:3b`**.
+**Detect the available model** in Ollama at runtime, with a **guaranteed fallback
+to `qwen2.5:3b`**.
 
-## Consecuencias
+## Consequences
 
-- (+) Funciona sin configuración: usa lo que haya, y si no hay nada usable, cae a un
-  modelo pequeño conocido.
-- (−) `qwen2.5:3b` es un modelo chico con límites conocidos (ver ADR-0008 y "Lo que
-  sabemos que no funciona"): alucina con archivos largos sin chunking semántico.
+- (+) Works without configuration: uses whatever is available, and if nothing usable
+  is found, falls back to a known small model.
+- (−) `qwen2.5:3b` is a small model with known limitations (see ADR-0008 and "Known
+  Limitations"): hallucinates with long files without semantic chunking.

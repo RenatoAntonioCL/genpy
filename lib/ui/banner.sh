@@ -3,8 +3,8 @@ set -euo pipefail
 # =============================================================================
 # GenPy — lib/ui/banner.sh (v5.0.0)
 #
-# Banner de inicio de la aplicación.
-# Extraído de utils.sh para separar responsabilidades.
+# Application startup banner.
+# Extracted from utils.sh to separate responsibilities.
 # =============================================================================
 
 print_banner() {

@@ -9,7 +9,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly INSTALL_DIR="/usr/local/share/genpy"
 readonly INSTALL_BIN="/usr/local/bin/genpy"
 
-# Leer la versión desde la fuente única de verdad
+# Read the version from the single source of truth
 GENPY_VERSION=$(grep -m1 'GENPY_VERSION=' "$REPO_DIR/lib/core/config.sh" \
   | grep -oE '"[^"]+"' | tr -d '"')
 readonly GENPY_VERSION

@@ -1,13 +1,13 @@
-# Instalación
+# Installation
 
-## Requisitos
+## Requirements
 
 - Bash 4.3+
 - Git
-- Docker (para blueprints con contenedores)
-- macOS, Linux o WSL2
+- Docker (for blueprints with containers)
+- macOS, Linux or WSL2
 
-## Desde el repositorio
+## From the repository
 
 ```bash
 git clone https://github.com/RenatoAntonioCL/genpy.git
@@ -15,7 +15,7 @@ cd genpy
 bash scripts/install.sh
 ```
 
-## Comandos
+## Commands
 
 ```bash
 genpy create
@@ -24,4 +24,4 @@ genpy update
 genpy uninstall
 ```
 
-Detalle de arquitectura: [ARCHITECTURE.md](../ARCHITECTURE.md).
+Architecture details: [ARCHITECTURE.md](../ARCHITECTURE.md).

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# GenPy — review strategy: Go (Semana 5)
-# Contrato: validate_syntax, extract_signatures, get_prompt_rules
+# GenPy — review strategy: Go (Week 5)
+# Contract: validate_syntax, extract_signatures, get_prompt_rules
 set -euo pipefail
 
 validate_syntax() {
-  # Semana 5: go vet ./...
+  # Week 5: go vet ./...
   return 0
 }
 
@@ -15,8 +15,8 @@ extract_signatures() {
 
 get_prompt_rules() {
   cat <<'EOF'
-- Seguir las convenciones de formato de gofmt.
-- Manejar errores explícitamente; no ignorar el valor de retorno de error.
-- Preferir interfaces pequeñas y composición.
+- Follow gofmt formatting conventions.
+- Handle errors explicitly; do not ignore the error return value.
+- Prefer small interfaces and composition.
 EOF
 }

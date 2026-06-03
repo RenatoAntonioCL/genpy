@@ -1,21 +1,21 @@
 ---
 name: Feature request
-about: Propuesta de nueva funcionalidad o mejora
+about: Proposal for new functionality or improvement
 title: 'feat: '
 labels: enhancement
 assignees: ''
 ---
 
-## Problema que resuelve
-<!-- Qué fricción o limitación actual motiva esta propuesta -->
+## Problem it solves
+<!-- What friction or current limitation motivates this proposal -->
 
-## Solución propuesta
-<!-- Cómo debería funcionar -->
+## Proposed solution
+<!-- How it should work -->
 
-## Alternativas consideradas
-<!-- Otras opciones descartadas y por qué -->
+## Alternatives considered
+<!-- Other options discarded and why -->
 
-## Semana del roadmap (si aplica)
-- [ ] Semana 4 — genpy doctor
-- [ ] Semana 5 — providers API / strategies Go y JS
-- [ ] Futuro / sin clasificar
+## Roadmap week (if applicable)
+- [ ] Week 4 — genpy doctor
+- [ ] Week 5 — API providers / Go and JS strategies
+- [ ] Future / unclassified

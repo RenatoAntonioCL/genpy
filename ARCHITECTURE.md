@@ -1,70 +1,69 @@
 # genpy — Architecture Document
 
 Version:       1.0.0-alpha
-Actualización: 2026-05-28
-Estado:        Semana 2 casi completa — motor de review sin IA operativo
-Autor:         Renato
+Updated:       2026-05-28
+Status:        Week 2 nearly complete — review engine without AI operational
+Author:        Renato
 
 ---
 
-## 1. Visión y Objetivos
+## 1. Vision and Goals
 
-genpy es una herramienta CLI modular en Bash que automatiza
-el despliegue, gestión y revisión de arquitecturas de software
-mediante blueprints contenerizados (Docker).
+genpy is a modular Bash CLI tool that automates
+the deployment, management, and review of software architectures
+via containerized blueprints (Docker).
 
-Objetivos de v1.0.0:
-  1. Instalable sin fricción en Linux, macOS y WSL2.
-  2. genpy create genera proyectos completos en < 60s.
-  3. genpy review revisa código con IA de forma segura,
-     trazable y completamente reversible.
-  4. Indestructible: ninguna operación deja el proyecto
-     del usuario en un estado irrecuperable.
-
----
-
-## 2. Principios de Diseño (Inviolables)
-
-  P1 — RESILIENCIA ABSOLUTA
-    Ningún cambio toca archivos vivos directamente.
-    Flujo obligatorio:
-    Sandbox(.tmp) → Guardianes → Git → Usuario.
-
-  P2 — BASH PURO Y MODULAR
-    Sin dependencias de Python/Node en el core del CLI.
-    Funciones con responsabilidad única.
-    trap en todos los puntos de fallo críticos.
-
-  P3 — CONTENEDORES AISLADOS
-    Blueprints autónomos via docker-compose.yml.
-    Sin dependencias globales en el host más allá de
-    Bash 4.3+, Docker, Git y Ollama.
-
-  P4 — PROGRESO INCREMENTAL
-    El sistema valida el entorno antes de avanzar.
-    Si un cambio no es validable, se rechaza.
+v1.0.0 goals:
+  1. Friction-free installation on Linux, macOS, and WSL2.
+  2. genpy create generates complete projects in < 60s.
+  3. genpy review reviews code with AI in a safe,
+     traceable, and fully reversible way.
+  4. Indestructible: no operation leaves the user's project
+     in an unrecoverable state.
 
 ---
 
-## 3. Stack y Restricciones
+## 2. Design Principles (Inviolable)
 
-  Runtime:        Bash 4.3+ (namerefs usados en libs.sh, guardians.sh y menus.sh;
-                  compat.sh valida Bash >= 4.3 en tiempo de ejecución)
-  Plataformas:    Linux, macOS, Windows WSL2
-  Dependencias:   Docker, Git, Ollama (solo review)
-  Testing:        bash puro, sin bats (148 tests)
-  CI:             GitHub Actions (activo)
-  Versioning:     Semver estricto
+  P1 — ABSOLUTE RESILIENCE
+    No change touches live files directly.
+    Mandatory flow:
+    Sandbox(.tmp) → Guardians → Git → User.
 
-  Restricciones:
-    El CLI no depende de Python, Node ni Go en el host.
-    Los scripts auxiliares de detección semántica SÍ
-    pueden usar el runtime del lenguaje target como
-    fallback (decisión C2).
+  P2 — PURE AND MODULAR BASH
+    No Python/Node dependencies in the CLI core.
+    Functions with single responsibility.
+    trap at every critical failure point.
+
+  P3 — ISOLATED CONTAINERS
+    Self-contained blueprints via docker-compose.yml.
+    No global host dependencies beyond
+    Bash 4.3+, Docker, Git, and Ollama.
+
+  P4 — INCREMENTAL PROGRESS
+    The system validates the environment before proceeding.
+    If a change cannot be validated, it is rejected.
 
 ---
 
-## 4. Estructura del Proyecto
+## 3. Stack and Constraints
+
+  Runtime:        Bash 4.3+ (namerefs used in libs.sh, guardians.sh and menus.sh;
+                  compat.sh validates Bash >= 4.3 at runtime)
+  Platforms:      Linux, macOS, Windows WSL2
+  Dependencies:   Docker, Git, Ollama (review only)
+  Testing:        pure bash, no bats (148 tests)
+  CI:             GitHub Actions (active)
+  Versioning:     Strict semver
+
+  Constraints:
+    The CLI does not depend on Python, Node, or Go on the host.
+    Semantic detection helper scripts MAY use the target
+    language runtime as a fallback (decision C2).
+
+---
+
+## 4. Project Structure
 
   genpy/
   ├── bin/
@@ -82,20 +81,20 @@ Objetivos de v1.0.0:
   │   │   ├── banner.sh
   │   │   ├── card.sh
   │   │   └── menus.sh
-  │   ├── providers/           ← Semana 3
+  │   ├── providers/           ← Week 3
   │   │   ├── ollama.sh
   │   │   └── api.sh
-  │   ├── review_strategies/   ← Semana 2
+  │   ├── review_strategies/   ← Week 2
   │   │   ├── python.sh
   │   │   ├── go.sh
   │   │   └── javascript.sh
-  │   ├── assembler.sh         ← Semana 2
+  │   ├── assembler.sh         ← Week 2
   │   ├── docker.sh
   │   ├── git_manager.sh
-  │   ├── guardians.sh         ← Semana 2
+  │   ├── guardians.sh         ← Week 2
   │   ├── libs.sh
-  │   ├── resolver.sh          ← Semana 2
-  │   ├── review.sh            ← Semana 3
+  │   ├── resolver.sh          ← Week 2
+  │   ├── review.sh            ← Week 3
   │   ├── template.sh
   │   ├── utils.sh
   │   └── wizard.sh
@@ -103,14 +102,14 @@ Objetivos de v1.0.0:
   │   ├── install.sh
   │   ├── uninstall.sh
   │   ├── update.sh
-  │   └── doctor.sh            ← Semana 4
+  │   └── doctor.sh            ← Week 4
   ├── templates/
   │   ├── web-fastapi-postgres/
   │   │   ├── .genpy/
-  │   │   │   └── blueprint.toml  ← Semana 2 (primero)
+  │   │   │   └── blueprint.toml  ← Week 2 (first)
   │   │   └── ...
-  │   └── ... (8 blueprints más)
-  ├── tests/                   ← Semana 2
+  │   └── ... (8 more blueprints)
+  ├── tests/                   ← Week 2
   │   ├── fixtures/
   │   ├── mocks/
   │   │   └── ollama_mock.sh
@@ -131,82 +130,82 @@ Objetivos de v1.0.0:
 
 ---
 
-## 5. Arquitectura de Módulos
+## 5. Module Architecture
 
-### 5.1 Capa Core
+### 5.1 Core Layer
 
   compat.sh
-    Detecta: OS (GENPY_OS), arquitectura (GENPY_ARCH)
-    Valida: Bash >= 4.3, aborta con mensaje si no
-    Provee: _port_in_use() portable
-            (ss → netstat → /dev/tcp fallback)
+    Detects: OS (GENPY_OS), architecture (GENPY_ARCH)
+    Validates: Bash >= 4.3, aborts with message if not
+    Provides: portable _port_in_use()
+              (ss → netstat → /dev/tcp fallback)
 
   config.sh
-    Arrays asociativos (readonly):
+    Associative arrays (readonly):
       AREAS, AREA_BLUEPRINTS, BLUEPRINT_META
       ADDON_PACKAGES, ADDON_LABELS, ADDON_INDEX
-    Función pública: blueprint_meta(blueprint, field)
-    Regla: ningún módulo hardcodea datos de dominio
+    Public function: blueprint_meta(blueprint, field)
+    Rule: no module hardcodes domain data
 
   errors.sh
-    Traps separados:
-      EXIT        → _genpy_cleanup() (limpia GENPY_CLEANUP_DIR)
-      INT / TERM  → imprime "Operación cancelada" + exit 130
-    El trap de INT llama exit, que dispara el de EXIT como cadena.
-    Sin separación: Ctrl+C no salía del wizard (el handler retornaba
-    y el while true continuaba desde el read interrumpido).
-    Colores propios: _ERR_RED, _ERR_NC (autónomo)
-    Funciones: die(), require_command(), require_dir()
+    Separate traps:
+      EXIT        → _genpy_cleanup() (clears GENPY_CLEANUP_DIR)
+      INT / TERM  → prints "Operation cancelled" + exit 130
+    The INT trap calls exit, which fires EXIT as a chain.
+    Without separation: Ctrl+C did not exit the wizard (the handler returned
+    and while true continued from the interrupted read).
+    Own colors: _ERR_RED, _ERR_NC (self-contained)
+    Functions: die(), require_command(), require_dir()
 
   preflight.sh
     preflight_mode_create():
       - require_command docker, git
       - check_docker_daemon()
-      - disco libre > 500MB
-      - permisos de escritura en directorio actual
-    preflight_mode_review(): ← Semana 3
-      - Todo lo anterior +
-      - Git working tree limpio
-      - Ollama accesible en localhost:11434
-      - Modelo requerido descargado
-      - blueprint.toml válido y parseable
+      - free disk > 500MB
+      - write permissions in current directory
+    preflight_mode_review(): ← Week 3
+      - All of the above +
+      - Clean Git working tree
+      - Ollama accessible at localhost:11434
+      - Required model downloaded
+      - blueprint.toml valid and parseable
 
-### 5.2 Capa de Providers (Semana 3)
+### 5.2 Providers Layer (Week 3)
 
-  Contrato único:
+  Single contract:
     ai_complete(prompt_file, output_file, options_file)
     Returns:
-      0 → éxito, respuesta en output_file
-      1 → fallo de servicio
-      2 → respuesta vacía o malformada
+      0 → success, response in output_file
+      1 → service failure
+      2 → empty or malformed response
       3 → timeout
 
   ollama.sh
     POST localhost:11434/api/generate
-    Detección de modelo según prioridad B1:
-      1. config del usuario
-      2. primer modelo en ollama list
+    Model detection per priority B1:
+      1. user config
+      2. first model in ollama list
       3. fallback: qwen2.5:3b
-    Maneja: timeout, conexión rechazada,
-            JSON malformado
+    Handles: timeout, connection refused,
+             malformed JSON
 
   api.sh
-    Requiere: GENPY_API_KEY en el entorno
+    Requires: GENPY_API_KEY in the environment
     Endpoint: configurable (OpenAI/Anthropic/custom)
-    Mismos códigos de retorno que ollama.sh
+    Same return codes as ollama.sh
 
-### 5.3 Capa de Review Strategies (Semana 2)
+### 5.3 Review Strategies Layer (Week 2)
 
-  Contrato único:
+  Single contract:
     validate_syntax(file)     → 0=ok, 1=error
-    extract_signatures(file)  → imprime firmas
-    get_prompt_rules()        → imprime reglas
+    extract_signatures(file)  → prints signatures
+    get_prompt_rules()        → prints rules
 
   python.sh
     validate_syntax:      python -m py_compile
     extract_signatures:   grep "^def \|^class \|
                                ^async def "
-    Reglas: indentación, type hints, f-strings
+    Rules: indentation, type hints, f-strings
 
   go.sh
     validate_syntax:      go vet ./...
@@ -217,10 +216,10 @@ Objetivos de v1.0.0:
     extract_signatures:   grep "^export \|
                                ^function \|^const "
 
-### 5.4 El Flujo genpy review (10 Pasos)
+### 5.4 The genpy review Flow (10 Steps)
 
   [0]  preflight_mode_review()
-  [1]  Parse blueprint.toml → cargar strategy
+  [1]  Parse blueprint.toml → load strategy
   [2]  Git checkpoint
          git checkout -b genpy/review/<timestamp>
   [3]  Resolve range
@@ -230,78 +229,78 @@ Objetivos de v1.0.0:
          --method Class.method
          → produce START, END
   [4]  Build context
-         imports completos (zona superior fija)
-         firmas resumidas (zonas sup e inf)
-         focal chunk completo (START..END)
+         full imports (fixed top zone)
+         summarized signatures (top and bottom zones)
+         full focal chunk (START..END)
   [5]  Assemble prompt
-         Sección 1: Rol y restricciones
-         Sección 2: Objetivo de revisión
-         Sección 3: Contexto (solo lectura)
-         Sección 4: Fragmento objetivo
-  [6]  ai_complete() con timeout explícito
+         Section 1: Role and constraints
+         Section 2: Review goal
+         Section 3: Context (read-only)
+         Section 4: Target fragment
+  [6]  ai_complete() with explicit timeout
          → focal_chunk.tmp
-  [7]  5 guardianes (barato primero):
-         G1: output no vacío
-         G2: sin markdown/texto conversacional
-         G3: line count 70%-130% del original
-         G4: validate_syntax() de la strategy
-         G5: firmas públicas presentes
-       Fallo → [R]eintentar / [A]bortar / [E]ditar
-       Máx reintentos: 2 (configurable)
-  [8]  Re-assemble + validate_syntax() completo
+  [7]  5 guardians (cheapest first):
+         G1: non-empty output
+         G2: no markdown/conversational text
+         G3: line count 70%-130% of original
+         G4: validate_syntax() from the strategy
+         G5: public signatures present
+       Failure → [R]etry / [A]bort / [E]dit
+       Max retries: 2 (configurable)
+  [8]  Re-assemble + full validate_syntax()
          head + focal_chunk.tmp + tail
-  [9]  Diff visual + confirmación
+  [9]  Visual diff + confirmation
          diff --color=always | less -R
-         [A]ceptar / [R]echazar / [E]ditar
-  [10] Apply o Rollback
-         Aceptar: cp + git commit
-         Rechazar: git checkout + branch delete
+         [A]ccept / [R]eject / [E]dit
+  [10] Apply or Rollback
+         Accept: cp + git commit
+         Reject: git checkout + branch delete
 
-### 5.5 El Flujo genpy create (7 Pasos, Estable)
+### 5.5 The genpy create Flow (7 Steps, Stable)
 
-  [1]  Banner + nombre del proyecto
-         Validación: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
-         Rechaza: espacios, /, ., $, guion inicial
+  [1]  Banner + project name
+         Validation: ^[a-zA-Z0-9][a-zA-Z0-9_-]*$
+         Rejects: spaces, /, ., $, leading dash
   [2]  preflight_mode_create()
   [3]  select_git_mode()
   [4]  select_area() → select_blueprint()
   [5]  select_blueprint_addons()
   [6]  print_blueprint_card() + confirm_creation()
   [7]  copy_template()
-         → rsync del template al directorio destino
-         → _sed_inplace {{PROJECT_NAME}} en .env y archivos de texto
-         → _inject_env_secrets(): genera secretos para {{SECRET_HEX_N}}
-              y resuelve referencias cruzadas {{VAR_NAME}} en el mismo .env
+         → rsync of template to destination directory
+         → _sed_inplace {{PROJECT_NAME}} in .env and text files
+         → _inject_env_secrets(): generates secrets for {{SECRET_HEX_N}}
+              and resolves cross-references {{VAR_NAME}} in the same .env
        → inject_blueprint_addons()
        → setup_git_repository()
        → check_docker_daemon() + inspect_blueprint_ports()
 
-  Secretos .env por blueprint:
-    web-fastapi-postgres  DB_PASSWORD (32 bytes), DATABASE_URL consistente
+  .env secrets per blueprint:
+    web-fastapi-postgres  DB_PASSWORD (32 bytes), consistent DATABASE_URL
     web-go-gin-clean      DB_PASSWORD (32 bytes)
     ai-ml-pytorch         JUPYTER_TOKEN (24 bytes)
     web-node-nest-mongo   JWT_SECRET (32 bytes)
     infra-monitoring-stack GF_SECURITY_ADMIN_PASSWORD (16 bytes)
 
-### 5.6 Chunking con Sort Semántico (Semana 5)
+### 5.6 Chunking with Semantic Sort (Week 5)
 
-  Activo cuando: archivo > 500 líneas
-  Orden de procesamiento por nivel:
-    0 → imports y constantes globales
-    1 → modelos y clases base
-    2 → servicios y repositorios
-    3 → routers y controllers
-    4 → punto de entrada (main/app)
-  Contexto acumulativo entre chunks:
+  Active when: file > 500 lines
+  Processing order by level:
+    0 → imports and global constants
+    1 → models and base classes
+    2 → services and repositories
+    3 → routers and controllers
+    4 → entry point (main/app)
+  Cumulative context between chunks:
     accumulated_context += extract_signatures(chunk_revised)
-  Re-ensamblado: por START_LINE original,
-                 no por orden de procesamiento
+  Reassembly: by original START_LINE,
+              not by processing order
 
 ---
 
-## 6. El Blueprint Contract
+## 6. The Blueprint Contract
 
-  Archivo: <proyecto>/.genpy/blueprint.toml
+  File: <project>/.genpy/blueprint.toml
 
   [meta]
   name         = string
@@ -317,16 +316,16 @@ Objetivos de v1.0.0:
   include_block_comments       = true
 
   [[ai_context.dependency_map]]
-  source  = "path relativo"
-  affects = ["paths relativos"]
+  source  = "relative path"
+  affects = ["relative paths"]
 
   [validation]
-  syntax_check      = "comando con {file}"
-  semantic_check    = "comando docker opcional"
+  syntax_check      = "command with {file}"
+  semantic_check    = "optional docker command"
   semantic_timeout  = 60
 
   [review]
-  default_goal    = "string opcional"
+  default_goal    = "optional string"
   max_chunk_lines = 150
 
   [git]
@@ -335,103 +334,102 @@ Objetivos de v1.0.0:
 
 ---
 
-## 7. Configuración en Cascada
+## 7. Cascading Configuration
 
-  Prioridad (mayor gana):
-    1. Flags de CLI
-    2. <proyecto>/.genpy/blueprint.toml
+  Priority (highest wins):
+    1. CLI flags
+    2. <project>/.genpy/blueprint.toml
     3. ~/.config/genpy/config.toml
-    4. Defaults en config.sh
+    4. Defaults in config.sh
 
-  Espacios:
-    /usr/local/lib/genpy/    Instalación (read-only)
-    ~/.config/genpy/         Usuario global
-    <proyecto>/.genpy/       Proyecto específico
+  Scopes:
+    /usr/local/lib/genpy/    Installation (read-only)
+    ~/.config/genpy/         Global user
+    <project>/.genpy/        Project-specific
 
 ---
 
-## 8. Modelo de Amenazas
+## 8. Threat Model
 
-  A1 — Path traversal en blueprint.toml
-       Mitigación: validar rutas relativas dentro
-       del directorio del proyecto. Rechazar .. y
-       rutas absolutas.
+  A1 — Path traversal in blueprint.toml
+       Mitigation: validate relative paths inside
+       the project directory. Reject .. and
+       absolute paths.
 
-  A2 — Prompt injection vía código del usuario
-       Mitigación: system prompt establece que el
-       focal chunk son datos, no instrucciones.
+  A2 — Prompt injection via user code
+       Mitigation: system prompt establishes that
+       the focal chunk is data, not instructions.
 
-  A3 — Ollama expuesto en red
-       Mitigación: preflight verifica que Ollama
-       escucha solo en 127.0.0.1.
+  A3 — Ollama exposed on the network
+       Mitigation: preflight verifies that Ollama
+       listens only on 127.0.0.1.
 
 ---
 
 ## 9. Roadmap
 
-  Semana 0 — Reparaciones ✅ Completada
-    R1-R12 resueltos.
+  Week 0 — Fixes ✅ Complete
+    R1-R12 resolved.
 
-  Semana 1 — Fundación Portable ✅ Completada
-    compat.sh, errors.sh, preflight.sh (modo create)
+  Week 1 — Portable Foundation ✅ Complete
+    compat.sh, errors.sh, preflight.sh (create mode)
     i18n/en.sh + es.sh
     CONTEXT.md + ARCHITECTURE.md
 
-  Fase 0 — Estabilización flujo create ✅ Completada (2026-05-28)
-    Fix Ctrl+C: traps EXIT e INT/TERM separados en errors.sh.
-    Fix config.sh: include guard + source explícito en wizard.sh.
-    Fix sed Linux: _sed_inplace() en libs.sh (filtro requirements.txt).
-    Fix dependencias implícitas: utils.sh sourceado en docker.sh,
-      libs.sh, git_manager.sh con include guard.
-    Fix validación nombre de proyecto: regex + i18n.
-    Fix rsync: copy_template() valida template_dir y copia no vacía.
-    Fix subshell: pipe → process substitution en template.sh.
-    Fix git push: 2>/dev/null eliminado, error real visible.
-    Secretos .env: _generate_secret() + _inject_env_secrets() en
-      template.sh. 5 blueprints con credenciales únicas por proyecto.
+  Phase 0 — Create flow stabilization ✅ Complete (2026-05-28)
+    Fix Ctrl+C: separate EXIT and INT/TERM traps in errors.sh.
+    Fix config.sh: include guard + explicit source in wizard.sh.
+    Fix sed Linux: _sed_inplace() in libs.sh (requirements.txt filter).
+    Fix implicit dependencies: utils.sh sourced in docker.sh,
+      libs.sh, git_manager.sh with include guard.
+    Fix project name validation: regex + i18n.
+    Fix rsync: copy_template() validates template_dir and non-empty copy.
+    Fix subshell: pipe → process substitution in template.sh.
+    Fix git push: 2>/dev/null removed, real error visible.
+    .env secrets: _generate_secret() + _inject_env_secrets() in
+      template.sh. 5 blueprints with unique per-project credentials.
 
-  Semana 2 — Motor de Review sin IA ✅ Completa
-    blueprint.toml integrado en genpy create ✅
-    resolver.sh — resolve_range() con 4 modos ✅ (24 tests)
+  Week 2 — Review Engine without AI ✅ Complete
+    blueprint.toml integrated in genpy create ✅
+    resolver.sh — resolve_range() with 4 modes ✅ (24 tests)
     guardians.sh — G1-G5 + run_guardians() ✅ (44 tests)
     assembler.sh — context/prompt/reassemble ✅ (48 tests)
-    review_strategies/python.sh funcional ✅
+    review_strategies/python.sh functional ✅
     git_manager.sh — create_checkpoint/rollback ✅ (32 tests)
-    Total: 148 tests en bash puro, 148 PASS / 0 FAIL
+    Total: 148 tests in pure bash, 148 PASS / 0 FAIL
 
-  Semana 3 — Integración IA ⏳ Pendiente
+  Week 3 — AI Integration ⏳ Pending
     providers/ollama.sh + api.sh
-    review.sh orquestador (10 pasos)
+    review.sh orchestrator (10 steps)
     preflight_mode_review()
-    Circuit breaker para Ollama
+    Circuit breaker for Ollama
     Tag v1.1.0-beta
 
-  Semana 4 — Distribución ⏳ Pendiente
-    install.sh reescrito (4 fases)
+  Week 4 — Distribution ⏳ Pending
+    install.sh rewritten (4 phases)
     doctor.sh
-    update.sh con SHA256
-    README público + docs/
-    Tag v1.1.0 estable
+    update.sh with SHA256
+    Public README + docs/
+    Tag v1.1.0 stable
 
-  Semana 5 — Expansión ⏳ Pendiente
+  Week 5 — Expansion ⏳ Pending
     review_strategies/go.sh + javascript.sh
-    Chunking semántico con sort por nivel
-    providers/api.sh completo
+    Semantic chunking with sort by level
+    providers/api.sh complete
     brew formula draft
     Tag v1.2.0
 
 ---
 
-## 10. Limitaciones Conocidas de v1
+## 10. Known Limitations of v1
 
-  - Funciones anidadas y closures fuera del scope
-    del resolver en v1.
-  - TypeScript usa strategy javascript.
-  - Modelos 3B degradan con archivos > 200 líneas
-    sin chunking.
-  - blueprints infra y cyber no tienen strategy
-    de review (language = infra).
-  - Blueprints de terceros no soportados en v1.
-  - tests/ en bash puro (148 tests); bats-core descartado, CI activo.
-  - doctor.sh pendiente Semana 4.
-
+  - Nested functions and closures are out of scope
+    for the resolver in v1.
+  - TypeScript uses the javascript strategy.
+  - 3B models degrade with files > 200 lines
+    without chunking.
+  - infra and cyber blueprints have no review
+    strategy (language = infra).
+  - Third-party blueprints not supported in v1.
+  - tests/ in pure bash (148 tests); bats-core discarded, CI active.
+  - doctor.sh pending Week 4.

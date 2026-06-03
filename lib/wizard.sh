@@ -2,17 +2,17 @@
 # =============================================================================
 # GenPy — lib/wizard.sh (v1.0.0-alpha)
 #
-# Orquestador principal del flujo de creación de proyectos.
-# Responsabilidad única: coordinar pasos en orden, sin lógica de UI
-# ni datos de dominio hardcodeados.
+# Main orchestrator for the project creation flow.
+# Single responsibility: coordinate steps in order, without UI logic
+# or hardcoded domain data.
 #
-# Flujo:
-#   1. Banner + nombre del proyecto
-#   2. Modo git
-#   3. Selección de área → blueprint (delegado a ui/menus.sh)
-#   4. Selección de aditivos (delegado a libs.sh)
-#   5. Tarjeta de resumen + confirmación (delegado a ui/card.sh)
-#   6. Fabricación: copy_template → inject_addons → git → diagnóstico Docker
+# Flow:
+#   1. Banner + project name
+#   2. Git mode
+#   3. Area → blueprint selection (delegated to ui/menus.sh)
+#   4. Add-on selection (delegated to libs.sh)
+#   5. Summary card + confirmation (delegated to ui/card.sh)
+#   6. Build: copy_template → inject_addons → git → Docker diagnostics
 # =============================================================================
 
 source "$LIB_DIR/core/config.sh"
@@ -26,7 +26,7 @@ source "$LIB_DIR/libs.sh"
 source "$LIB_DIR/docker.sh"
 source "$LIB_DIR/git_manager.sh"
 
-# ─── PASO 1: Banner y nombre del proyecto ────────────────────────────────────
+# ─── STEP 1: Banner and project name ─────────────────────────────────────────
 
 print_banner
 
@@ -46,7 +46,7 @@ done
 
 PROJECT_DIR="$(pwd)/$PROJECT_NAME"
 
-# Invocación de Preflight (Nuevo)
+# Preflight invocation (new)
 source "$LIB_DIR/core/preflight.sh"
 if ! preflight_mode_create; then
     die "$MSG_ERR_PREFLIGHT"
@@ -56,16 +56,16 @@ if [[ -d "$PROJECT_DIR" ]]; then
   die "$MSG_ERR_DIR_EXISTS$PROJECT_DIR"
 fi
 
-# Registrar para limpieza automática en caso de error (ver core/errors.sh)
+# Register for automatic cleanup on error (see core/errors.sh)
 GENPY_CLEANUP_DIR="$PROJECT_DIR"
 
-# ─── PASO 2: Modo Git ────────────────────────────────────────────────────────
+# ─── STEP 2: Git Mode ────────────────────────────────────────────────────────
 
 
 GIT_MODE="local"
 select_git_mode
 
-# ─── PASO 3: Selección de Blueprint ──────────────────────────────────────────
+# ─── STEP 3: Blueprint Selection ─────────────────────────────────────────────
 
 BLUEPRINT=""
 while [[ -z "$BLUEPRINT" ]]; do
@@ -74,29 +74,29 @@ while [[ -z "$BLUEPRINT" ]]; do
   select_blueprint "$AREA_ID" BLUEPRINT
 done
 
-# ─── PASO 4: Aditivos ────────────────────────────────────────────────────────
+# ─── STEP 4: Add-ons ─────────────────────────────────────────────────────────
 
 declare -a selected_addons=()
 select_blueprint_addons selected_addons "$BLUEPRINT"
 
-# ─── PASO 5: Resumen y confirmación ──────────────────────────────────────────
+# ─── STEP 5: Summary and confirmation ────────────────────────────────────────
 
 print_blueprint_card "$PROJECT_NAME" "$BLUEPRINT" "$GIT_MODE"
 confirm_creation
 
-# ─── PASO 6: Fabricación ─────────────────────────────────────────────────────
+# ─── STEP 6: Build ───────────────────────────────────────────────────────────
 
 print_section "$MSG_STEP6_TITLE"
 
 
-# Definir TEMPLATE_BASE_DIR si no está definido por los archivos fuente
+# Define TEMPLATE_BASE_DIR if not defined by source files
 : "${TEMPLATE_BASE_DIR:="$(dirname "$LIB_DIR")/templates"}"
 
 copy_template "$TEMPLATE_BASE_DIR/$BLUEPRINT" "$PROJECT_DIR" "$PROJECT_NAME"
 
 
 if [[ ! -d "$PROJECT_DIR" ]] || [[ -z "$(ls -A "$PROJECT_DIR")" ]]; then
-  die "La carpeta '$PROJECT_NAME' no se creó correctamente."
+  die "Directory '$PROJECT_NAME' was not created correctly."
 fi
 
 
@@ -105,25 +105,25 @@ inject_blueprint_addons "$PROJECT_DIR" selected_addons "$BLUEPRINT"
 
 setup_git_repository "$PROJECT_DIR" "$PROJECT_NAME"
 
-# ─── PASO 7: Diagnóstico Docker ──────────────────────────────────────────────
+# ─── STEP 7: Docker Diagnostics ──────────────────────────────────────────────
 
 print_section "$MSG_STEP7_TITLE"
 if check_docker_daemon; then
   inspect_blueprint_ports "$BLUEPRINT" "$PROJECT_DIR"
 else
-  print_info "Inicia Docker Desktop para poder ejecutar docker compose up."
+  print_info "Start Docker Desktop to run docker compose up."
 fi
 
-# ─── RESUMEN FINAL ───────────────────────────────────────────────────────────
+# ─── FINAL SUMMARY ───────────────────────────────────────────────────────────
 
-# Proyecto creado OK — desactivar limpieza automática
+# Project created OK — disable automatic cleanup
 GENPY_CLEANUP_DIR=""
 
 echo ""
 print_line
-print_success "Proyecto ${WHITE}$PROJECT_NAME${NC} creado en: ${DIM}$PROJECT_DIR${NC}"
+print_success "Project ${WHITE}$PROJECT_NAME${NC} created at: ${DIM}$PROJECT_DIR${NC}"
 echo ""
-echo -e "  ${WHITE}Próximos pasos:${NC}"
+echo -e "  ${WHITE}Next steps:${NC}"
 echo -e "  ${GREEN}cd $PROJECT_NAME && docker compose up -d ${NC}"
 echo ""
 print_line

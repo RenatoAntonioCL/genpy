@@ -3,24 +3,24 @@ set -euo pipefail
 # =============================================================================
 # GenPy — lib/core/config.sh (v1.0.0-alpha)
 #
-# Fuente única de verdad del sistema.
-# Define blueprints, áreas, aditivos y metadatos en un solo lugar.
+# Single source of truth for the system.
+# Defines blueprints, areas, add-ons and metadata in a single place.
 #
-# REGLA: Ningún otro archivo debe hardcodear nombres de blueprints,
-# puertos, stacks o descripciones. Todo se lee desde aquí.
+# RULE: No other file should hardcode blueprint names,
+# ports, stacks or descriptions. Everything is read from here.
 # =============================================================================
 
 [[ -n "${_GENPY_CONFIG_LOADED:-}" ]] && return 0
 _GENPY_CONFIG_LOADED=1
 
-# ─── Versión ──────────────────────────────────────────────────────────────────
+# ─── Version ──────────────────────────────────────────────────────────────────
 
 readonly GENPY_VERSION="1.0.0-alpha"
 
-# ─── Áreas disponibles ────────────────────────────────────────────────────────
+# ─── Available areas ──────────────────────────────────────────────────────────
 #
-# Formato: AREAS[id]="emoji  Nombre"
-# El id es el número que el usuario ingresa en el menú principal.
+# Format: AREAS[id]="emoji  Name"
+# The id is the number the user enters in the main menu.
 
 declare -A AREAS=(
   [1]="🌐  Web & APIs"
@@ -30,10 +30,10 @@ declare -A AREAS=(
 )
 readonly AREAS
 
-# ─── Blueprints por área ──────────────────────────────────────────────────────
+# ─── Blueprints by area ───────────────────────────────────────────────────────
 #
-# Formato: AREA_BLUEPRINTS[area_id]="blueprint1 blueprint2 ..."
-# El orden determina el número de submenú (1, 2, 3...).
+# Format: AREA_BLUEPRINTS[area_id]="blueprint1 blueprint2 ..."
+# The order determines the submenu number (1, 2, 3...).
 
 declare -A AREA_BLUEPRINTS=(
   [1]="web-fastapi-postgres web-node-nest-mongo web-go-gin-clean"
@@ -43,16 +43,16 @@ declare -A AREA_BLUEPRINTS=(
 )
 readonly AREA_BLUEPRINTS
 
-# ─── Metadatos de blueprints ──────────────────────────────────────────────────
+# ─── Blueprint metadata ───────────────────────────────────────────────────────
 #
-# Formato de clave: BLUEPRINT_META[blueprint.campo]
-# Campos: label, description, stack, libs, ports, lang, area_warning
+# Key format: BLUEPRINT_META[blueprint.field]
+# Fields: label, description, stack, libs, ports, lang, area_warning
 
 declare -A BLUEPRINT_META=(
   # ── Web & APIs ──────────────────────────────────────────────────────────────
   ["web-fastapi-postgres.label"]="FastAPI + PostgreSQL"
   ["web-fastapi-postgres.hint"]="Python · SQLAlchemy · uvicorn · alembic"
-  ["web-fastapi-postgres.description"]="API REST con base de datos relacional"
+  ["web-fastapi-postgres.description"]="REST API with relational database"
   ["web-fastapi-postgres.stack"]="Python 3.11  FastAPI  PostgreSQL 15  SQLAlchemy 2"
   ["web-fastapi-postgres.libs"]="uvicorn, pydantic, alembic, psycopg2-binary"
   ["web-fastapi-postgres.ports"]="8000 (API, localhost)"
@@ -60,15 +60,15 @@ declare -A BLUEPRINT_META=(
 
   ["web-node-nest-mongo.label"]="NestJS + MongoDB"
   ["web-node-nest-mongo.hint"]="TypeScript · Mongoose · class-validator"
-  ["web-node-nest-mongo.description"]="API REST con base de datos documental"
+  ["web-node-nest-mongo.description"]="REST API with document database"
   ["web-node-nest-mongo.stack"]="Node 20  NestJS  TypeScript  MongoDB 7  Mongoose"
   ["web-node-nest-mongo.libs"]="@nestjs/core, class-validator, class-transformer"
   ["web-node-nest-mongo.ports"]="3000 (API, localhost)"
   ["web-node-nest-mongo.lang"]="node"
 
   ["web-go-gin-clean.label"]="Go + Gin"
-  ["web-go-gin-clean.hint"]="Go 1.21 · GORM · MySQL · arquitectura limpia"
-  ["web-go-gin-clean.description"]="API REST con arquitectura limpia"
+  ["web-go-gin-clean.hint"]="Go 1.21 · GORM · MySQL · clean architecture"
+  ["web-go-gin-clean.description"]="REST API with clean architecture"
   ["web-go-gin-clean.stack"]="Go 1.21  Gin  MySQL 8  GORM"
   ["web-go-gin-clean.libs"]="gin-gonic, gorm, godotenv"
   ["web-go-gin-clean.ports"]="8080 (API, localhost)"
@@ -77,7 +77,7 @@ declare -A BLUEPRINT_META=(
   # ── AI Labs ─────────────────────────────────────────────────────────────────
   ["ai-ml-pytorch.label"]="ML / PyTorch"
   ["ai-ml-pytorch.hint"]="PyTorch 2.3 · Jupyter Lab · numpy · scikit-learn"
-  ["ai-ml-pytorch.description"]="Entorno de machine learning con notebooks"
+  ["ai-ml-pytorch.description"]="Machine learning environment with notebooks"
   ["ai-ml-pytorch.stack"]="Python 3.11  PyTorch 2.3  Jupyter Lab"
   ["ai-ml-pytorch.libs"]="torch, torchvision, numpy, pandas, scikit-learn, matplotlib"
   ["ai-ml-pytorch.ports"]="8888 (Jupyter Lab, localhost)"
@@ -85,7 +85,7 @@ declare -A BLUEPRINT_META=(
 
   ["ai-llm-rag.label"]="LLM RAG"
   ["ai-llm-rag.hint"]="LangChain · ChromaDB · OpenAI · tiktoken"
-  ["ai-llm-rag.description"]="Pipeline de recuperación aumentada con LLMs"
+  ["ai-llm-rag.description"]="Retrieval-augmented pipeline with LLMs"
   ["ai-llm-rag.stack"]="Python 3.11  LangChain  ChromaDB  OpenAI"
   ["ai-llm-rag.libs"]="langchain, chromadb, openai, tiktoken, python-dotenv"
   ["ai-llm-rag.ports"]="Sin puertos — pipeline batch"
@@ -94,15 +94,15 @@ declare -A BLUEPRINT_META=(
   # ── Security ────────────────────────────────────────────────────────────────
   ["cyber-attacker-kali.label"]="Attacker (Kali)"
   ["cyber-attacker-kali.hint"]="Kali Linux · nmap · netcat · Python 3 · scapy"
-  ["cyber-attacker-kali.description"]="Entorno ofensivo — solo para labs controlados"
+  ["cyber-attacker-kali.description"]="Offensive environment — for authorized labs only"
   ["cyber-attacker-kali.stack"]="Kali Linux  Python 3  nmap  netcat"
   ["cyber-attacker-kali.libs"]="scapy, requests"
   ["cyber-attacker-kali.ports"]="Sin puertos expuestos"
   ["cyber-attacker-kali.lang"]="python"
 
   ["cyber-lab-victim-win7.label"]="Victim (Win7)"
-  ["cyber-lab-victim-win7.hint"]="Docker Wine · Windows 7 simulado · red aislada"
-  ["cyber-lab-victim-win7.description"]="Máquina víctima simulada — solo para labs controlados"
+  ["cyber-lab-victim-win7.hint"]="Docker Wine · simulated Windows 7 · isolated network"
+  ["cyber-lab-victim-win7.description"]="Simulated victim machine — for authorized labs only"
   ["cyber-lab-victim-win7.stack"]="Docker Wine  Windows 7 simulado"
   ["cyber-lab-victim-win7.libs"]="N/A"
   ["cyber-lab-victim-win7.ports"]="Red interna (lab-network)"
@@ -111,15 +111,15 @@ declare -A BLUEPRINT_META=(
   # ── Infra ───────────────────────────────────────────────────────────────────
   ["infra-local-cluster.label"]="Cluster Local"
   ["infra-local-cluster.hint"]="Traefik v3 · HTTP/HTTPS · Dashboard · Docker Compose"
-  ["infra-local-cluster.description"]="Cluster local con reverse proxy y SSL"
+  ["infra-local-cluster.description"]="Local cluster with reverse proxy and SSL"
   ["infra-local-cluster.stack"]="Traefik v3  Docker Compose"
   ["infra-local-cluster.libs"]="N/A"
   ["infra-local-cluster.ports"]="80 (HTTP, localhost)   8082 (Traefik dashboard, localhost)"
   ["infra-local-cluster.lang"]="infra"
 
   ["infra-monitoring-stack.label"]="Monitoring Stack"
-  ["infra-monitoring-stack.hint"]="Prometheus · Grafana · métricas y alertas"
-  ["infra-monitoring-stack.description"]="Stack de observabilidad completo"
+  ["infra-monitoring-stack.hint"]="Prometheus · Grafana · metrics and alerts"
+  ["infra-monitoring-stack.description"]="Complete observability stack"
   ["infra-monitoring-stack.stack"]="Prometheus  Grafana  Docker Compose"
   ["infra-monitoring-stack.libs"]="N/A"
   ["infra-monitoring-stack.ports"]="9090 (Prometheus, localhost)   3000 (Grafana, localhost)"
@@ -127,13 +127,13 @@ declare -A BLUEPRINT_META=(
 )
 readonly BLUEPRINT_META
 
-# ─── Aditivos por blueprint ───────────────────────────────────────────────────
+# ─── Add-ons by blueprint ─────────────────────────────────────────────────────
 #
-# Formato: ADDON_PACKAGES[blueprint.id]="paquete1 paquete2"
-#          ADDON_LABELS[blueprint.id]="emoji Nombre → Descripción"
+# Format: ADDON_PACKAGES[blueprint.id]="package1 package2"
+#          ADDON_LABELS[blueprint.id]="emoji Name → Description"
 #
-# Separar el key semántico (id) de los paquetes reales resuelve
-# el bug de diseño original donde el key era los paquetes mismos.
+# Separating the semantic key (id) from the real packages resolves
+# the original design bug where the key was the packages themselves.
 
 declare -A ADDON_PACKAGES=(
   # FastAPI
@@ -165,36 +165,36 @@ readonly ADDON_PACKAGES
 
 declare -A ADDON_LABELS=(
   # FastAPI
-  ["web-fastapi-postgres.jwt"]="🔐 JWT Auth       → Cifrado y tokens de sesión"
-  ["web-fastapi-postgres.tasks"]="⚡ Async Tasks    → Cola de tareas con Redis"
-  ["web-fastapi-postgres.migrations"]="🗄️  Migrations     → Control de versiones de BD"
+  ["web-fastapi-postgres.jwt"]="🔐 JWT Auth       → Encryption and session tokens"
+  ["web-fastapi-postgres.tasks"]="⚡ Async Tasks    → Task queue with Redis"
+  ["web-fastapi-postgres.migrations"]="🗄️  Migrations     → Database version control"
 
   # NestJS
-  ["web-node-nest-mongo.jwt"]="🔐 Nest JWT       → Autenticación con tokens"
-  ["web-node-nest-mongo.validation"]="🛡️  Validation     → DTOs con decoradores"
-  ["web-node-nest-mongo.swagger"]="📖 OpenAPI        → Documentación automática"
+  ["web-node-nest-mongo.jwt"]="🔐 Nest JWT       → Token-based authentication"
+  ["web-node-nest-mongo.validation"]="🛡️  Validation     → DTOs with decorators"
+  ["web-node-nest-mongo.swagger"]="📖 OpenAPI        → Automatic documentation"
 
   # Go
-  ["web-go-gin-clean.jwt"]="🔐 JWT Auth       → Tokens de sesión"
-  ["web-go-gin-clean.postgres"]="🗄️  GORM           → ORM con PostgreSQL"
-  ["web-go-gin-clean.logger"]="📋 Zap Logger     → Logging estructurado"
+  ["web-go-gin-clean.jwt"]="🔐 JWT Auth       → Session tokens"
+  ["web-go-gin-clean.postgres"]="🗄️  GORM           → ORM with PostgreSQL"
+  ["web-go-gin-clean.logger"]="📋 Zap Logger     → Structured logging"
 
   # PyTorch
-  ["ai-ml-pytorch.tracking"]="📊 Weights&Biases → Tracking de experimentos"
-  ["ai-ml-pytorch.tuning"]="🔧 Optuna         → Optimización de hiperparámetros"
-  ["ai-ml-pytorch.vision"]="🖼️  TorchVision    → Visión computacional"
+  ["ai-ml-pytorch.tracking"]="📊 Weights&Biases → Experiment tracking"
+  ["ai-ml-pytorch.tuning"]="🔧 Optuna         → Hyperparameter optimization"
+  ["ai-ml-pytorch.vision"]="🖼️  TorchVision    → Computer vision"
 
   # RAG
-  ["ai-llm-rag.langchain"]="🦜 LangChain      → Framework RAG completo"
-  ["ai-llm-rag.vectorstore"]="🗄️  ChromaDB       → Vector store local"
-  ["ai-llm-rag.embeddings"]="🧠 Sentence Trans → Embeddings locales"
+  ["ai-llm-rag.langchain"]="🦜 LangChain      → Full RAG framework"
+  ["ai-llm-rag.vectorstore"]="🗄️  ChromaDB       → Local vector store"
+  ["ai-llm-rag.embeddings"]="🧠 Sentence Trans → Local embeddings"
 )
 readonly ADDON_LABELS
 
-# ─── Índice de aditivos por blueprint ────────────────────────────────────────
+# ─── Add-on index by blueprint ────────────────────────────────────────────────
 #
-# Lista ordenada de IDs de aditivos para cada blueprint.
-# El orden controla los números del menú (1, 2, 3...).
+# Ordered list of add-on IDs for each blueprint.
+# The order controls the menu numbers (1, 2, 3...).
 
 declare -A ADDON_INDEX=(
   ["web-fastapi-postgres"]="jwt tasks migrations"
@@ -205,18 +205,18 @@ declare -A ADDON_INDEX=(
 )
 readonly ADDON_INDEX
 
-# ─── Área con advertencia de seguridad ───────────────────────────────────────
+# ─── Area with security warning ──────────────────────────────────────────────
 
 readonly SECURITY_AREA_ID=3
-readonly SECURITY_WARNING="Estos blueprints son exclusivamente para laboratorios
-     con autorización explícita. Uso en redes reales es ilegal."
+readonly SECURITY_WARNING="These blueprints are exclusively for authorized
+     labs. Use on real networks is illegal."
 
-# ─── Función de consulta ─────────────────────────────────────────────────────
+# ─── Query function ───────────────────────────────────────────────────────────
 #
-# blueprint_meta <blueprint> <campo>
+# blueprint_meta <blueprint> <field>
 #
-# Uso: stack=$(blueprint_meta "web-fastapi-postgres" "stack")
-# Evita acceder directamente al array asociativo desde otros módulos.
+# Usage: stack=$(blueprint_meta "web-fastapi-postgres" "stack")
+# Avoids direct access to the associative array from other modules.
 
 blueprint_meta() {
   local blueprint="$1"

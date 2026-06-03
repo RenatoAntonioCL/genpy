@@ -19,14 +19,14 @@ jobs:
 
       - name: Run ShellCheck
         run: |
-          # SC1090/SC1091: source con ruta dinámica (patrón del proyecto)
-          # SC2034: variables exportadas para scripts sourciados
+          # SC1090/SC1091: source with dynamic path (project pattern)
+          # SC2034: variables exported for sourced scripts
           find lib scripts tests -name '*.sh' -print0 \
             | xargs -0 shellcheck --severity=warning \
                 -e SC1090,SC1091,SC2034
           shellcheck --severity=warning -e SC1090,SC1091,SC2034 bin/genpy
 
-  # ── Sintaxis Bash ────────────────────────────────────────────────────────────
+  # ── Bash Syntax ──────────────────────────────────────────────────────────────
   bash-syntax:
     name: Bash syntax (bash -n)
     runs-on: ubuntu-latest
@@ -39,7 +39,7 @@ jobs:
             | xargs -0 -n1 bash -n
           bash -n bin/genpy
 
-  # ── Validación de templates Docker ──────────────────────────────────────────
+  # ── Docker Template Validation ───────────────────────────────────────────────
   docker-compose:
     name: docker-compose validate
     runs-on: ubuntu-latest
@@ -49,11 +49,11 @@ jobs:
       - name: Validate all docker-compose templates
         run: |
           for f in templates/*/docker-compose.yml; do
-            echo "  Validando: $f"
+            echo "  Validating: $f"
             docker compose -f "$f" config -q
           done
 
-  # ── Tests unitarios ──────────────────────────────────────────────────────────
+  # ── Unit Tests ───────────────────────────────────────────────────────────────
   unit:
     name: Unit tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -79,7 +79,7 @@ jobs:
           bash tests/unit/test_checkpoint.sh
           bash tests/unit/test_ollama_provider.sh
 
-  # ── Tests de integración ─────────────────────────────────────────────────────
+  # ── Integration Tests ────────────────────────────────────────────────────────
   integration:
     name: Integration tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}

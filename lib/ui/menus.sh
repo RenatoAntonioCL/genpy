@@ -3,22 +3,22 @@ set -euo pipefail
 # =============================================================================
 # GenPy — lib/ui/menus.sh (v5.0.0)
 #
-# Menús interactivos del wizard.
-# Extraído de wizard.sh para separar UI de orquestación.
+# Interactive wizard menus.
+# Extracted from wizard.sh to separate UI from orchestration.
 #
-# Antes: wizard.sh tenía los menús de área y blueprint hardcodeados
-#        con case statements anidados y strings duplicados.
-# Ahora: los menús se generan dinámicamente desde AREAS, AREA_BLUEPRINTS
-#        y BLUEPRINT_META en config.sh.
+# Before: wizard.sh had area and blueprint menus hardcoded
+#         with nested case statements and duplicated strings.
+# Now: menus are generated dynamically from AREAS, AREA_BLUEPRINTS
+#      and BLUEPRINT_META in config.sh.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
 # select_area
 #
-# Muestra el menú de áreas y retorna el ID elegido en la variable
-# pasada por nombre.
+# Shows the area menu and returns the chosen ID in the variable
+# passed by name.
 #
-# Uso:
+# Usage:
 #   select_area area_id
 # -----------------------------------------------------------------------------
 select_area() {
@@ -26,7 +26,7 @@ select_area() {
 
   print_section "$MSG_MENU_AREA_TITLE"
 
-  # Generar menú dinámicamente desde AREAS (definido en config.sh)
+  # Generate menu dynamically from AREAS (defined in config.sh)
   local sorted_ids
   sorted_ids=$(echo "${!AREAS[@]}" | tr ' ' '\n' | sort -n)
 
@@ -48,12 +48,12 @@ select_area() {
 # -----------------------------------------------------------------------------
 # select_blueprint
 #
-# Muestra el submenú de blueprints para el área elegida y retorna
-# el nombre del blueprint en la variable pasada por nombre.
+# Shows the blueprint submenu for the chosen area and returns
+# the blueprint name in the variable passed by name.
 #
-# Si el área tiene advertencia de seguridad (SECURITY_AREA_ID), la muestra.
+# If the area has a security warning (SECURITY_AREA_ID), it shows it.
 #
-# Uso:
+# Usage:
 #   select_blueprint "$area_id" blueprint_name
 # -----------------------------------------------------------------------------
 select_blueprint() {
@@ -62,16 +62,16 @@ select_blueprint() {
 
   local area_name="${AREAS[$area_id]}"
 print_section "${area_name}${MSG_MENU_BP_SUFFIX}"
-  # Mostrar advertencia si es el área de seguridad
+  # Show warning if it's the security area
   if [[ "$area_id" == "$SECURITY_AREA_ID" ]]; then
     echo -e "  ${YELLOW}⚠${NC}  $SECURITY_WARNING\n"
   fi
 
-  # Obtener blueprints del área como array
+  # Get area blueprints as an array
   local -a blueprints
   read -ra blueprints <<< "${AREA_BLUEPRINTS[$area_id]}"
 
-  # Generar menú dinámicamente desde BLUEPRINT_META
+  # Generate menu dynamically from BLUEPRINT_META
   for i in "${!blueprints[@]}"; do
     local bp="${blueprints[$i]}"
     local label hint
@@ -94,8 +94,8 @@ print_section "${area_name}${MSG_MENU_BP_SUFFIX}"
 # -----------------------------------------------------------------------------
 # select_git_mode
 #
-# Pregunta al usuario cómo gestionar el repositorio.
-# Guarda la elección en la variable global GIT_MODE.
+# Asks the user how to manage the repository.
+# Saves the choice in the global variable GIT_MODE.
 # -----------------------------------------------------------------------------
 select_git_mode() {
   print_section "$MSG_MENU_GIT_TITLE"
@@ -119,12 +119,12 @@ select_git_mode() {
 # -----------------------------------------------------------------------------
 # confirm_creation
 #
-# Muestra el prompt de confirmación (s/n).
-# Retorna 0 si confirmó, sale con código 0 si canceló.
+# Shows the confirmation prompt (y/n).
+# Returns 0 if confirmed, exits with code 0 if cancelled.
 # -----------------------------------------------------------------------------
 confirm_creation() {
   while true; do
-    read -rp "  ¿${MSG_CONFIRM_PROMPT}" confirm
+    read -rp "  ${MSG_CONFIRM_PROMPT}" confirm
     case "$confirm" in
       s|S) return 0 ;;
       n|N)

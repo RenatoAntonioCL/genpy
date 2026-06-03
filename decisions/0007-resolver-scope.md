@@ -1,19 +1,19 @@
-# ADR-0007: Alcance del resolver v1 (C1)
+# ADR-0007: Resolver v1 Scope (C1)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (C1)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (C1)
 
-## Contexto
+## Context
 
-`lib/resolver.sh` traduce selectores (`--lines`, `--function`, `--class`,
-`--method Clase.método`) a un rango de líneas. Hay que acotar qué casos cubre la v1 para
-no perseguir todos los selectores posibles de entrada.
+`lib/resolver.sh` translates selectors (`--lines`, `--function`, `--class`,
+`--method Clase.método`) to a line range. We need to define what cases v1 covers to
+avoid chasing every possible input selector.
 
-## Decisión
+## Decision
 
-Resolver v1 soporta **símbolos top-level + `Clase.método`**.
+Resolver v1 supports **top-level symbols + `Clase.método`**.
 
-## Consecuencias
+## Consequences
 
-- (+) Cubre los casos de uso más frecuentes con una implementación acotada.
-- (−) Quedan fuera (por ahora) anidamientos más profundos o símbolos no top-level.
+- (+) Covers the most frequent use cases with a bounded implementation.
+- (−) Deeper nesting or non-top-level symbols are out of scope (for now).

@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 # lib/core/compat.sh
 
-# Detectar OS y Arquitectura
+# Detect OS and Architecture
 GENPY_OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 export GENPY_OS
 GENPY_ARCH="$(uname -m)"
 export GENPY_ARCH
 
-# Validar versión de Bash (Invariante A1 / ADR-0001)
-# Mínimo 4.3: se usan namerefs (local -n) en libs.sh, guardians.sh y menus.sh.
+# Validate Bash version (Invariant A1 / ADR-0001)
+# Minimum 4.3: namerefs (local -n) are used in libs.sh, guardians.sh and menus.sh.
 if (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 3) )); then
-    echo "❌ Error: GenPy requiere Bash 4.3 o superior (usa namerefs: local -n)."
-    echo "Tu versión actual es: $BASH_VERSION"
-    [[ "$GENPY_OS" == "darwin" ]] && echo "Tip: Ejecuta 'brew install bash' para actualizar."
+    echo "❌ Error: GenPy requires Bash 4.3 or higher (uses namerefs: local -n)."
+    echo "Your current version is: $BASH_VERSION"
+    [[ "$GENPY_OS" == "darwin" ]] && echo "Tip: Run 'brew install bash' to update."
     exit 1
 fi
 
-# Shim portable para detectar si un puerto está en uso.
-# Comprueba tanto listeners del SO como contenedores Docker activos.
+# Portable shim to detect if a port is in use.
+# Checks both OS listeners and active Docker containers.
 _port_in_use() {
     local port="$1"
-    # Listeners del sistema operativo
+    # OS listeners
     if command -v ss &>/dev/null; then
         ss -tuln | grep -q ":$port " && return 0
     elif command -v netstat &>/dev/null; then
@@ -28,15 +28,15 @@ _port_in_use() {
     else
         (echo > /dev/tcp/localhost/"$port") &>/dev/null && return 0
     fi
-    # Puertos enlazados por contenedores Docker (de cualquier proyecto)
+    # Ports bound by Docker containers (from any project)
     if command -v docker &>/dev/null; then
         docker ps --format '{{.Ports}}' 2>/dev/null | grep -q ":$port->" && return 0
     fi
     return 1
 }
 
-# Devuelve el primer puerto >= $1 que esté libre.
-# Imprime el puerto encontrado; retorna 1 si se agota el rango.
+# Returns the first port >= $1 that is free.
+# Prints the found port; returns 1 if the range is exhausted.
 _find_free_port() {
     local port="$1"
     while _port_in_use "$port"; do

@@ -1,20 +1,20 @@
-## Descripción
-<!-- Qué hace este PR y por qué. Una o dos oraciones. -->
+## Description
+<!-- What this PR does and why. One or two sentences. -->
 
-## Tipo de cambio
-- [ ] `feat` — nueva funcionalidad
-- [ ] `fix` — corrección de bug
-- [ ] `refactor` — sin cambio de comportamiento
-- [ ] `test` — tests nuevos o actualizados
-- [ ] `docs` — documentación
-- [ ] `chore` — CI, config, dependencias
+## Type of change
+- [ ] `feat` — new feature
+- [ ] `fix` — bug fix
+- [ ] `refactor` — no behavior change
+- [ ] `test` — new or updated tests
+- [ ] `docs` — documentation
+- [ ] `chore` — CI, config, dependencies
 
 ## Tests
-- [ ] `bash tests/unit/test_*.sh` — 0 fallos
-- [ ] `bash tests/integration/test_*.sh` — 0 fallos (si aplica)
-- [ ] `bash -n` en todos los archivos modificados
+- [ ] `bash tests/unit/test_*.sh` — 0 failures
+- [ ] `bash tests/integration/test_*.sh` — 0 failures (if applicable)
+- [ ] `bash -n` on all modified files
 
 ## Checklist
-- [ ] CONTEXT.md actualizado si se completa una semana del roadmap
-- [ ] Convención de commits seguida: `tipo(scope): descripción`
-- [ ] Sin archivos de debug ni artefactos temporales
+- [ ] CONTEXT.md updated if a roadmap week is completed
+- [ ] Commit convention followed: `type(scope): description`
+- [ ] No debug files or temporary artifacts

@@ -1,30 +1,30 @@
 ---
 name: Bug report
-about: Algo no funciona como se espera
+about: Something is not working as expected
 title: 'fix: '
 labels: bug
 assignees: ''
 ---
 
-## Descripción
-<!-- Qué ocurrió y qué esperabas que ocurriera -->
+## Description
+<!-- What happened and what you expected to happen -->
 
-## Pasos para reproducir
+## Steps to reproduce
 1. 
 2. 
 3. 
 
-## Comportamiento esperado
+## Expected behavior
 
-## Comportamiento actual
+## Actual behavior
 
-## Entorno
+## Environment
 - OS: <!-- Linux / macOS / WSL2 -->
 - Bash: <!-- bash --version -->
 - Docker: <!-- docker --version -->
 - genpy: <!-- genpy version -->
 
-## Logs / output relevante
+## Logs / relevant output
 ```
-<!-- Pega aquí la salida del terminal -->
+<!-- Paste terminal output here -->
 ```

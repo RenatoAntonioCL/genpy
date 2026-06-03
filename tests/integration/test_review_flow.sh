@@ -2,10 +2,10 @@
 # =============================================================================
 # GenPy — tests/integration/test_review_flow.sh
 #
-# Prueba de integración del flujo genpy review de extremo a extremo.
-# Usa ollama_mock.sh como provider (sin Ollama real).
+# End-to-end integration test for the genpy review flow.
+# Uses ollama_mock.sh as provider (no real Ollama).
 #
-# Ejecutar desde la raíz del repo:
+# Run from the repo root:
 #   bash tests/integration/test_review_flow.sh
 # =============================================================================
 set -euo pipefail
@@ -20,17 +20,17 @@ _PASS=0; _FAIL=0
 _ok()   { echo "  PASS  $1"; (( _PASS++ )) || true; }
 _fail() { echo "  FAIL  $1"; echo "        $2"; (( _FAIL++ )) || true; }
 
-# Ejecuta un bloque en subshell; registra PASS/FAIL según el exit code.
+# Runs a block in a subshell; records PASS/FAIL based on exit code.
 _run() {
   local desc="$1"; shift
   if "$@" 2>/dev/null; then
     _ok "$desc"
   else
-    _fail "$desc" "rc=$(( $? )) — ejecuta con 'bash -x' para detalles"
+    _fail "$desc" "rc=$(( $? )) — run with 'bash -x' for details"
   fi
 }
 
-# ─── Helpers de proyecto git temporal ─────────────────────────────────────────
+# ─── Temporary git project helpers ────────────────────────────────────────────
 
 _make_project() {
   local dir
@@ -58,9 +58,9 @@ PYEOF
   echo "$dir"
 }
 
-# ─── Helpers de test ──────────────────────────────────────────────────────────
+# ─── Test helpers ─────────────────────────────────────────────────────────────
 
-# Entorno base: mock que devuelve el código sin modificar (camino "sin cambios")
+# Base environment: mock that returns unchanged code (no-changes path)
 _review_env() {
   source "$REPO_ROOT/tests/mocks/ollama_mock.sh"
   preflight_mode_review() { return 0; }
@@ -68,14 +68,14 @@ _review_env() {
   export GENPY_REVIEW_NON_INTERACTIVE=1
 }
 
-# Entorno con mock que añade un comentario al final del chunk (camino "con cambios")
+# Environment with mock that adds a comment at the end of the chunk (with-changes path)
 _review_env_with_change() {
   ai_complete() {
     local prompt_file="$1" output_file="$2"
-    local marker="=== SECCIÓN 4: FRAGMENTO OBJETIVO ==="
+    local marker="=== SECTION 4: TARGET FRAGMENT ==="
     if grep -qF "$marker" "$prompt_file" 2>/dev/null; then
       awk -v m="$marker" 'found{print} $0==m{found=1}' "$prompt_file" >"$output_file"
-      # El mock añade un comentario para generar un diff real (1 línea, dentro de G3)
+      # Mock adds a comment to generate a real diff (1 line, within G3)
       printf '# reviewed by genpy\n' >> "$output_file"
     else
       cp "$prompt_file" "$output_file"
@@ -99,10 +99,10 @@ _check_strategy_go()  { [[ "$(_review_detect_strategy "/tmp/foo.go")"  == *"/go.
 _check_strategy_ts()  { [[ "$(_review_detect_strategy "/tmp/foo.ts")"  == *"/javascript.sh"  ]]; }
 _check_strategy_err() { ! _review_detect_strategy "/tmp/foo.rs" 2>/dev/null; }
 
-_run "detecta python por extensión .py"          _check_strategy_py
-_run "detecta go por extensión .go"              _check_strategy_go
-_run "detecta javascript por extensión .ts"      _check_strategy_ts
-_run "extensión desconocida devuelve error"       _check_strategy_err
+_run "detects python by .py extension"           _check_strategy_py
+_run "detects go by .go extension"               _check_strategy_go
+_run "detects javascript by .ts extension"       _check_strategy_ts
+_run "unknown extension returns error"            _check_strategy_err
 
 # ─── Tests: _review_abspath ──────────────────────────────────────────────────
 
@@ -111,28 +111,28 @@ echo "─── _review_abspath ────────────────
 
 tmpfile=$(mktemp)
 _check_abspath() { [[ "$(_review_abspath "$tmpfile")" == /* ]]; }
-_run "_review_abspath devuelve ruta absoluta" _check_abspath
+_run "_review_abspath returns absolute path" _check_abspath
 rm -f "$tmpfile"
 
-# ─── Tests: flujo completo con mock ──────────────────────────────────────────
+# ─── Tests: full flow with mock ──────────────────────────────────────────────
 
 echo ""
-echo "─── Flujo completo (mock provider, no-interactive) ───────────────────────"
+echo "─── Full flow (mock provider, non-interactive) ───────────────────────────"
 
 proj=$(_make_project)
 
-# Camino "sin cambios": el mock devuelve el código idéntico → rollback, rc=0
+# No-changes path: mock returns identical code → rollback, rc=0
 _test_flow_no_diff() {
   cd "$proj"
   _review_env
   genpy_review "sample.py" --function "greet" --goal "test"
 }
 
-# Camino "con cambios": el mock añade un comentario → se aplican los cambios
+# With-changes path: mock adds a comment → changes are applied
 _test_flow_apply() {
   cd "$proj"
   _review_env_with_change
-  genpy_review "sample.py" --function "greet" --goal "Mejorar calidad"
+  genpy_review "sample.py" --function "greet" --goal "Improve quality"
 }
 
 _test_flow_apply_branch() {
@@ -150,17 +150,17 @@ _test_flow_apply_commits() {
   [[ "$n" -ge 2 ]]
 }
 
-_run "camino sin-cambios: genpy_review completa con rc=0"         _test_flow_no_diff
-_run "camino con-cambios: genpy_review aplica y completa rc=0"    _test_flow_apply
-_run "camino con-cambios: rama genpy/review/* existe"             _test_flow_apply_branch
-_run "camino con-cambios: al menos 2 commits tras aplicar"        _test_flow_apply_commits
+_run "no-changes path: genpy_review completes with rc=0"       _test_flow_no_diff
+_run "with-changes path: genpy_review applies and rc=0"        _test_flow_apply
+_run "with-changes path: genpy/review/* branch exists"         _test_flow_apply_branch
+_run "with-changes path: at least 2 commits after apply"       _test_flow_apply_commits
 
 rm -rf "$proj"
 
-# ─── Tests: selector --lines ──────────────────────────────────────────────────
+# ─── Tests: --lines selector ──────────────────────────────────────────────────
 
 echo ""
-echo "─── Flujo con --lines ────────────────────────────────────────────────────"
+echo "─── Flow with --lines ────────────────────────────────────────────────────"
 
 proj=$(_make_project)
 
@@ -170,14 +170,14 @@ _test_flow_lines() {
   genpy_review "sample.py" --lines "4-6"
 }
 
-_run "genpy_review completa con --lines 4-6" _test_flow_lines
+_run "genpy_review completes with --lines 4-6" _test_flow_lines
 
 rm -rf "$proj"
 
-# ─── Tests: selector --class ──────────────────────────────────────────────────
+# ─── Tests: --class selector ──────────────────────────────────────────────────
 
 echo ""
-echo "─── Flujo con --class ────────────────────────────────────────────────────"
+echo "─── Flow with --class ────────────────────────────────────────────────────"
 
 proj=$(mktemp -d)
 git -C "$proj" init -q
@@ -202,14 +202,14 @@ _test_flow_class() {
   genpy_review "models.py" --class "User"
 }
 
-_run "genpy_review completa con --class User" _test_flow_class
+_run "genpy_review completes with --class User" _test_flow_class
 
 rm -rf "$proj"
 
-# ─── Tests: manejo de errores ────────────────────────────────────────────────
+# ─── Tests: error handling ────────────────────────────────────────────────────
 
 echo ""
-echo "─── Manejo de errores ────────────────────────────────────────────────────"
+echo "─── Error handling ──────────────────────────────────────────────────────"
 
 proj=$(_make_project)
 
@@ -229,9 +229,9 @@ _test_err_bad_option() {
   ! genpy_review "sample.py" --unknown-flag
 }
 
-_run "falla con archivo inexistente"     _test_err_no_file
-_run "falla sin argumentos (usage)"      _test_err_no_args
-_run "falla con opción desconocida"      _test_err_bad_option
+_run "fails with nonexistent file"       _test_err_no_file
+_run "fails without arguments (usage)"   _test_err_no_args
+_run "fails with unknown option"         _test_err_bad_option
 
 rm -rf "$proj"
 
@@ -274,12 +274,12 @@ _test_preflight_dirty_tree() {
   [[ "$rc" -ne 0 ]]
 }
 
-_run "preflight falla con Ollama caído"        _test_preflight_ollama_down
-_run "preflight falla con árbol de trabajo sucio" _test_preflight_dirty_tree
+_run "preflight fails with Ollama down"           _test_preflight_ollama_down
+_run "preflight fails with dirty working tree"    _test_preflight_dirty_tree
 
-# ─── Resultado ────────────────────────────────────────────────────────────────
+# ─── Result ───────────────────────────────────────────────────────────────────
 
 echo ""
 echo "─────────────────────────────────────────────────────────────────────────"
-printf "  Resultado: %d PASS  /  %d FAIL\n" "$_PASS" "$_FAIL"
+printf "  Result: %d PASS  /  %d FAIL\n" "$_PASS" "$_FAIL"
 [[ "$_FAIL" -eq 0 ]]

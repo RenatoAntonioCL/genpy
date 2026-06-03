@@ -1,28 +1,28 @@
-# ADR-0008: Detección semántica híbrida (C2)
+# ADR-0008: Hybrid Semantic Detection (C2)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (C2)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (C2)
 
-## Contexto
+## Context
 
-Para resolver símbolos y armar contexto hay que entender la estructura del archivo. Un
-parser completo en cada lenguaje es caro; depender de un runtime (python3) en todos lados
-no es portable.
+To resolve symbols and build context, the file structure must be understood. A full
+per-language parser is expensive; depending on a runtime (python3) everywhere is not
+portable.
 
-## Decisión
+## Decision
 
-**Detección híbrida**: Bash/grep/awk como **camino principal**, y el **runtime nativo
-(python3 `ast`) como fallback** cuando hace falta precisión.
+**Hybrid detection**: Bash/grep/awk as the **main path**, and the **native runtime
+(python3 `ast`) as fallback** when precision is needed.
 
-## Consecuencias
+## Consequences
 
-- (+) Funciona sin dependencias en el caso común; usa el parser real solo cuando se
-  necesita.
-- (+) Coherente con la estrategia de chunking semántico que evita alucinaciones de
-  modelos chicos (ver "Lo que sabemos que no funciona").
-- (−) Dos caminos de código a mantener y mantener consistentes.
+- (+) Works without dependencies in the common case; uses the real parser only when
+  needed.
+- (+) Consistent with the semantic chunking strategy that avoids hallucinations from
+  small models (see "Known Limitations").
+- (−) Two code paths to maintain and keep consistent.
 
-## Nota
+## Note
 
-Referenciada con el código `(C2)` en comentarios de `lib/resolver.sh` y
-`lib/assembler.sh`; conservar ese código facilita la trazabilidad.
+Referenced with the code `(C2)` in comments in `lib/resolver.sh` and
+`lib/assembler.sh`; preserving that code facilitates traceability.

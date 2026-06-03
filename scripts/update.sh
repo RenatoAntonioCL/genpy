@@ -12,10 +12,10 @@ readonly INSTALL_BIN="/usr/local/bin/genpy"
 
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-echo "⬇️  Buscando la última versión de GenPy..."
+echo "⬇️  Fetching the latest version of GenPy..."
 
-# 1. Detectar el tag del último release publicado en GitHub.
-#    Si no hay acceso a la API, clonar desde main como fallback.
+# 1. Detect the tag of the latest release published on GitHub.
+#    If there is no API access, clone from main as fallback.
 TARGET_REF="main"
 if command -v curl &>/dev/null; then
   LATEST_TAG=$(curl -sf \
@@ -23,42 +23,42 @@ if command -v curl &>/dev/null; then
     | grep '"tag_name"' | cut -d'"' -f4 || true)
   if [[ -n "$LATEST_TAG" ]]; then
     TARGET_REF="$LATEST_TAG"
-    echo "  → Última versión: $LATEST_TAG"
+    echo "  → Latest version: $LATEST_TAG"
   else
-    echo "  → No se pudo detectar el último release; usando rama main."
+    echo "  → Could not detect the latest release; using main branch."
   fi
 fi
 
 git clone --depth 1 --branch "$TARGET_REF" "$REPO_URL" "$TMP_DIR"
 
-# 2. Verificar la integridad del clon ANTES de tocar la instalación actual.
-#    Si viene incompleto o corrupto, se aborta sin destruir lo que ya funciona.
+# 2. Verify the integrity of the clone BEFORE touching the current installation.
+#    If it comes incomplete or corrupt, it aborts without destroying what already works.
 for required in bin/genpy lib/core/config.sh lib/core/compat.sh templates; do
   if [[ ! -e "$TMP_DIR/$required" ]]; then
-    echo "❌ Update abortado: el clon no contiene '$required'." >&2
-    echo "   Tu instalación actual queda intacta." >&2
+    echo "❌ Update aborted: clone does not contain '$required'." >&2
+    echo "   Your current installation remains intact." >&2
     exit 1
   fi
 done
 [[ -s "$TMP_DIR/bin/genpy" ]] || {
-  echo "❌ Update abortado: 'bin/genpy' está vacío. Instalación actual intacta." >&2
+  echo "❌ Update aborted: 'bin/genpy' is empty. Current installation intact." >&2
   exit 1
 }
-new_sha="$(git -C "$TMP_DIR" rev-parse --short HEAD 2>/dev/null || echo desconocido)"
-echo "  ✓ Clon verificado (commit $new_sha)."
+new_sha="$(git -C "$TMP_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+echo "  ✓ Clone verified (commit $new_sha)."
 
-# 3. Reemplazar archivos
+# 3. Replace files
 sudo rm -rf "$INSTALL_DIR"
 sudo mkdir -p "$INSTALL_DIR"
 sudo cp -R "$TMP_DIR/." "$INSTALL_DIR/"
 
-# 4. Restaurar permisos de ejecución (solo si el archivo existe)
+# 4. Restore execution permissions (only if the file exists)
 [[ -f "$INSTALL_DIR/bin/genpy" ]] && sudo chmod +x "$INSTALL_DIR/bin/genpy"
 [[ -f "$INSTALL_DIR/scripts/install.sh" ]] && sudo chmod +x "$INSTALL_DIR/scripts/install.sh"
 [[ -f "$INSTALL_DIR/scripts/update.sh" ]] && sudo chmod +x "$INSTALL_DIR/scripts/update.sh"
 [[ -f "$INSTALL_DIR/scripts/uninstall.sh" ]] && sudo chmod +x "$INSTALL_DIR/scripts/uninstall.sh"
 
-# 5. Recrear el wrapper global
+# 5. Recreate the global wrapper
 sudo tee "$INSTALL_BIN" > /dev/null <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -66,4 +66,4 @@ exec /usr/local/share/genpy/bin/genpy "$@"
 EOF
 sudo chmod +x "$INSTALL_BIN"
 
-echo "✅ GenPy actualizado a $new_sha."
+echo "✅ GenPy updated to $new_sha."

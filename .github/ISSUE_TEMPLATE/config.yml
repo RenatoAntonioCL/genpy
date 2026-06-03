@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Documentación
+  - name: Documentation
     url: https://github.com/RenatoAntonioCL/genpy/blob/main/docs/CONTRIBUTING.md
-    about: Lee la guía de contribución antes de abrir un issue
+    about: Read the contribution guide before opening an issue

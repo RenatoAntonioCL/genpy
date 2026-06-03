@@ -8,27 +8,27 @@ _GENPY_RESOLVER_LOADED=1
 # =============================================================================
 # GenPy — lib/resolver.sh (v1.0.0-alpha)
 #
-# Traduce un selector semántico a un rango de líneas (RESOLVE_START..RESOLVE_END,
-# 1-based, inclusive) para el flujo genpy review (ARCHITECTURE.md §5.4 paso [3]).
+# Translates a semantic selector to a line range (RESOLVE_START..RESOLVE_END,
+# 1-based, inclusive) for the genpy review flow (ARCHITECTURE.md §5.4 step [3]).
 #
-# Modos:
-#   --lines N-M         rango explícito
-#   --function nombre   función def/async def al nivel top-level
-#   --class nombre      clase top-level
-#   --method Cls.mth    método dentro de una clase top-level
+# Modes:
+#   --lines N-M         explicit range
+#   --function name     def/async def function at the top level
+#   --class name        top-level class
+#   --method Cls.mth    method inside a top-level class
 #
-# Estrategia: grep/awk primero; python3 ast como fallback cuando bash no detecta
-# la definición (decisión C2). Requiere python3 >= 3.8 solo si se activa el fallback.
+# Strategy: grep/awk first; python3 ast as fallback when bash does not detect
+# the definition (decision C2). Requires python3 >= 3.8 only if the fallback is activated.
 # =============================================================================
 
-# ─── API pública ──────────────────────────────────────────────────────────────
+# ─── Public API ───────────────────────────────────────────────────────────────
 
 # resolve_range MODE TARGET FILE
 # Sets globals: RESOLVE_START, RESOLVE_END
 # Returns: 0=ok, 1=error
 resolve_range() {
   if [[ $# -ne 3 ]]; then
-    echo "Uso: resolve_range --lines|--function|--class|--method TARGET FILE" >&2
+    echo "Usage: resolve_range --lines|--function|--class|--method TARGET FILE" >&2
     return 1
   fi
 
@@ -38,7 +38,7 @@ resolve_range() {
   RESOLVE_END=""
 
   if [[ ! -f "$file" ]]; then
-    echo "Error: archivo no encontrado: $file" >&2
+    echo "Error: file not found: $file" >&2
     return 1
   fi
 
@@ -48,8 +48,8 @@ resolve_range() {
     --class)    _rr_class    "$target" "$file" ;;
     --method)   _rr_method   "$target" "$file" ;;
     *)
-      echo "Error: modo desconocido '$mode'" >&2
-      echo "Válidos: --lines  --function  --class  --method" >&2
+      echo "Error: unknown mode '$mode'" >&2
+      echo "Valid: --lines  --function  --class  --method" >&2
       return 1
       ;;
   esac
@@ -61,7 +61,7 @@ _rr_lines() {
   local range="$1" file="$2"
 
   if [[ ! "$range" =~ ^([0-9]+)-([0-9]+)$ ]]; then
-    echo "Error: --lines requiere formato N-M (ej: 10-25)" >&2
+    echo "Error: --lines requires format N-M (e.g.: 10-25)" >&2
     return 1
   fi
 
@@ -70,7 +70,7 @@ _rr_lines() {
   total=$(awk 'END {print NR}' "$file")
 
   if [[ "$n" -lt 1 || "$n" -gt "$m" || "$m" -gt "$total" ]]; then
-    echo "Error: rango $n-$m inválido (archivo tiene $total líneas)" >&2
+    echo "Error: range $n-$m invalid (file has $total lines)" >&2
     return 1
   fi
 
@@ -78,12 +78,12 @@ _rr_lines() {
   RESOLVE_END="$m"
 }
 
-# ─── --function nombre ────────────────────────────────────────────────────────
+# ─── --function name ──────────────────────────────────────────────────────────
 
 _rr_function() {
   local name="$1" file="$2"
 
-  # Bash: def/async def al nivel 0 (columna 0)
+  # Bash: def/async def at level 0 (column 0)
   local start
   start=$(grep -En \
     "^(async[[:space:]]+)?def[[:space:]]+${name}[[:space:](]" "$file" \
@@ -98,11 +98,11 @@ _rr_function() {
   # Fallback: Python ast (C2)
   _rr_python "function" "$name" "" "$file" && return 0
 
-  echo "Error: función '${name}' no encontrada en $file" >&2
+  echo "Error: function '${name}' not found in $file" >&2
   return 1
 }
 
-# ─── --class nombre ───────────────────────────────────────────────────────────
+# ─── --class name ─────────────────────────────────────────────────────────────
 
 _rr_class() {
   local name="$1" file="$2"
@@ -120,37 +120,37 @@ _rr_class() {
 
   _rr_python "class" "$name" "" "$file" && return 0
 
-  echo "Error: clase '${name}' no encontrada en $file" >&2
+  echo "Error: class '${name}' not found in $file" >&2
   return 1
 }
 
-# ─── --method Clase.método ────────────────────────────────────────────────────
+# ─── --method Class.method ────────────────────────────────────────────────────
 
 _rr_method() {
   local target="$1" file="$2"
 
   if [[ ! "$target" =~ ^([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)$ ]]; then
-    echo "Error: --method requiere formato Clase.método (ej: ItemService.create_item)" >&2
+    echo "Error: --method requires format Clase.método (e.g.: ItemService.create_item)" >&2
     return 1
   fi
 
   local cname="${BASH_REMATCH[1]}" mname="${BASH_REMATCH[2]}"
 
-  # Localizar la clase primero
+  # Locate the class first
   local class_start
   class_start=$(grep -En \
     "^class[[:space:]]+${cname}[[:space:](:]" "$file" \
     | head -1 | cut -d: -f1 || true)
 
   if [[ -z "$class_start" ]]; then
-    echo "Error: clase '${cname}' no encontrada en $file" >&2
+    echo "Error: class '${cname}' not found in $file" >&2
     return 1
   fi
 
   local class_end
   class_end=$(_rr_top_level_end "$file" "$class_start")
 
-  # Buscar el método dentro del bloque de la clase (cualquier indentación, no col-0)
+  # Search for the method inside the class block (any indentation, not col-0)
   local method_start
   method_start=$(awk \
     -v cs="$class_start" -v ce="$class_end" -v mn="$mname" \
@@ -160,10 +160,10 @@ _rr_method() {
      }' "$file" || true)
 
   if [[ -n "$method_start" ]]; then
-    # Detectar indentación del 'def' para delimitar el fin del método
+    # Detect indentation of 'def' to delimit the end of the method
     local def_line
     def_line=$(sed -n "${method_start}p" "$file")
-    local prefix="${def_line%%[! ]*}"   # Leading spaces (solo espacios, no tabs)
+    local prefix="${def_line%%[! ]*}"   # Leading spaces (spaces only, not tabs)
     local indent="${#prefix}"
 
     RESOLVE_START="$method_start"
@@ -173,15 +173,15 @@ _rr_method() {
 
   _rr_python "method" "$mname" "$cname" "$file" && return 0
 
-  echo "Error: método '${cname}.${mname}' no encontrado en $file" >&2
+  echo "Error: method '${cname}.${mname}' not found in $file" >&2
   return 1
 }
 
-# ─── Detección de fin de bloque ───────────────────────────────────────────────
+# ─── End-of-block detection ───────────────────────────────────────────────────
 
 # _rr_top_level_end FILE START
-# Retorna la última línea del bloque top-level que empieza en START.
-# El bloque termina justo antes del siguiente def/class/decorator en col 0.
+# Returns the last line of the top-level block starting at START.
+# The block ends just before the next def/class/decorator at column 0.
 _rr_top_level_end() {
   local file="$1" start="$2"
   local total
@@ -197,10 +197,10 @@ _rr_top_level_end() {
 }
 
 # _rr_method_end FILE METHOD_START INDENT CLASS_END
-# Retorna la última línea del método.
-# El método termina justo antes del siguiente sibling con indent <= INDENT,
-# o en CLASS_END si no hay sibling.
-# Las líneas en blanco se ignoran al buscar el sibling pero se incluyen en END.
+# Returns the last line of the method.
+# The method ends just before the next sibling with indent <= INDENT,
+# or at CLASS_END if there is no sibling.
+# Blank lines are ignored when searching for the sibling but included in END.
 _rr_method_end() {
   local file="$1" start="$2" indent="$3" max="$4"
 
@@ -216,14 +216,14 @@ _rr_method_end() {
   ' "$file"
 }
 
-# ─── Fallback Python (decisión C2) ────────────────────────────────────────────
+# ─── Python fallback (decision C2) ───────────────────────────────────────────
 
 # _rr_python KIND NAME EXTRA FILE
 #   KIND   function | class | method
-#   NAME   nombre de la función/clase/método
-#   EXTRA  nombre de la clase contenedora (solo para method; vacío si no aplica)
-# Establece RESOLVE_START y RESOLVE_END usando python3 ast.
-# Requiere python3 >= 3.8 (end_lineno). Retorna 0=ok, 1=fallo.
+#   NAME   name of the function/class/method
+#   EXTRA  name of the containing class (method only; empty if not applicable)
+# Sets RESOLVE_START and RESOLVE_END using python3 ast.
+# Requires python3 >= 3.8 (end_lineno). Returns 0=ok, 1=failure.
 _rr_python() {
   local kind="$1" name="$2" extra="$3" file="$4"
 

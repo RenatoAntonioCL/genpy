@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# GenPy — review strategy: JavaScript/TypeScript (Semana 5)
-# Contrato: validate_syntax, extract_signatures, get_prompt_rules
+# GenPy — review strategy: JavaScript/TypeScript (Week 5)
+# Contract: validate_syntax, extract_signatures, get_prompt_rules
 set -euo pipefail
 
 validate_syntax() {
-  # Semana 5: node --check o tsc --noEmit
+  # Week 5: node --check or tsc --noEmit
   return 0
 }
 
@@ -15,8 +15,8 @@ extract_signatures() {
 
 get_prompt_rules() {
   cat <<'EOF'
-- Preferir const sobre let; evitar var.
-- Tipar explícitamente los parámetros y valores de retorno en TypeScript.
-- Usar async/await en lugar de callbacks o cadenas .then().
+- Prefer const over let; avoid var.
+- Explicitly type parameters and return values in TypeScript.
+- Use async/await instead of callbacks or .then() chains.
 EOF
 }

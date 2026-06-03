@@ -8,20 +8,20 @@ _GENPY_ASSEMBLER_LOADED=1
 # =============================================================================
 # GenPy — lib/assembler.sh (v1.0.0-alpha)
 #
-# Contexto, prompt y re-ensamblado del archivo.
-# Implementa ARCHITECTURE.md §5.4 pasos [4], [5] y [8].
+# Context, prompt and file reassembly.
+# Implements ARCHITECTURE.md §5.4 steps [4], [5] and [8].
 #
-# API pública:
+# Public API:
 #   build_review_context FILE STRATEGY_FILE  → stdout (context blob)
 #   assemble_prompt CONTEXT_FILE FOCAL_CHUNK_FILE GOAL → stdout (prompt)
-#   reassemble_file ORIGINAL REVISED_CHUNK START END   → stdout (archivo)
+#   reassemble_file ORIGINAL REVISED_CHUNK START END   → stdout (file)
 #
-# Contrato de la strategy (debe proveer):
-#   extract_signatures(file)  → imprime firmas
-#   get_prompt_rules()        → imprime reglas del lenguaje
+# Strategy contract (must provide):
+#   extract_signatures(file)  → prints signatures
+#   get_prompt_rules()        → prints language rules
 # =============================================================================
 
-# Marcadores de sección en el context blob (deben ser líneas únicas)
+# Section markers in the context blob (must be unique lines)
 _ASSEMBLER_MARK_RULES="__GENPY_RULES__"
 _ASSEMBLER_MARK_IMPORTS="__GENPY_IMPORTS__"
 _ASSEMBLER_MARK_SIGNATURES="__GENPY_SIGNATURES__"
@@ -36,19 +36,19 @@ _ASSEMBLER_MARK_END="__GENPY_END__"
 #              are sourced into the current shell for subsequent calls.
 build_review_context() {
   if [[ $# -ne 2 ]]; then
-    echo "Uso: build_review_context FILE STRATEGY_FILE" >&2
+    echo "Usage: build_review_context FILE STRATEGY_FILE" >&2
     return 1
   fi
 
   local file="$1" strategy="$2"
 
   if [[ ! -f "$file" ]]; then
-    echo "Error: archivo no encontrado: $file" >&2
+    echo "Error: file not found: $file" >&2
     return 1
   fi
 
   if [[ ! -f "$strategy" ]]; then
-    echo "Error: strategy no encontrada: $strategy" >&2
+    echo "Error: strategy not found: $strategy" >&2
     return 1
   fi
 
@@ -63,7 +63,7 @@ build_review_context() {
 
   # ── Imports section: header zone (top of file until first top-level def) ──
   # Covers: blank lines, comments (#, //), Python import/from, Go package.
-  # v1 is Python-focused; Go/JS multi-line import blocks: Semana 5.
+  # v1 is Python-focused; Go/JS multi-line import blocks: Week 5.
   echo "$_ASSEMBLER_MARK_IMPORTS"
   awk '
     /^[[:space:]]*$/        { print; next }
@@ -88,26 +88,26 @@ build_review_context() {
 
 # assemble_prompt CONTEXT_FILE FOCAL_CHUNK_FILE GOAL
 # Reads the context blob produced by build_review_context and writes
-# the 4-section prompt (ARCHITECTURE.md §5.4 paso [5]) to stdout.
+# the 4-section prompt (ARCHITECTURE.md §5.4 step [5]) to stdout.
 #
 # CONTEXT_FILE    : context blob file (output of build_review_context)
 # FOCAL_CHUNK_FILE: file with the focal chunk (lines START..END from original)
 # GOAL            : string describing the review objective
 assemble_prompt() {
   if [[ $# -ne 3 ]]; then
-    echo "Uso: assemble_prompt CONTEXT_FILE FOCAL_CHUNK_FILE GOAL" >&2
+    echo "Usage: assemble_prompt CONTEXT_FILE FOCAL_CHUNK_FILE GOAL" >&2
     return 1
   fi
 
   local context_file="$1" focal_chunk_file="$2" goal="$3"
 
   if [[ ! -f "$context_file" ]]; then
-    echo "Error: contexto no encontrado: $context_file" >&2
+    echo "Error: context not found: $context_file" >&2
     return 1
   fi
 
   if [[ ! -f "$focal_chunk_file" ]]; then
-    echo "Error: fragmento focal no encontrado: $focal_chunk_file" >&2
+    echo "Error: focal chunk not found: $focal_chunk_file" >&2
     return 1
   fi
 
@@ -123,33 +123,33 @@ assemble_prompt() {
     -v s="$_ASSEMBLER_MARK_SIGNATURES" -v e="$_ASSEMBLER_MARK_END" \
     '$0==s{f=1;next} $0==e{f=0} f' "$context_file")
 
-  # ── Sección 1: Rol y restricciones ──
-  printf '%s\n' "=== SECCIÓN 1: ROL Y RESTRICCIONES ==="
-  printf '%s\n' "Eres un revisor de código experto. Mejora el FRAGMENTO OBJETIVO"
-  printf '%s\n' "respetando el CONTEXTO (solo lectura). No alteres la API pública existente."
-  printf '\n%s\n' "Reglas:"
+  # ── Section 1: Role and constraints ──
+  printf '%s\n' "=== SECTION 1: ROLE AND CONSTRAINTS ==="
+  printf '%s\n' "You are an expert code reviewer. Improve the TARGET FRAGMENT"
+  printf '%s\n' "while respecting the CONTEXT (read-only). Do not alter the existing public API."
+  printf '\n%s\n' "Rules:"
   [[ -n "$rules" ]] && printf '%s\n' "$rules"
-  printf '\n%s\n' "IMPORTANTE: Devuelve ÚNICAMENTE el código mejorado. Sin markdown,"
-  printf '%s\n'   "sin explicaciones ni bloques de código. El fragmento debe ser"
-  printf '%s\n'   "válido tal como aparecería en el archivo fuente."
+  printf '\n%s\n' "IMPORTANT: Return ONLY the improved code. No markdown,"
+  printf '%s\n'   "no explanations or code blocks. The fragment must be"
+  printf '%s\n'   "valid as it would appear in the source file."
 
-  # ── Sección 2: Objetivo de revisión ──
-  printf '\n%s\n' "=== SECCIÓN 2: OBJETIVO DE REVISIÓN ==="
+  # ── Section 2: Review goal ──
+  printf '\n%s\n' "=== SECTION 2: REVIEW GOAL ==="
   printf '%s\n' "$goal"
 
-  # ── Sección 3: Contexto (solo lectura) ──
-  printf '\n%s\n' "=== SECCIÓN 3: CONTEXTO (SOLO LECTURA) ==="
+  # ── Section 3: Context (read-only) ──
+  printf '\n%s\n' "=== SECTION 3: CONTEXT (READ-ONLY) ==="
   if [[ -n "$imports" ]]; then
-    printf '%s\n' "# Importaciones y cabecera"
+    printf '%s\n' "# Imports and header"
     printf '%s\n' "$imports"
   fi
   if [[ -n "$signatures" ]]; then
-    printf '\n%s\n' "# Firmas públicas del archivo"
+    printf '\n%s\n' "# Public signatures"
     printf '%s\n' "$signatures"
   fi
 
-  # ── Sección 4: Fragmento objetivo ──
-  printf '\n%s\n' "=== SECCIÓN 4: FRAGMENTO OBJETIVO ==="
+  # ── Section 4: Target fragment ──
+  printf '\n%s\n' "=== SECTION 4: TARGET FRAGMENT ==="
   cat "$focal_chunk_file"
 }
 
@@ -165,24 +165,24 @@ assemble_prompt() {
 # END           : last line of the focal chunk in ORIGINAL (1-based, inclusive)
 reassemble_file() {
   if [[ $# -ne 4 ]]; then
-    echo "Uso: reassemble_file ORIGINAL REVISED_CHUNK START END" >&2
+    echo "Usage: reassemble_file ORIGINAL REVISED_CHUNK START END" >&2
     return 1
   fi
 
   local original="$1" revised_chunk="$2" start="$3" end="$4"
 
   if [[ ! -f "$original" ]]; then
-    echo "Error: archivo original no encontrado: $original" >&2
+    echo "Error: original file not found: $original" >&2
     return 1
   fi
 
   if [[ ! -f "$revised_chunk" ]]; then
-    echo "Error: fragmento revisado no encontrado: $revised_chunk" >&2
+    echo "Error: revised chunk not found: $revised_chunk" >&2
     return 1
   fi
 
   if [[ ! "$start" =~ ^[0-9]+$ || ! "$end" =~ ^[0-9]+$ ]]; then
-    echo "Error: START y END deben ser enteros positivos" >&2
+    echo "Error: START and END must be positive integers" >&2
     return 1
   fi
 
@@ -190,7 +190,7 @@ reassemble_file() {
   total=$(awk 'END {print NR}' "$original")
 
   if [[ "$start" -lt 1 || "$end" -gt "$total" || "$start" -gt "$end" ]]; then
-    echo "Error: rango $start-$end inválido (archivo tiene $total líneas)" >&2
+    echo "Error: range $start-$end invalid (file has $total lines)" >&2
     return 1
   fi
 
