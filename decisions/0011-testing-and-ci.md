@@ -1,35 +1,35 @@
-# ADR-0011: Estrategia de tests y CI (D2)
+# ADR-0011: Testing and CI Strategy (D2)
 
-- **Estado:** Aceptada (revisa la intención original de D2)
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (D2)
+- **Status:** Accepted (revises the original intent of D2)
+- **Source:** `CONTEXT.md` → "Closed Decisions" (D2)
 
-## Contexto
+## Context
 
-El proyecto necesita una suite de tests automatizada corriendo en cada cambio. La
-decisión original (D2) preveía **bats-core**, pero en la práctica se descartó: bats
-añade una dependencia externa y los tests se resolvieron mejor en **bash puro** con
-mocks propios (incluido un mock de Ollama), sin necesidad de python3.
+The project needs an automated test suite running on every change. The original decision
+(D2) planned for **bats-core**, but in practice it was dropped: bats adds an external
+dependency and the tests were better solved in **pure bash** with custom mocks (including
+an Ollama mock), without needing python3.
 
-## Decisión
+## Decision
 
-- **Tests en bash puro, sin bats.** Cada archivo `tests/unit/*.sh` corre standalone e
-  imprime su resumen `N PASS / M FAIL`.
-- **CI en GitHub Actions** (`.github/workflows/ci.yml`): job de sintaxis (`bash -n` +
-  validación de `docker-compose` de los templates) y job `unit` que ejecuta los cuatro
-  archivos de test con `GUARDIAN_NON_INTERACTIVE=1`.
+- **Tests in pure bash, no bats.** Each `tests/unit/*.sh` file runs standalone and
+  prints its summary `N PASS / M FAIL`.
+- **CI on GitHub Actions** (`.github/workflows/ci.yml`): a syntax job (`bash -n` +
+  `docker-compose` validation of the templates) and a `unit` job that runs the four
+  test files with `GUARDIAN_NON_INTERACTIVE=1`.
 
-## Consecuencias
+## Consequences
 
-- (+) Sin dependencias de testing fuera de Bash; coherente con la regla "el CLI no
-  depende de Python/Node/Go en el host".
-- (+) Validación automática en cada push/PR a `main`; CI verde como señal de salud.
-- (−) Sin el azúcar de un framework (TAP, tags, paralelismo): el runner es casero.
+- (+) No testing dependencies outside of Bash; consistent with the rule "the CLI does
+  not depend on Python/Node/Go on the host".
+- (+) Automatic validation on every push/PR to `main`; green CI as a health signal.
+- (−) No framework sugar (TAP, tags, parallelism): the runner is homegrown.
 
-## Estado de la suite
+## Suite Status
 
-148 tests en verde: `test_resolver.sh` (24), `test_guardians.sh` (44),
+148 tests passing: `test_resolver.sh` (24), `test_guardians.sh` (44),
 `test_assembler.sh` (48), `test_checkpoint.sh` (32).
 
-## Nota
+## Note
 
-Supersede la parte "bats-core" de D2. Se conserva el código D2 por trazabilidad.
+Supersedes the "bats-core" part of D2. The D2 code is preserved for traceability.

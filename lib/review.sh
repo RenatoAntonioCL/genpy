@@ -7,43 +7,43 @@ _GENPY_REVIEW_LOADED=1
 # =============================================================================
 # GenPy — lib/review.sh (v1.0.0-alpha)
 #
-# Orquestador genpy review — flujo de 10 pasos (ARCHITECTURE.md §5.4).
+# genpy review orchestrator — 10-step flow (ARCHITECTURE.md §5.4).
 #
-# Uso:
-#   genpy review ARCHIVO [SELECTOR] [OPCIONES]
+# Usage:
+#   genpy review FILE [SELECTOR] [OPTIONS]
 #
-# SELECTOR (uno de):
-#   --lines N-M              Rango de líneas
-#   --function NOMBRE        Función top-level
-#   --class NOMBRE           Clase top-level
-#   --method CLASE.METODO    Método dentro de una clase
+# SELECTOR (one of):
+#   --lines N-M              Line range
+#   --function NAME          Top-level function
+#   --class NAME             Top-level class
+#   --method CLASS.METHOD    Method inside a class
 #
-# OPCIONES:
-#   --goal TEXTO             Objetivo de revisión (default: genérico)
-#   --provider ollama|api    Provider IA (default: ollama)
-#   --model NOMBRE           Forzar modelo específico (equivale a GENPY_MODEL)
+# OPTIONS:
+#   --goal TEXT              Review goal (default: generic)
+#   --provider ollama|api    AI provider (default: ollama)
+#   --model NAME             Force a specific model (equivalent to GENPY_MODEL)
 #
-# Variables de entorno para testing / CI:
-#   GENPY_REVIEW_NON_INTERACTIVE=1   Auto-acepta el diff en paso [9]
-#   GUARDIAN_NON_INTERACTIVE=1       Auto-aborta en guardianes (ver guardians.sh)
+# Environment variables for testing / CI:
+#   GENPY_REVIEW_NON_INTERACTIVE=1   Auto-accepts the diff at step [9]
+#   GUARDIAN_NON_INTERACTIVE=1       Auto-aborts on guardian failure (see guardians.sh)
 # =============================================================================
 
-# ─── API pública ──────────────────────────────────────────────────────────────
+# ─── Public API ───────────────────────────────────────────────────────────────
 
 genpy_review() {
   local target_file=""
   local selector_mode=""
   local selector_target=""
-  local goal="Mejorar la calidad, legibilidad y robustez del código"
+  local goal="Improve code quality, readability and robustness"
   local provider="${GENPY_PROVIDER:-ollama}"
 
-  # ── Parseo de argumentos ────────────────────────────────────────────────────
+  # ── Argument parsing ────────────────────────────────────────────────────────
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --lines|--function|--class|--method)
         selector_mode="$1"; shift
         if [[ $# -eq 0 ]]; then
-          echo "Error: falta el argumento para $selector_mode" >&2
+          echo "Error: missing argument for $selector_mode" >&2
           _review_usage; return 1
         fi
         selector_target="$1"; shift
@@ -51,7 +51,7 @@ genpy_review() {
       --goal)
         shift
         if [[ $# -eq 0 ]]; then
-          echo "Error: falta el texto del objetivo" >&2
+          echo "Error: missing goal text" >&2
           return 1
         fi
         goal="$1"; shift
@@ -59,7 +59,7 @@ genpy_review() {
       --provider)
         shift
         if [[ $# -eq 0 ]]; then
-          echo "Error: falta el nombre del provider" >&2
+          echo "Error: missing provider name" >&2
           return 1
         fi
         provider="$1"; shift
@@ -67,20 +67,20 @@ genpy_review() {
       --model)
         shift
         if [[ $# -eq 0 ]]; then
-          echo "Error: falta el nombre del modelo" >&2
+          echo "Error: missing model name" >&2
           return 1
         fi
         export GENPY_MODEL="$1"; shift
         ;;
       -*)
-        echo "Error: opción desconocida: $1" >&2
+        echo "Error: unknown option: $1" >&2
         _review_usage; return 1
         ;;
       *)
         if [[ -z "$target_file" ]]; then
           target_file="$1"; shift
         else
-          echo "Error: argumento inesperado: $1" >&2
+          echo "Error: unexpected argument: $1" >&2
           _review_usage; return 1
         fi
         ;;
@@ -91,53 +91,53 @@ genpy_review() {
     _review_usage; return 1
   fi
 
-  # Resolver ruta absoluta del archivo
+  # Resolve absolute path of the file
   target_file="$(_review_abspath "$target_file")" || return 1
 
   if [[ ! -f "$target_file" ]]; then
-    echo "Error: archivo no encontrado: $target_file" >&2
+    echo "Error: file not found: $target_file" >&2
     return 1
   fi
 
-  # Sin selector: revisar el archivo completo
+  # No selector: review the full file
   if [[ -z "$selector_mode" ]]; then
     selector_mode="--lines"
     selector_target="1-$(awk 'END {print NR}' "$target_file")"
   fi
 
-  # ── Cargar módulos ──────────────────────────────────────────────────────────
+  # ── Load modules ────────────────────────────────────────────────────────────
   source "${LIB_DIR:?}/core/errors.sh"
   source "${LIB_DIR}/utils.sh"
   source "${LIB_DIR}/resolver.sh"
   source "${LIB_DIR}/assembler.sh"
   source "${LIB_DIR}/guardians.sh"
   source "${LIB_DIR}/git_manager.sh"
-  # preflight.sh solo si la función no está ya definida (permite mock en tests)
+  # preflight.sh only if the function is not already defined (allows mock in tests)
   if ! declare -f preflight_mode_review &>/dev/null; then
     source "${LIB_DIR}/core/preflight.sh"
   fi
 
-  # Cargar provider solo si ai_complete no está ya definida (permite inyección
-  # del mock en tests pre-sourciando ollama_mock.sh antes de llamar genpy_review)
+  # Load provider only if ai_complete is not already defined (allows injection
+  # of mock in tests by pre-sourcing ollama_mock.sh before calling genpy_review)
   if ! declare -f ai_complete &>/dev/null; then
     case "$provider" in
       ollama) source "${LIB_DIR}/providers/ollama.sh" ;;
       api)    source "${LIB_DIR}/providers/api.sh" ;;
       *)
-        echo "Error: provider desconocido: '$provider'. Válidos: ollama, api" >&2
+        echo "Error: unknown provider: '$provider'. Valid: ollama, api" >&2
         return 1
         ;;
     esac
   fi
 
-  # Detectar strategy
+  # Detect strategy
   local strategy_file
   strategy_file=$(_review_detect_strategy "$target_file") || return 1
 
-  # Project dir = raíz git
+  # Project dir = git root
   local project_dir
   project_dir=$(git rev-parse --show-toplevel 2>/dev/null) || {
-    echo "Error: no se encontró un repositorio git en o por encima de $(dirname "$target_file")" >&2
+    echo "Error: no git repository found at or above $(dirname "$target_file")" >&2
     return 1
   }
 
@@ -156,22 +156,22 @@ genpy_review() {
   local reassembled_file="$tmpdir/reassembled.tmp"
   local diff_file="$tmpdir/review.diff"
 
-  # ── [1] Cargar strategy ─────────────────────────────────────────────────────
-  print_section "Revisión IA — $(basename "$target_file")"
+  # ── [1] Load strategy ───────────────────────────────────────────────────────
+  print_section "AI Review — $(basename "$target_file")"
   # shellcheck source=/dev/null
   source "$strategy_file"
 
   # ── [2] Git checkpoint ──────────────────────────────────────────────────────
   create_checkpoint "$project_dir" || return 1
 
-  # ── [3] Resolver rango ──────────────────────────────────────────────────────
+  # ── [3] Resolve range ───────────────────────────────────────────────────────
   resolve_range "$selector_mode" "$selector_target" "$target_file" || {
     rollback_to_checkpoint "$project_dir"
     return 1
   }
-  print_info "Fragmento: líneas ${RESOLVE_START}–${RESOLVE_END} de $(basename "$target_file")"
+  print_info "Fragment: lines ${RESOLVE_START}–${RESOLVE_END} of $(basename "$target_file")"
 
-  # Extraer el focal chunk
+  # Extract the focal chunk
   sed -n "${RESOLVE_START},${RESOLVE_END}p" "$target_file" > "$focal_chunk_file"
 
   # ── [4] Build context ───────────────────────────────────────────────────────
@@ -180,25 +180,25 @@ genpy_review() {
   # ── [5] Assemble prompt ─────────────────────────────────────────────────────
   assemble_prompt "$context_file" "$focal_chunk_file" "$goal" > "$prompt_file"
 
-  # ── [6–7] Bucle IA + Guardianes ─────────────────────────────────────────────
+  # ── [6–7] AI + Guardians loop ───────────────────────────────────────────────
   local retries_done=0
   while true; do
-    show_progress "Enviando fragmento al modelo"
+    show_progress "Sending fragment to model"
 
     local ai_rc=0
     ai_complete "$prompt_file" "$ai_output_file" || ai_rc=$?
-    printf '\r\033[K'  # limpiar la línea de progreso
+    printf '\r\033[K'  # clear the progress line
 
     case "$ai_rc" in
       0) ;;
       3)
         rollback_to_checkpoint "$project_dir"
-        print_error "Timeout esperando la respuesta del modelo (${OLLAMA_TIMEOUT:-120}s)."
+        print_error "Timeout waiting for model response (${OLLAMA_TIMEOUT:-120}s)."
         return 1
         ;;
       *)
         rollback_to_checkpoint "$project_dir"
-        print_error "El provider falló (rc=${ai_rc}). ¿Está Ollama en ejecución?"
+        print_error "Provider failed (rc=${ai_rc}). Is Ollama running?"
         return 1
         ;;
     esac
@@ -216,22 +216,22 @@ genpy_review() {
         ;;
       *)
         rollback_to_checkpoint "$project_dir"
-        print_warning "Revisión abortada."
+        print_warning "Review aborted."
         return 1
         ;;
     esac
   done
 
-  # ── [8] Re-ensamblado + validación de sintaxis completa ─────────────────────
+  # ── [8] Reassembly + full syntax validation ──────────────────────────────────
   reassemble_file \
     "$target_file" "$ai_output_file" "$RESOLVE_START" "$RESOLVE_END" \
     > "$reassembled_file"
 
   if declare -f validate_syntax &>/dev/null; then
     if ! validate_syntax "$reassembled_file" 2>/dev/null; then
-      print_warning "El archivo reensamblado tiene errores de sintaxis."
+      print_warning "The reassembled file has syntax errors."
       if [[ "${GENPY_REVIEW_NON_INTERACTIVE:-0}" != "1" && -t 0 ]]; then
-        printf '  [A]bortar  [E]ditar manualmente → '
+        printf '  [A]bort  [E]dit manually → '
         local syn_choice; IFS= read -r syn_choice
         syn_choice="${syn_choice^^}"
         if [[ "$syn_choice" == "E" ]]; then
@@ -247,11 +247,11 @@ genpy_review() {
     fi
   fi
 
-  # ── [9] Diff visual + confirmación ──────────────────────────────────────────
+  # ── [9] Visual diff + confirmation ──────────────────────────────────────────
   diff -u "$target_file" "$reassembled_file" > "$diff_file" || true
 
   if [[ ! -s "$diff_file" ]]; then
-    print_warning "El modelo no introdujo cambios en el fragmento."
+    print_warning "The model introduced no changes to the fragment."
     rollback_to_checkpoint "$project_dir"
     return 0
   fi
@@ -266,12 +266,12 @@ genpy_review() {
 
   local final_choice="A"
   if [[ "${GENPY_REVIEW_NON_INTERACTIVE:-0}" != "1" && -t 0 ]]; then
-    printf '\n  [A]ceptar cambios  [R]echazar  [E]ditar → '
+    printf '\n  [A]ccept changes  [R]eject  [E]dit → '
     IFS= read -r final_choice
     final_choice="${final_choice^^}"
   fi
 
-  # ── [10] Aplicar o revertir ──────────────────────────────────────────────────
+  # ── [10] Apply or revert ─────────────────────────────────────────────────────
   case "$final_choice" in
     A|"")
       _review_apply "$project_dir" "$target_file" "$reassembled_file"
@@ -282,12 +282,12 @@ genpy_review() {
       ;;
     *)
       rollback_to_checkpoint "$project_dir"
-      print_warning "Revisión rechazada. Restaurado el estado original."
+      print_warning "Review rejected. Original state restored."
       ;;
   esac
 }
 
-# ─── Internos ─────────────────────────────────────────────────────────────────
+# ─── Internals ────────────────────────────────────────────────────────────────
 
 _review_apply() {
   local project_dir="$1" target_file="$2" reassembled_file="$3"
@@ -299,16 +299,16 @@ _review_apply() {
   git -C "$project_dir" commit -q \
     -m "chore(genpy): review applied to ${relative_file}"
 
-  print_success "Cambios aplicados y commiteados en '${CHECKPOINT_BRANCH}'."
-  print_info   "Para integrar: git checkout <rama-base> && git merge ${CHECKPOINT_BRANCH}"
+  print_success "Changes applied and committed to '${CHECKPOINT_BRANCH}'."
+  print_info   "To integrate: git checkout <base-branch> && git merge ${CHECKPOINT_BRANCH}"
 }
 
-# Detecta la strategy a partir del blueprint.toml o la extensión del archivo
+# Detects the strategy from blueprint.toml or the file extension
 _review_detect_strategy() {
   local file="$1"
   local lib_dir="${LIB_DIR:?}"
 
-  # 1. Intentar leer language del blueprint.toml del proyecto actual
+  # 1. Try to read language from the project's blueprint.toml
   local toml=".genpy/blueprint.toml"
   if [[ -f "$toml" ]]; then
     local lang
@@ -322,7 +322,7 @@ _review_detect_strategy() {
     fi
   fi
 
-  # 2. Fallback: extensión del archivo
+  # 2. Fallback: file extension
   local ext="${file##*.}"
   local strategy
   case "$ext" in
@@ -330,21 +330,21 @@ _review_detect_strategy() {
     go)            strategy="${lib_dir}/review_strategies/go.sh" ;;
     js|ts|jsx|tsx) strategy="${lib_dir}/review_strategies/javascript.sh" ;;
     *)
-      echo "Error: no se pudo detectar el lenguaje para '${file}'" >&2
-      echo "  Usa un blueprint.toml con [meta] language = <lenguaje>" >&2
+      echo "Error: could not detect language for '${file}'" >&2
+      echo "  Use a blueprint.toml with [meta] language = <language>" >&2
       return 1
       ;;
   esac
 
   if [[ ! -f "$strategy" ]]; then
-    echo "Error: strategy no encontrada: $strategy" >&2
+    echo "Error: strategy not found: $strategy" >&2
     return 1
   fi
 
   echo "$strategy"
 }
 
-# Resuelve ruta absoluta portable (misma lógica que bin/genpy _resolve_path)
+# Resolves absolute path portably (same logic as bin/genpy _resolve_path)
 _review_abspath() {
   local target="$1"
   if command -v realpath &>/dev/null; then
@@ -361,22 +361,22 @@ _review_abspath() {
 
 _review_usage() {
   cat >&2 <<'EOF'
-Uso: genpy review ARCHIVO [SELECTOR] [OPCIONES]
+Usage: genpy review FILE [SELECTOR] [OPTIONS]
 
-SELECTOR (uno de):
-  --lines N-M              Rango de líneas (ej: 10-50)
-  --function NOMBRE        Función top-level
-  --class NOMBRE           Clase top-level
-  --method CLASE.METODO    Método dentro de una clase
+SELECTOR (one of):
+  --lines N-M              Line range (e.g.: 10-50)
+  --function NAME          Top-level function
+  --class NAME             Top-level class
+  --method CLASS.METHOD    Method inside a class
 
-OPCIONES:
-  --goal TEXTO             Objetivo de revisión
-  --provider ollama|api    Provider IA (default: ollama)
-  --model NOMBRE           Forzar modelo específico
+OPTIONS:
+  --goal TEXT              Review goal
+  --provider ollama|api    AI provider (default: ollama)
+  --model NAME             Force specific model
 
-Ejemplos:
+Examples:
   genpy review app.py --function create_user
-  genpy review main.py --lines 10-50 --goal "Mejorar manejo de errores"
+  genpy review main.py --lines 10-50 --goal "Improve error handling"
   genpy review models.py --class UserModel
 EOF
 }

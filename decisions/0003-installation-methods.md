@@ -1,20 +1,20 @@
-# ADR-0003: Métodos de instalación (A3)
+# ADR-0003: Installation Methods (A3)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (A3)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (A3)
 
-## Contexto
+## Context
 
-Los usuarios llegan por distintos caminos; forzar un único método de instalación
-genera fricción.
+Users arrive through different paths; forcing a single installation method creates
+friction.
 
-## Decisión
+## Decision
 
-Soportar **`git clone` + `install.sh`** *y* gestores de paquetes.
+Support **`git clone` + `install.sh`** *and* package managers.
 
-## Consecuencias
+## Consequences
 
-- (+) Camino simple para probar (clonar e instalar) y camino integrado para quienes
-  usan un package manager.
-- (−) Más superficie a mantener: `scripts/install.sh`, `update.sh`, `uninstall.sh`
-  deben quedar coherentes con la vía de package manager.
+- (+) Simple path to try it out (clone and install) and an integrated path for those
+  who use a package manager.
+- (−) More surface to maintain: `scripts/install.sh`, `update.sh`, `uninstall.sh`
+  must stay consistent with the package manager path.

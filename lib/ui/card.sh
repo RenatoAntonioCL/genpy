@@ -3,17 +3,17 @@ set -euo pipefail
 # =============================================================================
 # GenPy — lib/ui/card.sh (v5.0.0)
 #
-# Tarjeta visual de resumen del proyecto antes de confirmar la creación.
-# Extraído de utils.sh. Lee metadatos desde core/config.sh via blueprint_meta().
+# Visual summary card for the project before confirming creation.
+# Extracted from utils.sh. Reads metadata from core/config.sh via blueprint_meta().
 #
-# Antes: descripción, stack, puertos hardcodeados aquí en un case gigante.
-# Ahora: todo se obtiene desde BLUEPRINT_META en config.sh.
+# Before: description, stack, ports hardcoded here in a giant case statement.
+# Now: everything is fetched from BLUEPRINT_META in config.sh.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
 # print_blueprint_card
 #
-# Argumentos:
+# Arguments:
 #   $1 — project_name
 #   $2 — blueprint
 #   $3 — git_mode: "local" | "private" | "public"
@@ -23,14 +23,14 @@ print_blueprint_card() {
     local blueprint="$2"
     local git_mode="$3"
 
-    # Leer metadatos desde config.sh
+    # Read metadata from config.sh
     local description stack libs ports
     description=$(blueprint_meta "$blueprint" "description")
     stack=$(blueprint_meta "$blueprint" "stack")
     libs=$(blueprint_meta "$blueprint" "libs")
     ports=$(blueprint_meta "$blueprint" "ports")
 
-    # Mapeo de Git sin los comentarios grises (limpia la tarjeta)
+    # Git mapping without the grey labels (cleans up the card)
     local git_label=""
     case "$git_mode" in
         local)   git_label="Local Repository" ;;

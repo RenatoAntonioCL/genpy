@@ -1,19 +1,19 @@
-# ADR-0002: Plataformas soportadas (A2)
+# ADR-0002: Supported Platforms (A2)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (A2)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (A2)
 
-## Contexto
+## Context
 
-Hay que acotar dónde se garantiza que GenPy funciona, para poder testear y dar soporte
-sin dispersarse.
+We need to define where GenPy is guaranteed to work, to be able to test and provide
+support without spreading too thin.
 
-## Decisión
+## Decision
 
-Soporte para **Linux + macOS + WSL2** desde la v1.
+Support for **Linux + macOS + WSL2** from v1.
 
-## Consecuencias
+## Consequences
 
-- (+) Cubre los entornos de desarrollo habituales con una sola base de código portable.
-- (−) Obliga a cuidar portabilidad (ej. `lsof` no está en todas las distros → se
-  resolvió con `_port_in_use()` en `compat.sh`). Windows nativo (sin WSL2) queda fuera.
+- (+) Covers common development environments with a single portable codebase.
+- (−) Requires careful portability (e.g. `lsof` is not available on all distros → resolved
+  with `_port_in_use()` in `compat.sh`). Native Windows (without WSL2) is excluded.

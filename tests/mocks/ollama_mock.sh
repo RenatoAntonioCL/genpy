@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Mock de provider Ollama para tests Semana 2 (sin red).
-# Contrato: ai_complete(prompt_file, output_file, options_file)
-#   0=ok  1=fallo  2=vacío  3=timeout
+# Ollama provider mock for tests (no network).
+# Contract: ai_complete(prompt_file, output_file, options_file)
+#   0=ok  1=failure  2=empty  3=timeout
 set -euo pipefail
 
 ai_complete() {
@@ -11,9 +11,9 @@ ai_complete() {
 
   [[ -f "$prompt_file" ]] || return 1
 
-  # Simula respuesta: extrae el contenido de la Sección 4 (FRAGMENTO OBJETIVO)
-  # que es lo que el modelo devolvería: solo el código, sin el prompt completo.
-  local section4_marker="=== SECCIÓN 4: FRAGMENTO OBJETIVO ==="
+  # Simulates response: extracts the content of Section 4 (TARGET FRAGMENT),
+  # which is what the model would return: only the code, without the full prompt.
+  local section4_marker="=== SECTION 4: TARGET FRAGMENT ==="
   if grep -qF "$section4_marker" "$prompt_file" 2>/dev/null; then
     awk -v marker="$section4_marker" 'found{print} $0==marker{found=1}' \
       "$prompt_file" >"$output_file"

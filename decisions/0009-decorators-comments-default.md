@@ -1,19 +1,20 @@
-# ADR-0009: Decoradores y comentarios incluidos por defecto (C3)
+# ADR-0009: Decorators and Comments Included by Default (C3)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (C3)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (C3)
 
-## Contexto
+## Context
 
-Al extraer un símbolo (función/método) para review, hay que decidir si se arrastran sus
-decoradores y comentarios asociados o solo el cuerpo.
+When extracting a symbol (function/method) for review, we need to decide whether to
+include its associated decorators and comments or only the body.
 
-## Decisión
+## Decision
 
-**Incluir decoradores y comentarios por defecto**, configurable en `blueprint.toml`.
+**Include decorators and comments by default**, configurable in `blueprint.toml`.
 
-## Consecuencias
+## Consequences
 
-- (+) El contexto enviado al review es completo y fiel al código real.
-- (+) Quien necesite otro comportamiento lo ajusta por blueprint, sin cambiar el motor.
-- (−) Aumenta levemente el tamaño del chunk enviado al modelo.
+- (+) The context sent to the review is complete and faithful to the real code.
+- (+) Anyone who needs different behavior can adjust it per blueprint, without changing
+  the engine.
+- (−) Slightly increases the size of the chunk sent to the model.

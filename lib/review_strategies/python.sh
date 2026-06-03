@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # GenPy — review strategy: Python
-# Contrato: validate_syntax, extract_signatures, get_prompt_rules
+# Contract: validate_syntax, extract_signatures, get_prompt_rules
 set -euo pipefail
 
 validate_syntax() {
@@ -15,9 +15,9 @@ extract_signatures() {
 
 get_prompt_rules() {
   cat <<'EOF'
-- Mantener indentación de 4 espacios.
-- Preferir type hints en funciones públicas.
-- Usar f-strings en lugar de concatenación.
-- No eliminar decoradores de FastAPI (@router.*, @app.*).
+- Keep 4-space indentation.
+- Prefer type hints on public functions.
+- Use f-strings instead of concatenation.
+- Do not remove FastAPI decorators (@router.*, @app.*).
 EOF
 }

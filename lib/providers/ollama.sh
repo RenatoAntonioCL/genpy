@@ -7,30 +7,30 @@ _GENPY_OLLAMA_LOADED=1
 # =============================================================================
 # GenPy — lib/providers/ollama.sh
 #
-# Provider Ollama para genpy review.
-# Contrato: ai_complete(prompt_file, output_file, options_file) → 0|1|2|3
-#   0 → éxito, respuesta en output_file
-#   1 → fallo de servicio (conexión rechazada, HTTP no-200)
-#   2 → respuesta vacía o malformada
+# Ollama provider for genpy review.
+# Contract: ai_complete(prompt_file, output_file, options_file) → 0|1|2|3
+#   0 → success, response in output_file
+#   1 → service failure (connection refused, HTTP non-200)
+#   2 → empty or malformed response
 #   3 → timeout
 # =============================================================================
 
 OLLAMA_HOST="${OLLAMA_HOST:-http://localhost:11434}"
 OLLAMA_TIMEOUT="${OLLAMA_TIMEOUT:-120}"
 
-# ─── API pública ──────────────────────────────────────────────────────────────
+# ─── Public API ───────────────────────────────────────────────────────────────
 
 # ai_complete PROMPT_FILE OUTPUT_FILE [OPTIONS_FILE]
 ai_complete() {
   if [[ $# -lt 2 ]]; then
-    echo "Uso: ai_complete PROMPT_FILE OUTPUT_FILE [OPTIONS_FILE]" >&2
+    echo "Usage: ai_complete PROMPT_FILE OUTPUT_FILE [OPTIONS_FILE]" >&2
     return 1
   fi
 
   local prompt_file="$1" output_file="$2"
 
   if [[ ! -f "$prompt_file" ]]; then
-    echo "Error: prompt_file no encontrado: $prompt_file" >&2
+    echo "Error: prompt_file not found: $prompt_file" >&2
     return 1
   fi
 
@@ -77,9 +77,9 @@ ai_complete() {
   return 0
 }
 
-# ─── Internos ─────────────────────────────────────────────────────────────────
+# ─── Internals ────────────────────────────────────────────────────────────────
 
-# Prioridad: 1. GENPY_MODEL env var  2. primer modelo en ollama list  3. qwen2.5:3b
+# Priority: 1. GENPY_MODEL env var  2. first model in ollama list  3. qwen2.5:3b
 _ollama_detect_model() {
   if [[ -n "${GENPY_MODEL:-}" ]]; then
     echo "$GENPY_MODEL"; return 0
@@ -103,7 +103,7 @@ _ollama_detect_model() {
   echo "qwen2.5:3b"
 }
 
-# Lee stdin, imprime la cadena JSON con comillas (ej: "hola\nmundo")
+# Reads stdin, prints the JSON string with quotes (e.g.: "hello\nworld")
 _ollama_json_encode() {
   if command -v jq &>/dev/null; then
     jq -Rs '.'
@@ -112,7 +112,7 @@ _ollama_json_encode() {
   fi
 }
 
-# Extrae .response del JSON de respuesta de Ollama
+# Extracts .response from Ollama's JSON response
 _ollama_extract_response() {
   local file="$1"
   if command -v jq &>/dev/null; then

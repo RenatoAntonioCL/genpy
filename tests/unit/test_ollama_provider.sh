@@ -2,11 +2,11 @@
 # =============================================================================
 # GenPy — tests/unit/test_ollama_provider.sh
 #
-# Pruebas unitarias para lib/providers/ollama.sh.
-# No requiere Ollama en ejecución — testea las funciones internas
-# con fixtures locales.
+# Unit tests for lib/providers/ollama.sh.
+# Does not require Ollama running — tests internal functions
+# with local fixtures.
 #
-# Ejecutar desde la raíz del repo:
+# Run from the repo root:
 #   bash tests/unit/test_ollama_provider.sh
 # =============================================================================
 set -euo pipefail
@@ -35,7 +35,7 @@ _assert_eq() {
   if [[ "$got" == "$want" ]]; then
     _ok "$desc"
   else
-    _fail "$desc" "esperado: '$want'  obtenido: '$got'"
+    _fail "$desc" "expected: '$want'  got: '$got'"
   fi
 }
 
@@ -44,7 +44,7 @@ _assert_nonempty() {
   if [[ -n "$val" ]]; then
     _ok "$desc"
   else
-    _fail "$desc" "se esperaba valor no vacío"
+    _fail "$desc" "expected non-empty value"
   fi
 }
 
@@ -57,18 +57,18 @@ echo "─── _ollama_detect_model ──────────────�
   GENPY_MODEL="mistral:7b"
   result=$(_ollama_detect_model)
   [[ "$result" == "mistral:7b" ]] \
-    && { echo "  PASS  respeta GENPY_MODEL cuando está definido"; (( _PASS++ )) || true; } \
-    || { echo "  FAIL  GENPY_MODEL no respetado — got: $result"; (( _FAIL++ )) || true; }
+    && { echo "  PASS  respects GENPY_MODEL when set"; (( _PASS++ )) || true; } \
+    || { echo "  FAIL  GENPY_MODEL not respected — got: $result"; (( _FAIL++ )) || true; }
 )
 
 (
-  # Sin GENPY_MODEL y Ollama no disponible → debe devolver el fallback
+  # Without GENPY_MODEL and Ollama unavailable → must return fallback
   unset GENPY_MODEL 2>/dev/null || true
-  OLLAMA_HOST="http://127.0.0.1:1"  # puerto cerrado, falla inmediata
+  OLLAMA_HOST="http://127.0.0.1:1"  # closed port, immediate failure
   result=$(_ollama_detect_model)
   [[ "$result" == "qwen2.5:3b" ]] \
-    && { echo "  PASS  fallback a qwen2.5:3b cuando Ollama no responde"; (( _PASS++ )) || true; } \
-    || { echo "  FAIL  fallback incorrecto — got: $result"; (( _FAIL++ )) || true; }
+    && { echo "  PASS  fallback to qwen2.5:3b when Ollama does not respond"; (( _PASS++ )) || true; } \
+    || { echo "  FAIL  wrong fallback — got: $result"; (( _FAIL++ )) || true; }
 )
 
 # ─── _ollama_json_encode ──────────────────────────────────────────────────────
@@ -77,19 +77,19 @@ echo ""
 echo "─── _ollama_json_encode ───────────────────────────────────────────────────"
 
 result=$(printf 'hello world' | _ollama_json_encode)
-_assert_eq "texto simple" "$result" '"hello world"'
+_assert_eq "plain text" "$result" '"hello world"'
 
 result=$(printf 'line1\nline2' | _ollama_json_encode)
-_assert_eq "newlines codificados" "$result" '"line1\nline2"'
+_assert_eq "encoded newlines" "$result" '"line1\nline2"'
 
 result=$(printf 'say "hi"' | _ollama_json_encode)
-_assert_eq "comillas dobles codificadas" "$result" '"say \"hi\""'
+_assert_eq "encoded double quotes" "$result" '"say \"hi\""'
 
 result=$(printf 'path\\file' | _ollama_json_encode)
-_assert_eq "backslash codificado" "$result" '"path\\file"'
+_assert_eq "encoded backslash" "$result" '"path\\file"'
 
 result=$(printf '' | _ollama_json_encode)
-_assert_eq "string vacío" "$result" '""'
+_assert_eq "empty string" "$result" '""'
 
 # ─── _ollama_extract_response ─────────────────────────────────────────────────
 
@@ -98,66 +98,66 @@ echo "─── _ollama_extract_response ─────────────
 
 tmpdir=$(mktemp -d)
 
-# Respuesta válida con campo response
+# Valid response with response field
 cat > "$tmpdir/resp_ok.json" <<'JSON'
 {"model":"qwen2.5:3b","response":"def foo():\n    pass","done":true}
 JSON
 
 result=$(_ollama_extract_response "$tmpdir/resp_ok.json")
-_assert_eq "extrae .response de JSON válido" "$result" 'def foo():
+_assert_eq "extracts .response from valid JSON" "$result" 'def foo():
     pass'
 
-# Respuesta con response vacío
+# Response with empty response
 cat > "$tmpdir/resp_empty.json" <<'JSON'
 {"model":"qwen2.5:3b","response":"","done":true}
 JSON
 
 result=$(_ollama_extract_response "$tmpdir/resp_empty.json")
-_assert_eq "response vacío devuelve cadena vacía" "$result" ""
+_assert_eq "empty response returns empty string" "$result" ""
 
-# JSON sin campo response
+# JSON without response field
 cat > "$tmpdir/resp_nofield.json" <<'JSON'
 {"model":"qwen2.5:3b","done":true}
 JSON
 
 result=$(_ollama_extract_response "$tmpdir/resp_nofield.json")
-_assert_eq "JSON sin .response devuelve cadena vacía" "$result" ""
+_assert_eq "JSON without .response returns empty string" "$result" ""
 
-# JSON malformado
+# Malformed JSON
 cat > "$tmpdir/resp_bad.json" <<'JSON'
 {not valid json}
 JSON
 
 if ! _ollama_extract_response "$tmpdir/resp_bad.json" &>/dev/null; then
-  _ok "JSON malformado devuelve error (rc != 0)"
+  _ok "malformed JSON returns error (rc != 0)"
 else
-  _fail "JSON malformado debería fallar" "rc fue 0"
+  _fail "malformed JSON should fail" "rc was 0"
 fi
 
 rm -rf "$tmpdir"
 
-# ─── ai_complete con mock ─────────────────────────────────────────────────────
+# ─── ai_complete with mock ────────────────────────────────────────────────────
 
 echo ""
-echo "─── ai_complete (usando ollama_mock) ─────────────────────────────────────"
+echo "─── ai_complete (using ollama_mock) ─────────────────────────────────────"
 
-# Override ai_complete con el mock para este bloque de tests
+# Override ai_complete with the mock for this test block
 source "$REPO_ROOT/tests/mocks/ollama_mock.sh"
 
 tmpdir=$(mktemp -d)
 
-# Prompt con Sección 4 definida
+# Prompt with Section 4 defined
 cat > "$tmpdir/prompt_with_s4.txt" <<'EOF'
-=== SECCIÓN 1: ROL Y RESTRICCIONES ===
-Eres un revisor experto.
+=== SECTION 1: ROLE AND CONSTRAINTS ===
+You are an expert reviewer.
 
-=== SECCIÓN 2: OBJETIVO DE REVISIÓN ===
-Mejorar calidad.
+=== SECTION 2: REVIEW GOAL ===
+Improve quality.
 
-=== SECCIÓN 3: CONTEXTO (SOLO LECTURA) ===
+=== SECTION 3: CONTEXT (READ-ONLY) ===
 import os
 
-=== SECCIÓN 4: FRAGMENTO OBJETIVO ===
+=== SECTION 4: TARGET FRAGMENT ===
 def hello():
     print("hi")
 EOF
@@ -166,20 +166,20 @@ ai_complete "$tmpdir/prompt_with_s4.txt" "$tmpdir/output.txt" ""
 got=$(cat "$tmpdir/output.txt")
 
 if [[ "$got" == *"def hello"* ]]; then
-  _ok "mock extrae solo el contenido de Sección 4"
+  _ok "mock extracts only the content of Section 4"
 else
-  _fail "mock no extrajo Sección 4" "got: $got"
+  _fail "mock did not extract Section 4" "got: $got"
 fi
 
-if [[ "$got" == *"ROL Y RESTRICCIONES"* ]]; then
-  _fail "output contiene texto de Sección 1 (no debería)" "got: $got"
+if [[ "$got" == *"ROLE AND CONSTRAINTS"* ]]; then
+  _fail "output contains text from Section 1 (should not)" "got: $got"
 else
-  _ok "output no contiene secciones del prompt"
+  _ok "output does not contain prompt sections"
 fi
 
-# Prompt sin Sección 4 → copia todo
+# Prompt without Section 4 → copies everything
 cat > "$tmpdir/prompt_no_s4.txt" <<'EOF'
-Solo código sin marcadores de sección
+Plain code without section markers
 def bar():
     return 42
 EOF
@@ -187,23 +187,23 @@ EOF
 ai_complete "$tmpdir/prompt_no_s4.txt" "$tmpdir/output2.txt" ""
 got2=$(cat "$tmpdir/output2.txt")
 if [[ "$got2" == *"def bar"* ]]; then
-  _ok "mock sin Sección 4 copia el prompt completo"
+  _ok "mock without Section 4 copies the full prompt"
 else
-  _fail "mock sin Sección 4 no copió el prompt" "got: $got2"
+  _fail "mock without Section 4 did not copy the prompt" "got: $got2"
 fi
 
-# Archivo prompt vacío → rc 1 (archivo no existe)
+# Empty prompt file → rc 1 (file does not exist)
 if ! ai_complete "$tmpdir/nonexistent.txt" "$tmpdir/out.txt" "" 2>/dev/null; then
-  _ok "ai_complete falla (rc != 0) con prompt inexistente"
+  _ok "ai_complete fails (rc != 0) with nonexistent prompt"
 else
-  _fail "debía fallar con prompt inexistente" "rc fue 0"
+  _fail "should have failed with nonexistent prompt" "rc was 0"
 fi
 
 rm -rf "$tmpdir"
 
-# ─── Resultado ────────────────────────────────────────────────────────────────
+# ─── Result ───────────────────────────────────────────────────────────────────
 
 echo ""
 echo "─────────────────────────────────────────────────────────────────────────"
-printf "  Resultado: %d PASS  /  %d FAIL\n" "$_PASS" "$_FAIL"
+printf "  Result: %d PASS  /  %d FAIL\n" "$_PASS" "$_FAIL"
 [[ "$_FAIL" -eq 0 ]]

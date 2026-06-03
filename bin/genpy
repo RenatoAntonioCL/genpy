@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 1. Ubicación absoluta del script donde reside el código fuente (Developer/genpy/bin/genpy)
-# _resolve_path: shim portable para readlink -f (GNU) vs macOS stock (BSD readlink sin -f).
-# Consistente con el patrón _sed_inplace/_port_in_use del proyecto.
+# 1. Absolute path of the script where the source code lives (Developer/genpy/bin/genpy)
+# _resolve_path: portable shim for readlink -f (GNU) vs macOS stock (BSD readlink without -f).
+# Consistent with the _sed_inplace/_port_in_use pattern from the project.
 _resolve_path() {
   local target="$1"
   if command -v realpath &>/dev/null; then
@@ -11,7 +11,7 @@ _resolve_path() {
   elif readlink -f "$target" &>/dev/null 2>&1; then
     readlink -f "$target"
   else
-    # Fallback manual: cd al directorio del archivo y capturar pwd
+    # Manual fallback: cd to the file's directory and capture pwd
     local dir file
     dir="$(cd "$(dirname "$target")" && pwd)"
     file="$(basename "$target")"
@@ -21,22 +21,22 @@ _resolve_path() {
 BIN_PATH="$(_resolve_path "${BASH_SOURCE[0]}")"
 PROJECT_ROOT="$(dirname "$(dirname "$BIN_PATH")")"
 
-# 2. Definir directorios apuntando SIEMPRE al proyecto raíz de desarrollo
+# 2. Define directories always pointing to the development project root
 export LIB_DIR="$PROJECT_ROOT/lib"
 export SCRIPTS_DIR="$PROJECT_ROOT/scripts"
 export TEMPLATE_BASE_DIR="$PROJECT_ROOT/templates"
 
-# 3. Validación de integridad
+# 3. Integrity validation
 if [[ ! -d "$LIB_DIR" ]]; then
-    echo "❌ Error: No se encontró el directorio de librerías en $LIB_DIR"
+    echo "❌ Error: Library directory not found at $LIB_DIR"
     exit 1
 fi
 
-source "$LIB_DIR/core/config.sh"  # 1. Cargar metadatos
-source "$LIB_DIR/core/compat.sh"  # 2. Validar entorno
+source "$LIB_DIR/core/config.sh"  # 1. Load metadata
+source "$LIB_DIR/core/compat.sh"  # 2. Validate environment
 source "$LIB_DIR/utils.sh"
 
-# 4. Ahora sí, cargar el idioma
+# 4. Now load the language
 export GENPY_LANG="${GENPY_LANG:-es}"
 if [[ -f "$LIB_DIR/i18n/${GENPY_LANG}.sh" ]]; then
     source "$LIB_DIR/i18n/${GENPY_LANG}.sh"
@@ -47,15 +47,15 @@ fi
 
 export LIB_DIR TEMPLATE_BASE_DIR
 
-# ─── MENÚ DE AYUDA GLOBAL ────────────────────────────────────────────────────
+# ─── GLOBAL HELP MENU ────────────────────────────────────────────────────────
 show_help() {
   echo -e "\n 🛠️  GenPy — project scaffolding tool v${GENPY_VERSION}\n"
-  echo " Uso:"
-  echo "   genpy create      Crear un nuevo proyecto"
-  echo "   genpy review      Revisar código con IA (requiere Ollama)"
-  echo "   genpy update      Actualizar GenPy a la última versión"
-  echo "   genpy uninstall   Desinstalar GenPy completamente"
-  echo "   genpy version     Ver la versión instalada"
+  echo " Usage:"
+  echo "   genpy create      Create a new project"
+  echo "   genpy review      Review code with AI (requires Ollama)"
+  echo "   genpy update      Update GenPy to the latest version"
+  echo "   genpy uninstall   Uninstall GenPy completely"
+  echo "   genpy version     Show the installed version"
   echo ""
 }
 

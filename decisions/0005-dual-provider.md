@@ -1,20 +1,21 @@
-# ADR-0005: Proveedor dual de IA (B2)
+# ADR-0005: Dual AI Provider (B2)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (B2)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (B2)
 
-## Contexto
+## Context
 
-Algunos usuarios prefieren correr modelos localmente (privacidad, costo cero) y otros
-quieren la calidad de una API externa.
+Some users prefer running models locally (privacy, zero cost) and others want the
+quality of an external API.
 
-## Decisión
+## Decision
 
-**Provider dual**: Ollama (local) + API externa, detrás de una **abstracción** común
+**Dual provider**: Ollama (local) + external API, behind a common **abstraction**
 (`lib/providers/`).
 
-## Consecuencias
+## Consequences
 
-- (+) El motor de review no depende del backend; se puede cambiar sin tocar la lógica.
-- (+) Habilita tanto el uso offline como el de mayor calidad.
-- (−) Hay que mantener la paridad de la interfaz entre ambos providers.
+- (+) The review engine does not depend on the backend; it can be swapped without
+  touching the logic.
+- (+) Enables both offline use and higher-quality results.
+- (−) Interface parity between both providers must be maintained.

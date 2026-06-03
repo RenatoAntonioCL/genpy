@@ -1,29 +1,29 @@
 # Architecture Decision Records (ADRs)
 
-Decisiones de diseño cerradas del proyecto GenPy.
+Closed design decisions for the GenPy project.
 
-Formato: `NNNN-titulo-corto.md`. Cada ADR conserva entre paréntesis su **código
-original** (A1–D3) tal como se referencia en `CONTEXT.md` y en comentarios del código
-(ej. `(C2)`), para mantener la trazabilidad.
+Format: `NNNN-short-title.md`. Each ADR preserves its **original code** in parentheses
+(A1–D3) as referenced in `CONTEXT.md` and in code comments (e.g. `(C2)`),
+to maintain traceability.
 
-## Índice
+## Index
 
-| ADR | Código | Decisión | Estado |
-|-----|--------|----------|--------|
-| [0001](0001-bash-minimum-version.md) | A1 | Versión mínima de Bash | Aceptada |
-| [0002](0002-supported-platforms.md) | A2 | Plataformas soportadas (Linux/macOS/WSL2) | Aceptada |
-| [0003](0003-installation-methods.md) | A3 | Métodos de instalación (clone + package managers) | Aceptada |
-| [0004](0004-ollama-model-detection.md) | B1 | Detección de modelo en Ollama (+ fallback) | Aceptada |
-| [0005](0005-dual-provider.md) | B2 | Proveedor dual (Ollama + API) abstraído | Aceptada |
-| [0006](0006-guardian-failure-flow.md) | B3 | Flujo ante fallo de guardián (R/A/E) | Aceptada |
-| [0007](0007-resolver-scope.md) | C1 | Alcance del resolver v1 | Aceptada |
-| [0008](0008-hybrid-semantic-detection.md) | C2 | Detección semántica híbrida (bash + ast) | Aceptada |
-| [0009](0009-decorators-comments-default.md) | C3 | Decoradores y comentarios por defecto | Aceptada |
-| [0010](0010-i18n-en-es.md) | D1 | i18n inglés + español | Aceptada |
-| [0011](0011-testing-and-ci.md) | D2 | Tests bash puro (sin bats) + CI GitHub Actions | Aceptada |
-| [0012](0012-official-blueprints-only.md) | D3 | Solo blueprints oficiales en v1 | Aceptada |
+| ADR | Code | Decision | Status |
+|-----|------|----------|--------|
+| [0001](0001-bash-minimum-version.md) | A1 | Minimum Bash version | Accepted |
+| [0002](0002-supported-platforms.md) | A2 | Supported platforms (Linux/macOS/WSL2) | Accepted |
+| [0003](0003-installation-methods.md) | A3 | Installation methods (clone + package managers) | Accepted |
+| [0004](0004-ollama-model-detection.md) | B1 | Model detection in Ollama (+ fallback) | Accepted |
+| [0005](0005-dual-provider.md) | B2 | Dual provider (Ollama + API) abstracted | Accepted |
+| [0006](0006-guardian-failure-flow.md) | B3 | Guardian failure flow (R/A/E) | Accepted |
+| [0007](0007-resolver-scope.md) | C1 | Resolver v1 scope | Accepted |
+| [0008](0008-hybrid-semantic-detection.md) | C2 | Hybrid semantic detection (bash + ast) | Accepted |
+| [0009](0009-decorators-comments-default.md) | C3 | Decorators and comments by default | Accepted |
+| [0010](0010-i18n-en-es.md) | D1 | i18n English + Spanish | Accepted |
+| [0011](0011-testing-and-ci.md) | D2 | Pure bash tests (no bats) + CI GitHub Actions | Accepted |
+| [0012](0012-official-blueprints-only.md) | D3 | Official blueprints only in v1 | Accepted |
 
-> Migración completada: las decisiones A1–D3 que vivían en `CONTEXT.md` están ahora como
-> ADRs formales. ADR-0001 fija el mínimo real de Bash en 4.3 (namerefs) y ADR-0011
-> registra la estrategia vigente de tests en bash puro (sin bats); ambas reconciliadas
-> con el código y el resto de los documentos.
+> Migration complete: the A1–D3 decisions that lived in `CONTEXT.md` are now formal
+> ADRs. ADR-0001 sets the real Bash minimum at 4.3 (namerefs) and ADR-0011
+> records the current pure-bash testing strategy (no bats); both reconciled
+> with the code and the rest of the documents.

@@ -1,664 +1,663 @@
 # genpy — AI Context Brief
 
-> Cargar este archivo al inicio de cada sesión de trabajo.
-> Última actualización: 2026-06-02
-> Estado: Semana 3 completa — genpy review funcional con Ollama (177 tests)
+> Load this file at the start of each work session.
+> Last updated: 2026-06-02
+> Status: Week 3 complete — genpy review functional with Ollama (177 tests)
 
 ---
 
-## ¿Qué es genpy?
+## What is genpy?
 
-CLI modular en Bash para automatizar el despliegue y gestión
-de arquitecturas de software mediante blueprints contenerizados
-(Docker). Permite generar proyectos completos desde plantillas
-y, en versiones futuras, revisarlos con IA local (Ollama)
-o APIs externas.
+Modular Bash CLI to automate the deployment and management
+of software architectures via containerized blueprints
+(Docker). It generates complete projects from templates
+and, in future versions, reviews them with local AI (Ollama)
+or external APIs.
 
-Versión actual:  1.0.0-alpha
-Distribución:    git clone + install.sh / brew / apt
+Current version:  1.0.0-alpha
+Distribution:     git clone + install.sh / brew / apt
 
 ---
 
-## Estado Actual
+## Current Status
 
-Funciona hoy:
-  genpy create → flujo completo y estable
-    - Preflight: valida Docker, Git, disco, permisos
-    - UI bilingüe: español e inglés via i18n/
-    - 9 blueprints con docker-compose alineados (Modelo A/B)
-    - Política de puertos: APIs en 127.0.0.1, BD solo red interna
-    - Aditivos inyectables por blueprint
-    - Git init automático (local/privado/público → crea repo en GitHub vía API)
-    - Remapeo automático de puertos ocupados en docker-compose.yml
-    - Templates web/AI con Dockerfiles corregidos y buildables
+Working today:
+  genpy create → complete and stable flow
+    - Preflight: validates Docker, Git, disk, permissions
+    - Bilingual UI: Spanish and English via i18n/
+    - 9 blueprints with aligned docker-compose (Model A/B)
+    - Port policy: APIs on 127.0.0.1, DB on internal network only
+    - Per-blueprint injectable add-ons
+    - Automatic git init (local/private/public → creates GitHub repo via API)
+    - Automatic port remapping for occupied ports in docker-compose.yml
+    - web/AI templates with corrected, buildable Dockerfiles
 
-  genpy review → flujo de 10 pasos funcional con Ollama
-    - Selectores: --lines N-M, --function, --class, --method Clase.método
-    - Provider Ollama (localhost:11434) con detección automática de modelo
-    - Preflight: árbol git limpio + Ollama accesible
-    - Git checkpoint automático + rollback en caso de abort/error
-    - 5 guardianes de validación del output IA (G1–G5)
-    - Diff visual + confirmación [A]ceptar/[R]echazar/[E]ditar
-    - Opciones: --goal, --provider, --model
+  genpy review → 10-step flow functional with Ollama
+    - Selectors: --lines N-M, --function, --class, --method Clase.método
+    - Ollama provider (localhost:11434) with automatic model detection
+    - Preflight: clean git tree + Ollama accessible
+    - Automatic git checkpoint + rollback on abort/error
+    - 5 AI output validation guardians (G1–G5)
+    - Visual diff + confirmation [A]ccept/[R]eject/[E]dit
+    - Options: --goal, --provider, --model
 
-No existe todavía:
-  genpy doctor  → Semana 4
-  providers/api.sh → Semana 5 (API externa: OpenAI/Anthropic/custom)
-  review_strategies/go.sh y javascript.sh → Semana 5 (stubs no-bloqueantes)
-  Chunking semántico (§5.6) → Semana 5 (archivos > 500 líneas)
+Not yet implemented:
+  genpy doctor  → Week 4
+  providers/api.sh → Week 5 (external API: OpenAI/Anthropic/custom)
+  review_strategies/go.sh and javascript.sh → Week 5 (non-blocking stubs)
+  Semantic chunking (§5.6) → Week 5 (files > 500 lines)
 
-Semana 3 completa:
+Week 3 complete:
   ollama.sh ✅, review.sh ✅, preflight_mode_review ✅, bin/genpy review ✅
-  177 tests en bash puro:
+  177 tests in pure bash:
     24 resolver + 44 guardians + 48 assembler + 32 checkpoint
-    13 ollama_provider + 16 review_flow (integración)
+    13 ollama_provider + 16 review_flow (integration)
 
 ---
 
-## Estructura Real del Proyecto
+## Actual Project Structure
 
   bin/
-    genpy                   Entry point. Resuelve rutas,
-                            carga i18n, define comandos.
+    genpy                   Entry point. Resolves paths,
+                            loads i18n, defines commands.
 
   lib/core/
-    compat.sh               Detecta OS, arquitectura, Bash 4.3+.
-                            Provee _port_in_use() portable y
-                            _find_free_port() para auto-remapeo.
-                            Exporta: GENPY_OS, GENPY_ARCH.
-    config.sh               Fuente única de verdad del dominio.
+    compat.sh               Detects OS, architecture, Bash 4.3+.
+                            Provides portable _port_in_use() and
+                            _find_free_port() for auto-remapping.
+                            Exports: GENPY_OS, GENPY_ARCH.
+    config.sh               Single source of truth for the domain.
                             Arrays: AREAS, AREA_BLUEPRINTS,
                             BLUEPRINT_META, ADDON_PACKAGES,
                             ADDON_LABELS, ADDON_INDEX.
-                            Función: blueprint_meta().
+                            Function: blueprint_meta().
     errors.sh               trap EXIT/INT/TERM.
-                            Colores propios: _ERR_RED, _ERR_NC.
-                            Funciones: die(), require_command(),
+                            Own colors: _ERR_RED, _ERR_NC.
+                            Functions: die(), require_command(),
                             require_dir().
-                            Autónomo: no depende de utils.sh.
+                            Self-contained: does not depend on utils.sh.
     preflight.sh            preflight_mode_create():
-                            valida docker, git, disco >500MB,
-                            permisos de escritura.
+                            validates docker, git, disk >500MB,
+                            write permissions.
 
   lib/i18n/
-    en.sh                   Diccionario inglés. Cubre: wizard,
-                            menus, card, confirmación, errores.
-    es.sh                   Diccionario español. Mismo schema.
+    en.sh                   English dictionary. Covers: wizard,
+                            menus, card, confirmation, errors.
+    es.sh                   Spanish dictionary. Same schema.
 
   lib/ui/
-    banner.sh               Banner ASCII. Usa GENPY_VERSION.
-    card.sh                 Tarjeta de resumen. Zero hardcoding,
-                            todo desde blueprint_meta().
-    menus.sh                Menús dinámicos desde config.sh.
-                            Contiene: select_area(),
+    banner.sh               ASCII banner. Uses GENPY_VERSION.
+    card.sh                 Summary card. Zero hardcoding,
+                            everything from blueprint_meta().
+    menus.sh                Dynamic menus from config.sh.
+                            Contains: select_area(),
                             select_blueprint(), select_git_mode(),
                             confirm_creation().
 
   lib/
-    utils.sh                Paleta de colores y print_*().
-                            UI primitiva. Responsabilidad única.
-    libs.sh                 Motor de aditivos. select y inject.
-                            _inject_node_addons usa jq (no sed).
-                            Filtro Docker en requirements.txt
-                            usa _sed_inplace() (portable).
-    template.sh             rsync + _sed_inplace() portable.
-                            Respeta Modelo A/B (no mueve Dockerfiles).
-                            Inyecta {{PROJECT_NAME}} en:
+    utils.sh                Color palette and print_*().
+                            Primitive UI. Single responsibility.
+    libs.sh                 Add-on engine. select and inject.
+                            _inject_node_addons uses jq (not sed).
+                            Docker filter in requirements.txt
+                            uses _sed_inplace() (portable).
+    template.sh             rsync + portable _sed_inplace().
+                            Respects Model A/B (does not move Dockerfiles).
+                            Injects {{PROJECT_NAME}} in:
                             .env, *.md, docker-compose.yml, Dockerfile,
                             *.py, *.sh, *.go, go.mod, package.json,
                             nest-cli.json, tsconfig.json
                             _generate_secret(bytes): openssl rand -hex
-                            con fallback a /dev/urandom.
-                            _inject_env_secrets(env_file): dos pasadas —
-                            reemplaza {{SECRET_HEX_N}} y resuelve
-                            referencias cruzadas {{VAR_NAME}} en el mismo
-                            .env (ej: DATABASE_URL usa {{DB_PASSWORD}}).
-    wizard.sh               Orquestador genpy create (7 pasos).
-                            Sin lógica de dominio ni UI propia.
+                            with fallback to /dev/urandom.
+                            _inject_env_secrets(env_file): two passes —
+                            replaces {{SECRET_HEX_N}} and resolves
+                            cross-references {{VAR_NAME}} in the same
+                            .env (e.g.: DATABASE_URL uses {{DB_PASSWORD}}).
+    wizard.sh               genpy create orchestrator (7 steps).
+                            No domain logic or own UI.
     git_manager.sh          setup_git_repository().
-                            Crea repo en GitHub vía API REST
+                            Creates GitHub repo via REST API
                             (_get_github_token, _create_github_repo).
-                            Lee GITHUB_TOKEN / GH_TOKEN / gh CLI.
-                            Fallback: URL manual si no hay token.
-                            select_git_mode() eliminada (vive
-                            en menus.sh).
+                            Reads GITHUB_TOKEN / GH_TOKEN / gh CLI.
+                            Fallback: manual URL if no token.
+                            select_git_mode() removed (lives
+                            in menus.sh).
     docker.sh               check_docker_daemon().
                             inspect_blueprint_ports() via
                             blueprint_meta(), _port_in_use().
-                            Auto-remapea puertos ocupados con
-                            _find_free_port() y parchea
-                            docker-compose.yml en el acto.
-    review.sh               genpy_review() — orquestador 10 pasos.
-                            Selectores: --lines N-M, --function,
+                            Auto-remaps occupied ports with
+                            _find_free_port() and patches
+                            docker-compose.yml on the fly.
+    review.sh               genpy_review() — 10-step orchestrator.
+                            Selectors: --lines N-M, --function,
                             --class, --method Clase.método.
-                            Opciones: --goal, --provider, --model.
-                            Permite inyección de mock en tests
-                            (check declare -f ai_complete antes de
-                            sourcear el provider).
+                            Options: --goal, --provider, --model.
+                            Allows mock injection in tests
+                            (check declare -f ai_complete before
+                            sourcing the provider).
     resolver.sh             resolve_range(): --lines, --function,
                             --class, --method Clase.método.
                             Bash + python3 ast fallback (C2).
-    guardians.sh            run_guardians() + G1–G5. Retorna
+    guardians.sh            run_guardians() + G1–G5. Returns
                             0=ok / 1=abort / 2=retry.
-                            GUARDIAN_NON_INTERACTIVE para CI.
+                            GUARDIAN_NON_INTERACTIVE for CI.
     assembler.sh            build_review_context(), assemble_prompt(),
-                            reassemble_file(). Pasos [4][5][8].
-    review_strategies/      python.sh: funcional.
-                            go.sh, javascript.sh: stubs no-bloqueantes
-                            (validate_syntax retorna 0). Semana 5.
-    providers/              ollama.sh: ai_complete() funcional.
+                            reassemble_file(). Steps [4][5][8].
+    review_strategies/      python.sh: functional.
+                            go.sh, javascript.sh: non-blocking stubs
+                            (validate_syntax returns 0). Week 5.
+    providers/              ollama.sh: ai_complete() functional.
                               POST /api/generate, stream:false.
-                              Detección modelo: GENPY_MODEL >
+                              Model detection: GENPY_MODEL >
                               ollama list > qwen2.5:3b (fallback).
-                              jq con fallback python3.
-                            api.sh: stub Semana 5.
+                              jq with python3 fallback.
+                            api.sh: stub Week 5.
 
   scripts/
-    install.sh              Instalador. Pendiente reescritura
-                            con 4 fases.
-    uninstall.sh            Funcional.
-    update.sh               Funcional. Sin SHA256 todavía.
-    doctor.sh               Stub Semana 4.
+    install.sh              Installer. Pending rewrite
+                            with 4 phases.
+    uninstall.sh            Functional.
+    update.sh               Functional. No SHA256 yet.
+    doctor.sh               Stub Week 4.
 
   tests/                    fixtures/sample.py, fixtures/sample_assembler.txt
                             unit/: test_resolver.sh (24), test_guardians.sh (44),
                                    test_assembler.sh (48), test_checkpoint.sh (32),
                                    test_ollama_provider.sh (13)
                             integration/: test_review_flow.sh (16)
-                                   — 177 tests, bash puro, sin bats
+                                   — 177 tests, pure bash, no bats
                             mocks/ollama_mock.sh
-                              Extrae Sección 4 del prompt ensamblado
-                              (marcador: "=== SECCIÓN 4: FRAGMENTO OBJETIVO ===")
-  decisions/                ADRs formales A1–D3 migrados (ver README).
+                              Extracts Section 4 from the assembled prompt
+                              (marker: "=== SECTION 4: TARGET FRAGMENT ===")
+  decisions/                Formal ADRs A1–D3 migrated (see README).
   docs/                     INSTALL, CONTRIBUTING, SECURITY.
-  .github/                  workflows/ci.yml, CONTEXT.md → enlace.
+  .github/                  workflows/ci.yml, CONTEXT.md → link.
 
-  templates/                9 blueprints oficiales.
-                            web-fastapi-postgres tiene
-                            .genpy/blueprint.toml (referencia).
+  templates/                9 official blueprints.
+                            web-fastapi-postgres has
+                            .genpy/blueprint.toml (reference).
 
 ---
 
-## Modelos de Blueprint
+## Blueprint Models
 
-  Modelo A — Servicio único (Dockerfile en raíz del blueprint):
+  Model A — Single service (Dockerfile at blueprint root):
     ai-ml-pytorch, ai-llm-rag,
     cyber-attacker-kali, cyber-lab-victim-win7
 
-  Modelo B — Multi-servicio (Dockerfile en backend/):
+  Model B — Multi-service (Dockerfile in backend/):
     web-fastapi-postgres, web-go-gin-clean,
     web-node-nest-mongo
-    docker-compose.yml con context: ./backend
+    docker-compose.yml with context: ./backend
 
-  Sin Dockerfile — Solo configuración en config/:
+  No Dockerfile — Configuration only in config/:
     infra-local-cluster, infra-monitoring-stack
 
 ---
 
-## Principios Inviolables
+## Inviolable Principles
 
-  P1 — RESILIENCIA ABSOLUTA
-    La IA nunca toca archivos vivos directamente.
-    Todo cambio pasa por:
-    Sandbox(.tmp) → Guardianes → Git → Usuario.
+  P1 — ABSOLUTE RESILIENCE
+    AI never touches live files directly.
+    Every change goes through:
+    Sandbox(.tmp) → Guardians → Git → User.
 
-  P2 — BASH PURO Y MODULAR
-    Funciones con responsabilidad única.
-    trap en todos los puntos de fallo.
-    Sin dependencias del host más allá de
-    Bash 4.3+, Docker, Git y Ollama.
+  P2 — PURE AND MODULAR BASH
+    Functions with single responsibility.
+    trap at every failure point.
+    No host dependencies beyond
+    Bash 4.3+, Docker, Git, and Ollama.
 
-  P3 — CONTENEDORES AISLADOS
-    Cada blueprint es autónomo via docker-compose.yml.
-    Sin dependencias globales en el host.
+  P3 — ISOLATED CONTAINERS
+    Each blueprint is self-contained via docker-compose.yml.
+    No global host dependencies.
 
-  P4 — PROGRESO INCREMENTAL
-    El sistema siempre avanza, nunca retrocede.
-    Si un cambio no es validable, se rechaza.
+  P4 — INCREMENTAL PROGRESS
+    The system always moves forward, never backward.
+    If a change cannot be validated, it is rejected.
 
 ---
 
-## Invariantes de Arquitectura
+## Architecture Invariants
 
-  - config.sh es la fuente única de verdad del dominio.
-    Ningún módulo hardcodea blueprints, puertos,
-    stacks ni descripciones.
+  - config.sh is the single source of truth for the domain.
+    No module hardcodes blueprints, ports,
+    stacks, or descriptions.
 
-  - errors.sh es autónomo. No depende de utils.sh.
+  - errors.sh is self-contained. Does not depend on utils.sh.
 
-  - La IA nunca toca archivos vivos directamente.
+  - AI never touches live files directly.
 
-  - Los providers (ollama/api) son intercambiables
-    sin tocar review.sh.
-    Contrato: ai_complete(prompt_file, output_file,
+  - Providers (ollama/api) are interchangeable
+    without touching review.sh.
+    Contract: ai_complete(prompt_file, output_file,
                           options_file)
-    Returns: 0=ok 1=fallo 2=vacío 3=timeout
+    Returns: 0=ok 1=failure 2=empty 3=timeout
 
-  - Las strategies (python/go/js) son intercambiables
-    sin tocar review.sh.
-    Contrato: validate_syntax(file)
+  - Strategies (python/go/js) are interchangeable
+    without touching review.sh.
+    Contract: validate_syntax(file)
               extract_signatures(file)
               get_prompt_rules()
 
-  - El flujo review tiene exactamente 10 pasos.
-    Su orden no cambia sin un nuevo ADR.
+  - The review flow has exactly 10 steps.
+    Its order does not change without a new ADR.
 
-  - Los blueprints oficiales se definen en config.sh.
-    No hay blueprints de terceros en v1.
+  - Official blueprints are defined in config.sh.
+    No third-party blueprints in v1.
 
 ---
 
-## Decisiones Cerradas
+## Closed Decisions
 
-  > Versión formal y detallada en `decisions/` (ADR-0001…0012). Esta lista es el
-  > resumen rápido; ante diferencias, manda el ADR.
+  > Formal and detailed version in `decisions/` (ADR-0001…0012). This list is the
+  > quick summary; in case of discrepancies, the ADR prevails.
 
-  A1  Bash 4.3+ mínimo (namerefs). compat.sh detecta y valida.
-  A2  Linux + macOS + WSL2 desde v1.
-  A3  git clone + install.sh Y package managers.
-  B1  Modelo: detectar lo disponible en Ollama.
-      Fallback garantizado: qwen2.5:3b.
-  B2  Provider dual: Ollama + API externa abstraída.
-  B3  Fallo de guardián:
-      [R]eintentar / [A]bortar / [E]ditar manual.
+  A1  Bash 4.3+ minimum (namerefs). compat.sh detects and validates.
+  A2  Linux + macOS + WSL2 from v1.
+  A3  git clone + install.sh AND package managers.
+  B1  Model: detect what is available in Ollama.
+      Guaranteed fallback: qwen2.5:3b.
+  B2  Dual provider: Ollama + abstracted external API.
+  B3  Guardian failure:
+      [R]etry / [A]bort / [E]dit manually.
   C1  Resolver v1: top-level + Class.method.
-  C2  Detección semántica híbrida:
-      Bash primero, runtime nativo como fallback.
-  C3  Decoradores y comentarios: incluidos por defecto,
-      configurables en blueprint.toml.
-  D1  i18n: inglés + español desde v1.
-  D2  Tests en bash puro (sin bats) + CI GitHub Actions.
-  D3  Solo blueprints oficiales del repo en v1.
+  C2  Hybrid semantic detection:
+      Bash first, native runtime as fallback.
+  C3  Decorators and comments: included by default,
+      configurable in blueprint.toml.
+  D1  i18n: English + Spanish from v1.
+  D2  Tests in pure bash (no bats) + CI GitHub Actions.
+  D3  Only official repo blueprints in v1.
 
 ---
 
-## Lo que Sabemos que No Funciona
+## Known Limitations
 
-  - Ollama 3B alucina con archivos > 300 líneas
-    sin chunking semántico.
-  - Formato diff/patch es frágil con modelos pequeños.
-    Usar archivo completo con guardianes compensatorios.
-  - Chunks por número de líneas rompen contexto.
-    Usar límites semánticos con sort por nivel.
-  - sed para modificar JSON es frágil. Usar jq.
-  - lsof no disponible en todas las distros Linux.
-    Resuelto con _port_in_use() en compat.sh.
-
----
-
-## Reparaciones Semana 0 — 100% Completadas
-
-  ✅ R1  Shebang universal en todos los archivos
-  ✅ R2  errors.sh: trap INT/TERM + _ERR_RED propios
-  ✅ R3  select_git_mode duplicada eliminada
-  ✅ R4  _port_in_use() portable en compat.sh
-  ✅ R5  Prueba11 → {{PROJECT_NAME}} en main.py
-  ✅ R6  TEMPLATE_BASE_DIR fallback corregido
-  ✅ R7  source vs bash consistente en bin/genpy
-  ✅ R8  Versión 1.0.0-alpha unificada
-  ✅ R9  jq en _inject_node_addons
-  ✅ R10 README.md en ai-llm-rag
-  ✅ R11 docker-compose.yml en cyber-attacker-kali
-  ✅ R12 Dockerfile ai-ml-pytorch movido a raíz
+  - Ollama 3B hallucinates with files > 300 lines
+    without semantic chunking.
+  - diff/patch format is fragile with small models.
+    Use full file with compensating guardians.
+  - Line-number-based chunks break context.
+    Use semantic boundaries with sort by level.
+  - sed for JSON modification is fragile. Use jq.
+  - lsof not available on all Linux distros.
+    Resolved with _port_in_use() in compat.sh.
 
 ---
 
-## Checkpoint 2026-05-26 — Docker, templates y documentación
+## Week 0 Fixes — 100% Complete
 
-  Objetivo: blueprints utilizables con `docker compose` y layout coherente.
+  ✅ R1  Universal shebang in all files
+  ✅ R2  errors.sh: trap INT/TERM + own _ERR_RED
+  ✅ R3  Duplicate select_git_mode removed
+  ✅ R4  Portable _port_in_use() in compat.sh
+  ✅ R5  Prueba11 → {{PROJECT_NAME}} in main.py
+  ✅ R6  TEMPLATE_BASE_DIR fallback fixed
+  ✅ R7  source vs bash consistent in bin/genpy
+  ✅ R8  Version 1.0.0-alpha unified
+  ✅ R9  jq in _inject_node_addons
+  ✅ R10 README.md in ai-llm-rag
+  ✅ R11 docker-compose.yml in cyber-attacker-kali
+  ✅ R12 Dockerfile ai-ml-pytorch moved to root
 
-  ✅ Documentación
-     CONTEXT.md + ARCHITECTURE.md sincronizados (versión completa 2026-05-21).
+---
+
+## Checkpoint 2026-05-26 — Docker, templates and documentation
+
+  Goal: usable blueprints with `docker compose` and a coherent layout.
+
+  ✅ Documentation
+     CONTEXT.md + ARCHITECTURE.md synchronized (full version 2026-05-21).
 
   ✅ lib/template.sh
-     Eliminado movimiento de backend/Dockerfile → raíz (bug Modelo B).
-     Ampliada inyección {{PROJECT_NAME}} a Go/Node/TS.
+     Removed backend/Dockerfile → root movement (Model B bug).
+     Extended {{PROJECT_NAME}} injection to Go/Node/TS.
 
   ✅ lib/core/config.sh
-     Metadatos de puertos solo para APIs expuestas en localhost
-     (sin 5432/27017/3306 en chequeo de colisiones).
+     Port metadata only for APIs exposed on localhost
+     (no 5432/27017/3306 in collision check).
 
-  ✅ Política de red (9 docker-compose.yml)
-     Web: API 127.0.0.1, bases de datos sin ports en host.
-     AI: Jupyter 127.0.0.1; RAG sin puertos; PyTorch requirements en raíz.
-     Cyber: compose Kali recreado (sin puertos); víctima Win7 sin cambios de red.
-     Infra: Prometheus/Grafana/Traefik en 127.0.0.1; {{PROJECT_NAME}} en Traefik.
+  ✅ Network policy (9 docker-compose.yml)
+     Web: API 127.0.0.1, databases with no ports on host.
+     AI: Jupyter 127.0.0.1; RAG no ports; PyTorch requirements at root.
+     Cyber: Kali compose recreated (no ports); Win7 victim with no network changes.
+     Infra: Prometheus/Grafana/Traefik on 127.0.0.1; {{PROJECT_NAME}} in Traefik.
 
-  ✅ Dockerfiles y código de templates
-     web-fastapi-postgres: backend/src/, config POSTGRES_*, Dockerfile backend/.
+  ✅ Dockerfiles and template code
+     web-fastapi-postgres: backend/src/, POSTGRES_* config, Dockerfile backend/.
      web-node-nest-mongo: nest-cli.json, build dist/main.js.
-     web-go-gin-clean: módulo app, DSN desde env, Dockerfile multi-stage.
-     ai-ml-pytorch: Dockerfile raíz + requirements.txt raíz.
-     ai-llm-rag: Chroma PersistentClient local, deps langchain-community.
+     web-go-gin-clean: app module, DSN from env, multi-stage Dockerfile.
+     ai-ml-pytorch: root Dockerfile + root requirements.txt.
+     ai-llm-rag: local Chroma PersistentClient, langchain-community deps.
 
-  ✅ READMEs web
-     Sección "Red Docker" en FastAPI, NestJS y Go.
+  ✅ Web READMEs
+     "Docker Network" section in FastAPI, NestJS and Go.
 
-  ✅ docker-compose usa ${COMPOSE_PROJECT_NAME} para nombres de
-     contenedor y BD (válido al probar templates/ sin genpy create).
+  ✅ docker-compose uses ${COMPOSE_PROJECT_NAME} for container
+     and DB names (valid when testing templates/ without genpy create).
 
-  Pendiente verificar en host:
-     docker compose build && up en cada blueprint con Dockerfile.
-     libs.sh usa sed -i '' (solo macOS) — corregir para Linux.
+  Pending host verification:
+     docker compose build && up on each blueprint with Dockerfile.
+     libs.sh uses sed -i '' (macOS only) — fix for Linux.
 
-  No incluido en este checkpoint:
-     Seguridad capas OSI (roadmap futuro).
+  Not included in this checkpoint:
+     OSI layer security (future roadmap).
 
 ---
 
-## Checkpoint 2026-05-28 — Fase 0: estabilización del flujo create
+## Checkpoint 2026-05-28 — Phase 0: create flow stabilization
 
-  Objetivo: eliminar bugs reales que hacían el flujo frágil en Linux
-  y en rutas de error. 8 fixes aplicados, uno descartado (falso positivo).
+  Goal: eliminate real bugs that made the flow fragile on Linux
+  and in error paths. 8 fixes applied, one discarded (false positive).
 
-  ✅ Fix 1 — config.sh descomentado en wizard.sh
-     Declaración explícita de dependencia. Include guard en config.sh
-     (_GENPY_CONFIG_LOADED) evita error con readonly en doble source.
+  ✅ Fix 1 — config.sh uncommented in wizard.sh
+     Explicit dependency declaration. Include guard in config.sh
+     (_GENPY_CONFIG_LOADED) prevents readonly error on double source.
 
-  ✅ Fix 2 — sed -i '' en libs.sh → _sed_inplace()
-     El filtro de seguridad de requirements.txt rompía en Linux.
-     Ahora usa la función portable del mismo módulo (template.sh).
-     Sourceo de template.sh desde libs.sh garantizado por carga
-     ordenada en wizard.sh (líneas 24-25).
+  ✅ Fix 2 — sed -i '' in libs.sh → _sed_inplace()
+     The requirements.txt security filter was broken on Linux.
+     Now uses the portable function from the same module (template.sh).
+     template.sh sourcing from libs.sh guaranteed by ordered loading
+     in wizard.sh (lines 24-25).
 
-  ✅ Fix 3 — Dependencias implícitas de utils.sh
-     docker.sh, libs.sh y git_manager.sh ahora sourcean utils.sh
-     explícitamente vía LIB_DIR. Include guard en utils.sh
-     (_GENPY_UTILS_LOADED) evita redefinición doble.
+  ✅ Fix 3 — Implicit utils.sh dependencies
+     docker.sh, libs.sh and git_manager.sh now source utils.sh
+     explicitly via LIB_DIR. Include guard in utils.sh
+     (_GENPY_UTILS_LOADED) prevents double redefinition.
 
-  ✅ Fix 4 — Validación del nombre del proyecto
-     Regex ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ en wizard.sh.
-     Rechaza: espacios, /, ., $, guion inicial, string vacío.
-     Nuevo mensaje en i18n: MSG_ERR_NAME_INVALID (es.sh y en.sh).
+  ✅ Fix 4 — Project name validation
+     Regex ^[a-zA-Z0-9][a-zA-Z0-9_-]*$ in wizard.sh.
+     Rejects: spaces, /, ., $, leading dash, empty string.
+     New i18n message: MSG_ERR_NAME_INVALID (es.sh and en.sh).
 
-  ✅ Fix 5 — copy_template() valida template y resultado
-     Falla con mensaje preciso si template_dir no existe.
-     Falla si rsync copió vacío (ls -A post-copia).
-     wizard.sh conserva el check secundario como segunda línea de defensa.
+  ✅ Fix 5 — copy_template() validates template and result
+     Fails with a precise message if template_dir does not exist.
+     Fails if rsync copied nothing (ls -A post-copy).
+     wizard.sh keeps the secondary check as a second line of defense.
 
-  ✅ Fix 6 — Subshell en pipe de template.sh
+  ✅ Fix 6 — Subshell in template.sh pipe
      | while read → while ... done < <(find ...) (process substitution).
-     Los errores de _sed_inplace propagan correctamente; variables del
-     loop persisten en el shell principal.
+     _sed_inplace errors propagate correctly; loop variables
+     persist in the main shell.
 
-  ✅ Fix 7 — Backticks en compat.sh
-     Falso positivo: el código ya usaba $() en todas partes.
-     No aplica.
+  ✅ Fix 7 — Backticks in compat.sh
+     False positive: code already used $() everywhere.
+     Not applicable.
 
-  ✅ Fix 8 — Git push silenciaba stderr
-     Eliminado 2>/dev/null de _push_to_remote(). El mensaje real de git
-     (ej: "Permission denied (publickey)") ahora es visible al usuario.
-     La estructura if/else ya existía y era correcta.
+  ✅ Fix 8 — Git push silenced stderr
+     Removed 2>/dev/null from _push_to_remote(). The real git message
+     (e.g.: "Permission denied (publickey)") is now visible to the user.
+     The if/else structure already existed and was correct.
 
-  ✅ Fix extra — Ctrl+C no salía del wizard
-     errors.sh: separados los traps EXIT y INT/TERM.
-     INT/TERM llaman exit 130 después de limpiar; el loop while del
-     wizard ya no continúa tras Ctrl+C.
+  ✅ Extra fix — Ctrl+C did not exit the wizard
+     errors.sh: separated EXIT and INT/TERM traps.
+     INT/TERM call exit 130 after cleanup; the wizard's while loop
+     no longer continues after Ctrl+C.
 
 ---
 
-## Checkpoint 2026-05-28 — Secretos .env generados automáticamente
+## Checkpoint 2026-05-28 — Automatically generated .env secrets
 
-  Objetivo: eliminar contraseñas hardcodeadas en los templates;
-  cada proyecto generado recibe credenciales únicas y seguras.
+  Goal: eliminate hardcoded passwords in templates;
+  each generated project receives unique, secure credentials.
 
-  ✅ lib/template.sh — nuevas funciones
-     _generate_secret(bytes): usa openssl rand -hex con fallback
-     a LC_ALL=C tr < /dev/urandom. Output: hex puro [0-9a-f].
-     _inject_env_secrets(env_file): dos pasadas sobre el .env copiado.
-       Pasada 1: reemplaza {{SECRET_HEX_N}} con secreto de N bytes.
-                 Guarda var_name → secret en un mapa local.
-       Pasada 2: resuelve {{VAR_NAME}} (bash string substitution,
-                 no sed — evita bug de llaves dobles en BSD sed macOS).
-     Nota de implementación: ${#array[@]} con array asociativo vacío
-     dispara nounset en bash 5.3; se usa flag 'generated=0/1' en su lugar.
-     .env añadido a la lista de find para inyección de {{PROJECT_NAME}}.
-     _inject_env_secrets llamada al final de copy_template().
+  ✅ lib/template.sh — new functions
+     _generate_secret(bytes): uses openssl rand -hex with fallback
+     to LC_ALL=C tr < /dev/urandom. Output: pure hex [0-9a-f].
+     _inject_env_secrets(env_file): two passes over the copied .env.
+       Pass 1: replaces {{SECRET_HEX_N}} with a secret of N bytes.
+               Stores var_name → secret in a local map.
+       Pass 2: resolves {{VAR_NAME}} (bash string substitution,
+               no sed — avoids double-brace bug in BSD sed on macOS).
+     Implementation note: ${#array[@]} with an empty associative array
+     triggers nounset in bash 5.3; a 'generated=0/1' flag is used instead.
+     .env added to the find list for {{PROJECT_NAME}} injection.
+     _inject_env_secrets called at the end of copy_template().
 
-  ✅ .gitignore — excepción para templates/
-     Regla añadida: !templates/**/.env
-     Los .env de templates son fuente del CLI, no secretos reales.
+  ✅ .gitignore — exception for templates/
+     Rule added: !templates/**/.env
+     Template .env files are CLI source, not real secrets.
 
-  ✅ Templates actualizados:
+  ✅ Updated templates:
 
      web-fastapi-postgres:
        DB_PASSWORD={{SECRET_HEX_32}}  (64 chars hex)
-       DATABASE_URL usa {{DB_PASSWORD}} como referencia cruzada
-       → ambas variables reciben el mismo secreto generado
+       DATABASE_URL uses {{DB_PASSWORD}} as a cross-reference
+       → both variables receive the same generated secret
 
      web-go-gin-clean:
        DB_PASSWORD={{SECRET_HEX_32}}
 
      ai-ml-pytorch:
        JUPYTER_TOKEN={{SECRET_HEX_24}}
-       Comentario "puedes cambiarlo" eliminado (ya no aplica)
+       "you can change it" comment removed (no longer applies)
 
      web-node-nest-mongo:
-       JWT_SECRET={{SECRET_HEX_32}} (nueva variable)
+       JWT_SECRET={{SECRET_HEX_32}} (new variable)
 
      infra-monitoring-stack:
-       .env creado con GF_SECURITY_ADMIN_PASSWORD={{SECRET_HEX_16}}
-       docker-compose.yml actualizado: ya no hardcodea "admin"
+       .env created with GF_SECURITY_ADMIN_PASSWORD={{SECRET_HEX_16}}
+       docker-compose.yml updated: no longer hardcodes "admin"
        → GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
 
-  Sin cambios (justificados):
-     ai-llm-rag: OPENAI_API_KEY es una clave de API externa,
-       no generada. No se puede automatizar.
-     cyber-attacker-kali: sin credenciales (AUDIT_MODE, TARGET_SUBNET).
-     infra-local-cluster: solo PROJECT_NAME.
-     cyber-lab-victim-win7: sin .env.
+  No changes (justified):
+     ai-llm-rag: OPENAI_API_KEY is an external API key,
+       not generated. Cannot be automated.
+     cyber-attacker-kali: no credentials (AUDIT_MODE, TARGET_SUBNET).
+     infra-local-cluster: only PROJECT_NAME.
+     cyber-lab-victim-win7: no .env.
 
 ---
 
-## Checkpoint 2026-05-28 — Puertos y GitHub automáticos
+## Checkpoint 2026-05-28 — Automatic ports and GitHub
 
-  Objetivo: eliminar fricción manual en los dos pasos finales del wizard.
+  Goal: eliminate manual friction in the two final wizard steps.
 
   ✅ lib/core/compat.sh
-     Nueva función _find_free_port(port): itera desde port+1 hasta
-     encontrar un puerto libre (<= 65535). Vive junto a _port_in_use().
+     New function _find_free_port(port): iterates from port+1 until
+     a free port is found (<= 65535). Lives next to _port_in_use().
 
   ✅ lib/docker.sh — inspect_blueprint_ports()
-     Acepta segundo argumento project_dir.
-     Cuando un puerto está ocupado: llama _find_free_port, informa
-     el remapeo al usuario y parchea docker-compose.yml con sed
-     (solo el puerto host; el del contenedor no cambia).
-     Wizard.sh actualizado para pasar $PROJECT_DIR.
+     Accepts second argument project_dir.
+     When a port is occupied: calls _find_free_port, reports
+     the remapping to the user, and patches docker-compose.yml with sed
+     (host port only; container port does not change).
+     Wizard.sh updated to pass $PROJECT_DIR.
 
   ✅ lib/git_manager.sh — GitHub API
-     _get_github_token(): busca en GITHUB_TOKEN → GH_TOKEN → gh CLI.
-     _create_github_repo(): POST /user/repos vía curl; extrae ssh_url
-     con jq o grep; reporta error de la API si falla.
-     _push_to_remote(): conecta remote y hace push; instrucciones de
-     reintento si falla.
-     _fallback_manual_remote(): flujo anterior (URL manual), usado
-     cuando no hay curl, no hay token o la API falla.
-     setup_git_repository(): orquesta el flujo completo con degradación
-     grácil en cada punto de fallo.
+     _get_github_token(): searches GITHUB_TOKEN → GH_TOKEN → gh CLI.
+     _create_github_repo(): POST /user/repos via curl; extracts ssh_url
+     with jq or grep; reports API error on failure.
+     _push_to_remote(): connects remote and pushes; retry instructions
+     on failure.
+     _fallback_manual_remote(): previous flow (manual URL), used
+     when there is no curl, no token, or the API fails.
+     setup_git_repository(): orchestrates the full flow with graceful
+     degradation at each failure point.
 
   Tag: v1.0.0-alpha
 
 ---
 
-## Limpieza estructural 2026-05-26
+## Structural cleanup 2026-05-26
 
-  Objetivo: alinear el árbol del repo con ARCHITECTURE.md.
+  Goal: align the repo tree with ARCHITECTURE.md.
 
-  Eliminado:
-    - Prototipos review (curl/Ollama) en scripts/ y lib/ viejos.
-    - Artefactos locales .aider* (gitignore).
+  Removed:
+    - Review prototypes (curl/Ollama) in old scripts/ and lib/.
+    - Local .aider* artifacts (gitignore).
 
-  Creado:
+  Created:
     - tests/{fixtures,unit,integration,mocks/ollama_mock.sh}
     - decisions/, docs/, .github/workflows/ci.yml
-    - Stubs Semana 2–5: resolver, guardians, assembler, providers
-    - lib/review.sh nuevo (stub Semana 3)
+    - Week 2–5 stubs: resolver, guardians, assembler, providers
+    - lib/review.sh new (Week 3 stub)
     - templates/web-fastapi-postgres/.genpy/blueprint.toml
-    - CHANGELOG.md, README.md actualizado
+    - CHANGELOG.md, README.md updated
 
-  Implementado desde entonces:
+  Implemented since then:
     resolver.sh ✅, guardians.sh ✅, assembler.sh ✅
-  Pendiente implementar:
-    genpy review (Semana 3), doctor (Semana 4).
+  Pending implementation:
+    genpy review (Week 3), doctor (Week 4).
 
 ---
 
-## Semana 2 — Motor de Review sin IA
+## Week 2 — Review Engine without AI
 
-Lo que construimos ahora, en orden:
+What we built now, in order:
 
-  1. .genpy/blueprint.toml en web-fastapi-postgres  ✅ (plantilla + flujo create)
-     rsync copia .genpy/ al proyecto generado.
-     _validate_blueprint_toml() valida existencia, sección [meta],
-     version y language en bash puro (grep). Llamada desde copy_template().
+  1. .genpy/blueprint.toml in web-fastapi-postgres  ✅ (template + create flow)
+     rsync copies .genpy/ to the generated project.
+     _validate_blueprint_toml() validates existence, [meta] section,
+     version and language in pure bash (grep). Called from copy_template().
 
   2. resolver.sh  ✅
-     resolve_range() implementado: --lines N-M, --function,
-     --class, --method Clase.método para Python top-level.
-     Estrategia: grep/awk primero, python3 ast como fallback (C2).
-     24 tests en tests/unit/test_resolver.sh (24 PASS / 0 FAIL).
+     resolve_range() implemented: --lines N-M, --function,
+     --class, --method Clase.método for Python top-level.
+     Strategy: grep/awk first, python3 ast as fallback (C2).
+     24 tests in tests/unit/test_resolver.sh (24 PASS / 0 FAIL).
 
   3. guardians.sh  ✅
-     run_guardians() + G1–G5 implementados.
-     G4 omite chunks de métodos indentados (validación completa en paso [8]).
-     G5 verifica firmas top-level e indentadas; ignora privados (_foo),
-     conserva dunders (__init__). Interacción [R]/[A]/[E] con GUARDIAN_MAX_RETRIES.
-     44 tests en tests/unit/test_guardians.sh (44 PASS / 0 FAIL).
+     run_guardians() + G1–G5 implemented.
+     G4 skips chunks of indented methods (full validation in step [8]).
+     G5 verifies top-level and indented signatures; ignores private (_foo),
+     preserves dunders (__init__). [R]/[A]/[E] interaction with GUARDIAN_MAX_RETRIES.
+     44 tests in tests/unit/test_guardians.sh (44 PASS / 0 FAIL).
 
   4. assembler.sh  ✅
-     build_review_context(): extrae imports + firmas → context blob.
-     assemble_prompt(): 4 secciones con rol, goal, contexto y chunk.
-     reassemble_file(): head + chunk_revisado + tail → stdout.
-     48 tests en tests/unit/test_assembler.sh (48 PASS / 0 FAIL).
+     build_review_context(): extracts imports + signatures → context blob.
+     assemble_prompt(): 4 sections with role, goal, context and chunk.
+     reassemble_file(): head + revised_chunk + tail → stdout.
+     48 tests in tests/unit/test_assembler.sh (48 PASS / 0 FAIL).
 
-  5. review_strategies/python.sh  ✅ (funcional)
+  5. review_strategies/python.sh  ✅ (functional)
      validate_syntax(): python3 -m py_compile.
      extract_signatures(): grep ^def / ^async def / ^class.
-     get_prompt_rules(): indentación, type hints, f-strings, decoradores.
+     get_prompt_rules(): indentation, type hints, f-strings, decorators.
 
-  6. git_manager.sh robustecer  ✅
-     create_checkpoint(project_dir, [branch_prefix]): valida repo, HEAD no
-     detached, árbol limpio; crea rama genpy/review/<YYYYMMDD_HHMMSS> y cambia
-     a ella. Sets CHECKPOINT_BRANCH, CHECKPOINT_ORIGINAL_BRANCH.
-     rollback_to_checkpoint(project_dir): vuelve a la rama original y elimina
-     la de revisión con -D (force). Limpia los globals.
-     32 tests en tests/unit/test_checkpoint.sh (32 PASS / 0 FAIL).
+  6. git_manager.sh hardening  ✅
+     create_checkpoint(project_dir, [branch_prefix]): validates repo, HEAD not
+     detached, clean tree; creates branch genpy/review/<YYYYMMDD_HHMMSS> and switches
+     to it. Sets CHECKPOINT_BRANCH, CHECKPOINT_ORIGINAL_BRANCH.
+     rollback_to_checkpoint(project_dir): returns to the original branch and deletes
+     the review branch with -D (force). Clears globals.
+     32 tests in tests/unit/test_checkpoint.sh (32 PASS / 0 FAIL).
 
-  Criterio de salida:
-    El flujo completo funciona con ollama_mock.sh.
-    Sin Ollama real todavía.
+  Exit criteria:
+    Full flow works with ollama_mock.sh.
+    No real Ollama yet.
 
 ---
 
-## Checkpoint 2026-05-28 — Semana 2: motor de review sin IA
+## Checkpoint 2026-05-28 — Week 2: review engine without AI
 
-  Objetivo: construir y testar los módulos que el orquestador review.sh
-  necesitará en Semana 3. Sin IA real; todo testeable con mocks.
+  Goal: build and test the modules that the review.sh orchestrator
+  will need in Week 3. No real AI; everything testable with mocks.
 
-  ✅ lib/template.sh — integración blueprint.toml en genpy create
-     _validate_blueprint_toml(): verifica [meta], version y language
-     en bash puro (grep). copy_template() la invoca si el archivo existe.
+  ✅ lib/template.sh — blueprint.toml integration in genpy create
+     _validate_blueprint_toml(): verifies [meta], version and language
+     in pure bash (grep). copy_template() invokes it if the file exists.
 
   ✅ lib/resolver.sh — resolve_range()
-     Cuatro modos: --lines N-M, --function, --class, --method Clase.método.
-     Bash/grep/awk como camino principal; python3 ast como fallback (C2).
-     Produce globals RESOLVE_START y RESOLVE_END (1-based, inclusive).
+     Four modes: --lines N-M, --function, --class, --method Clase.método.
+     Bash/grep/awk as the main path; python3 ast as fallback (C2).
+     Produces globals RESOLVE_START and RESOLVE_END (1-based, inclusive).
      Include guard _GENPY_RESOLVER_LOADED.
      24 tests — 24 PASS / 0 FAIL.
 
   ✅ lib/guardians.sh — run_guardians() + G1–G5
      G1 not-empty, G2 no-markdown, G3 line-count 70–130%,
-     G4 validate_syntax (skip en métodos indentados),
-     G5 firmas públicas presentes (ignora _privados, conserva __dunders__).
-     run_guardians retorna 0/1/2; interacción [R]/[A]/[E].
-     GUARDIAN_MAX_RETRIES, GUARDIAN_NON_INTERACTIVE para CI.
+     G4 validate_syntax (skip on indented methods),
+     G5 public signatures present (ignores _private, preserves __dunders__).
+     run_guardians returns 0/1/2; [R]/[A]/[E] interaction.
+     GUARDIAN_MAX_RETRIES, GUARDIAN_NON_INTERACTIVE for CI.
      44 tests — 44 PASS / 0 FAIL.
 
   ✅ lib/assembler.sh — build_review_context / assemble_prompt / reassemble_file
-     build_review_context: extrae imports y firmas → context blob con marcadores.
-     assemble_prompt: 4 secciones (rol, goal, contexto RO, fragmento objetivo).
-     reassemble_file: head(1..START-1) + chunk_revisado + tail(END+1..EOF) → stdout.
+     build_review_context: extracts imports and signatures → context blob with markers.
+     assemble_prompt: 4 sections (role, goal, RO context, target fragment).
+     reassemble_file: head(1..START-1) + revised_chunk + tail(END+1..EOF) → stdout.
      48 tests — 48 PASS / 0 FAIL.
 
-  ✅ lib/review_strategies/python.sh — funcional
+  ✅ lib/review_strategies/python.sh — functional
      validate_syntax: python3 -m py_compile.
      extract_signatures: grep ^def / ^async def / ^class.
-     get_prompt_rules: cuatro reglas de estilo Python.
+     get_prompt_rules: four Python style rules.
 
-  Semana 2 completa. Siguiente: Semana 3 — review.sh + providers Ollama/API.
+  Week 2 complete. Next: Week 3 — review.sh + Ollama/API providers.
 
 ---
 
-## Checkpoint 2026-06-02 — Semana 3: genpy review funcional
+## Checkpoint 2026-06-02 — Week 3: genpy review functional
 
-  Objetivo: implementar el orquestador de 10 pasos y el provider Ollama.
-  El flujo completo genpy review funciona con Ollama real o con mock.
+  Goal: implement the 10-step orchestrator and the Ollama provider.
+  The full genpy review flow works with real Ollama or with a mock.
 
-  ✅ lib/providers/ollama.sh — ai_complete() funcional
-     POST http://localhost:11434/api/generate con stream:false.
-     Detección de modelo: GENPY_MODEL > primer modelo en ollama list
-     > fallback qwen2.5:3b (decisión B1).
-     JSON encode/decode: jq con fallback python3.
-     Códigos de retorno: 0=ok, 1=fallo servicio, 2=vacío/malformado, 3=timeout.
-     curl exit 28 → return 3 (timeout). Conexión rechazada → return 1.
+  ✅ lib/providers/ollama.sh — ai_complete() functional
+     POST http://localhost:11434/api/generate with stream:false.
+     Model detection: GENPY_MODEL > first model in ollama list
+     > fallback qwen2.5:3b (decision B1).
+     JSON encode/decode: jq with python3 fallback.
+     Return codes: 0=ok, 1=service failure, 2=empty/malformed, 3=timeout.
+     curl exit 28 → return 3 (timeout). Connection refused → return 1.
      13 tests — 13 PASS / 0 FAIL.
 
-  ✅ lib/review.sh — genpy_review() orquestador 10 pasos
-     Pasos [0]–[10] según ARCHITECTURE.md §5.4.
-     Selectores: --lines N-M, --function, --class, --method Clase.método.
-     Opciones: --goal, --provider (ollama|api), --model.
-     Inyección de mock: si ai_complete está definida antes de llamar
-     genpy_review, no se sourcea el provider (permite tests sin Ollama).
-     Mismo patrón para preflight_mode_review.
-     GENPY_REVIEW_NON_INTERACTIVE=1: auto-acepta el diff (tests/CI).
-     Camino sin-cambios: diff vacío → rollback + rc=0.
-     Camino con-cambios: diff → [A]ceptar/[R]echazar/[E]ditar → commit.
+  ✅ lib/review.sh — genpy_review() 10-step orchestrator
+     Steps [0]–[10] per ARCHITECTURE.md §5.4.
+     Selectors: --lines N-M, --function, --class, --method Clase.método.
+     Options: --goal, --provider (ollama|api), --model.
+     Mock injection: if ai_complete is defined before calling
+     genpy_review, the provider is not sourced (allows tests without Ollama).
+     Same pattern for preflight_mode_review.
+     GENPY_REVIEW_NON_INTERACTIVE=1: auto-accepts the diff (tests/CI).
+     No-changes path: empty diff → rollback + rc=0.
+     With-changes path: diff → [A]ccept/[R]eject/[E]dit → commit.
 
   ✅ lib/core/preflight.sh — preflight_mode_review()
-     Valida: curl disponible, árbol git limpio, Ollama accesible.
-     OLLAMA_HOST configurable vía env (default: http://localhost:11434).
+     Validates: curl available, clean git tree, Ollama accessible.
+     OLLAMA_HOST configurable via env (default: http://localhost:11434).
 
-  ✅ bin/genpy — comando review
-     shift antes del case → $@ pasa los args a genpy_review.
-     show_help() actualizado con genpy review.
+  ✅ bin/genpy — review command
+     shift before case → $@ passes args to genpy_review.
+     show_help() updated with genpy review.
 
-  ✅ lib/review_strategies/go.sh, javascript.sh — stubs no-bloqueantes
-     validate_syntax retorna 0 (no aborta el flujo).
-     extract_signatures con grep real (^func / ^export).
-     get_prompt_rules con reglas básicas del lenguaje.
+  ✅ lib/review_strategies/go.sh, javascript.sh — non-blocking stubs
+     validate_syntax returns 0 (does not abort the flow).
+     extract_signatures with real grep (^func / ^export).
+     get_prompt_rules with basic language rules.
 
   ✅ tests/unit/test_ollama_provider.sh — 13 tests
-     _ollama_detect_model: GENPY_MODEL, fallback sin Ollama.
-     _ollama_json_encode: texto simple, newlines, comillas, backslash.
-     _ollama_extract_response: JSON válido, vacío, sin campo, malformado.
-     ai_complete con mock: Sección 4, sin sección, archivo inexistente.
+     _ollama_detect_model: GENPY_MODEL, fallback without Ollama.
+     _ollama_json_encode: plain text, newlines, quotes, backslash.
+     _ollama_extract_response: valid JSON, empty, missing field, malformed.
+     ai_complete with mock: Section 4, no section, nonexistent file.
 
   ✅ tests/integration/test_review_flow.sh — 16 tests
-     _review_detect_strategy: .py/.go/.ts/desconocida.
-     Flujo sin-cambios: mock devuelve código idéntico → rollback, rc=0.
-     Flujo con-cambios: mock añade comentario → diff → commit aplicado.
-     Verificación de rama y commits tras apply.
-     Manejo de errores: archivo inexistente, sin args, opción desconocida.
-     preflight_mode_review: Ollama caído, árbol sucio.
+     _review_detect_strategy: .py/.go/.ts/unknown.
+     No-changes flow: mock returns identical code → rollback, rc=0.
+     With-changes flow: mock adds comment → diff → commit applied.
+     Branch and commit verification after apply.
+     Error handling: nonexistent file, no args, unknown option.
+     preflight_mode_review: Ollama down, dirty tree.
 
-  Bugs corregidos en esta sesión:
-     tests/mocks/ollama_mock.sh: marcador ^### FOCAL → Sección 4 real.
-     bin/genpy: comentario de tarea obsoleto eliminado.
+  Bugs fixed in this session:
+     tests/mocks/ollama_mock.sh: marker ^### FOCAL → real Section 4.
+     bin/genpy: stale task comment removed.
 
-  Total de tests: 177 (148 Semana 2 + 29 Semana 3) — 177 PASS / 0 FAIL.
-  Semana 3 completa. Siguiente: Semana 4 — genpy doctor.
+  Total tests: 177 (148 Week 2 + 29 Week 3) — 177 PASS / 0 FAIL.
+  Week 3 complete. Next: Week 4 — genpy doctor.
 
 ---
 
-## Glosario
+## Glossary
 
-  focal chunk    Fragmento de código enviado a la IA
-  guardian       Función de validación del output IA
-  checkpoint     Commit Git antes de operación con IA
-  strategy       Módulo específico por lenguaje
-  provider       Abstracción del servicio IA
-  blueprint      Template Docker completo y autónomo
-  addon          Paquete opcional inyectable
-  Modelo A       Dockerfile en raíz del blueprint
-  Modelo B       Dockerfile en backend/
-
+  focal chunk    Code fragment sent to the AI
+  guardian       AI output validation function
+  checkpoint     Git commit before an AI operation
+  strategy       Language-specific module
+  provider       AI service abstraction
+  blueprint      Complete, self-contained Docker template
+  addon          Optional injectable package
+  Model A        Dockerfile at blueprint root
+  Model B        Dockerfile in backend/

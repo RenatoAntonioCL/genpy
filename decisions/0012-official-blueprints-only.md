@@ -1,21 +1,21 @@
-# ADR-0012: Solo blueprints oficiales en v1 (D3)
+# ADR-0012: Official Blueprints Only in v1 (D3)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (D3)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (D3)
 
-## Contexto
+## Context
 
-GenPy genera proyectos desde blueprints. Permitir blueprints arbitrarios de terceros
-desde el día uno abre superficie de seguridad y soporte difícil de garantizar.
+GenPy generates projects from blueprints. Allowing arbitrary third-party blueprints
+from day one opens a security and support surface that is hard to guarantee.
 
-## Decisión
+## Decision
 
-En la v1, **solo blueprints oficiales** del propio repositorio (`templates/`).
+In v1, **only official blueprints** from the repository itself (`templates/`).
 
-## Consecuencias
+## Consequences
 
-- (+) Cada stack generado está versionado, probado y con credenciales únicas
-  garantizadas por el proyecto.
-- (+) Reduce el riesgo de ejecutar plantillas no confiables.
-- (−) No hay (todavía) blueprints de la comunidad ni rutas externas; queda como
-  posible evolución post-v1.
+- (+) Every generated stack is versioned, tested, and has unique credentials guaranteed
+  by the project.
+- (+) Reduces the risk of executing untrusted templates.
+- (−) There are no community blueprints or external paths (yet); this remains a possible
+  post-v1 evolution.

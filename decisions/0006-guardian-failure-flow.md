@@ -1,20 +1,20 @@
-# ADR-0006: Flujo ante fallo de un guardián (B3)
+# ADR-0006: Guardian Failure Flow (B3)
 
-- **Estado:** Aceptada
-- **Origen:** `CONTEXT.md` → "Decisiones Cerradas" (B3)
+- **Status:** Accepted
+- **Source:** `CONTEXT.md` → "Closed Decisions" (B3)
 
-## Contexto
+## Context
 
-Los guardianes (`lib/guardians.sh`, G1–G5) validan la salida del review. Cuando uno
-falla hay que decidir qué hacer sin perder el control el usuario ni romper el archivo.
+The guardians (`lib/guardians.sh`, G1–G5) validate the review output. When one
+fails, we need to decide what to do without losing user control or corrupting the file.
 
-## Decisión
+## Decision
 
-Ante un fallo de guardián, ofrecer: **[R]eintentar / [A]bortar / [E]ditar manual**.
-Configurable con `GUARDIAN_MAX_RETRIES` y `GUARDIAN_NON_INTERACTIVE`.
+On guardian failure, offer: **[R]etry / [A]bort / [E]dit manually**.
+Configurable with `GUARDIAN_MAX_RETRIES` and `GUARDIAN_NON_INTERACTIVE`.
 
-## Consecuencias
+## Consequences
 
-- (+) El usuario decide; nunca se aplica a ciegas una salida que no pasó los gates.
-- (+) El modo no interactivo permite usarlo en CI/scripts.
-- (−) Suma pasos de interacción en el flujo feliz cuando un modelo chico falla seguido.
+- (+) The user decides; output that did not pass the gates is never applied blindly.
+- (+) Non-interactive mode allows use in CI/scripts.
+- (−) Adds interaction steps to the happy path when a small model fails repeatedly.

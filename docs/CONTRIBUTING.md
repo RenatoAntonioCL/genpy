@@ -1,11 +1,11 @@
-# Contribuir
+# Contributing
 
-1. Lee [CONTEXT.md](../CONTEXT.md) y [ARCHITECTURE.md](../ARCHITECTURE.md) antes de abrir un PR.
-2. Bash puro en `lib/` — sin hardcodear blueprints fuera de `lib/core/config.sh`.
-3. Un cambio por responsabilidad; `trap` en flujos que toquen archivos del usuario.
-4. Tests en bash puro en `tests/` (sin bats); corré `tests/unit/*.sh` antes del PR.
+1. Read [CONTEXT.md](../CONTEXT.md) and [ARCHITECTURE.md](../ARCHITECTURE.md) before opening a PR.
+2. Pure bash in `lib/` — do not hardcode blueprints outside `lib/core/config.sh`.
+3. One change per responsibility; `trap` in flows that touch user files.
+4. Tests in pure bash in `tests/` (no bats); run `tests/unit/*.sh` before the PR.
 
-## Ramas
+## Branches
 
-- `main` — estable / checkpoints etiquetados
-- Features por semana del roadmap (`semana-2-review`, etc.)
+- `main` — stable / tagged checkpoints
+- Features per roadmap week (`semana-2-review`, etc.)

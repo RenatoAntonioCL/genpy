@@ -3,34 +3,34 @@ set -euo pipefail
 # =============================================================================
 # GenPy — lib/core/errors.sh (v1.0.0-alpha)
 #
-# Manejo centralizado de errores y cleanup.
+# Centralized error handling and cleanup.
 #
-# Provee:
-#   - trap global para errores inesperados
-#   - función die() como punto único de salida con error
-#   - cleanup() para tareas de limpieza al salir
+# Provides:
+#   - global trap for unexpected errors
+#   - die() function as the single error exit point
+#   - cleanup() for cleanup tasks on exit
 # =============================================================================
 
-# ─── Estado de limpieza ───────────────────────────────────────────────────────
+# ─── Cleanup state ───────────────────────────────────────────────────────────
 
 GENPY_CLEANUP_DIR=""
 
-# ─── Trap global ─────────────────────────────────────────────────────────────
+# ─── Global trap ─────────────────────────────────────────────────────────────
 
 _genpy_cleanup() {
   local exit_code=$?
 
   if [[ $exit_code -ne 0 && -n "$GENPY_CLEANUP_DIR" && -d "$GENPY_CLEANUP_DIR" ]]; then
-    echo -e "\n  ⚠️  Error detectado — limpiando directorio parcial: $GENPY_CLEANUP_DIR"
+    echo -e "\n  ⚠️  Error detected — cleaning up partial directory: $GENPY_CLEANUP_DIR"
     rm -rf "$GENPY_CLEANUP_DIR"
-    echo -e "  🗑️  Directorio eliminado."
+    echo -e "  🗑️  Directory removed."
   fi
 }
 
 trap '_genpy_cleanup' EXIT
-trap 'echo -e "\n  Operación cancelada." >&2; exit 130' INT TERM
+trap 'echo -e "\n  Operation cancelled." >&2; exit 130' INT TERM
 
-# ─── Colores mínimos propios (sin depender de utils.sh) ──────────────────────
+# ─── Own minimal colors (without depending on utils.sh) ──────────────────────
 
 _ERR_RED='\033[1;31m'
 _ERR_NC='\033[0m'
@@ -54,10 +54,10 @@ die() {
 
 require_command() {
   local cmd="$1"
-  local hint="${2:-Instala '$cmd' antes de continuar.}"
+  local hint="${2:-Install '$cmd' before continuing.}"
 
   if ! command -v "$cmd" &>/dev/null; then
-    die "$cmd no está instalado. $hint"
+    die "$cmd is not installed. $hint"
   fi
 }
 
@@ -65,7 +65,7 @@ require_command() {
 
 require_dir() {
   local dir="$1"
-  local message="${2:-Directorio requerido no encontrado: $dir}"
+  local message="${2:-Required directory not found: $dir}"
 
   [[ -d "$dir" ]] || die "$message"
 }
