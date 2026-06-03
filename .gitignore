@@ -29,3 +29,6 @@ env/
 ENV/
 *.temp
 *.tmp
+*.env
+*.env.local
+node_modules/
