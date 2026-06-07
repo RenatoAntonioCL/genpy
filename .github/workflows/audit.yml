@@ -1,0 +1,129 @@
+name: Compliance Audit
+
+# Checks that the repo where this runs meets how-i-work standards.
+# Deploy this file to target repos via update-propagator.yml.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Check compliance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: Check required files
+        id: files
+        run: |
+          required=(README.md CONTEXT.md ARCHITECTURE.md CHANGELOG.md CLAUDE.md)
+          missing=()
+          for f in "${required[@]}"; do
+            [[ -f "$f" ]] || missing+=("$f")
+          done
+          echo "missing=${missing[*]}" >> "$GITHUB_OUTPUT"
+
+      - name: Check CI/CD configured
+        id: cicd
+        run: |
+          count=$(find .github/workflows -maxdepth 1 \( -name '*.yml' -o -name '*.yaml' \) 2>/dev/null | wc -l | tr -d ' ')
+          echo "count=${count:-0}" >> "$GITHUB_OUTPUT"
+
+      - name: Check commit format
+        id: commits
+        run: |
+          pattern='^(feat|fix|docs|chore|refactor|test|ci|release)(\([^)]+\))?: .+'
+          invalid=()
+          while IFS= read -r subject; do
+            [[ -z "$subject" ]] && continue
+            echo "$subject" | grep -qE "$pattern" || invalid+=("$subject")
+          done < <(git log --format='%s' --no-merges -20)
+          echo "invalid_count=${#invalid[@]}" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "${invalid[@]}" > /tmp/invalid_commits.txt
+
+      - name: Generate report
+        id: report
+        run: |
+          missing="${{ steps.files.outputs.missing }}"
+          cicd_count="${{ steps.cicd.outputs.count }}"
+          cicd_count="${cicd_count:-0}"
+          invalid_count="${{ steps.commits.outputs.invalid_count }}"
+          invalid_count="${invalid_count:-0}"
+          issues=0
+
+          [[ -n "$missing" ]]          && issues=$((issues + 1))
+          [[ "$cicd_count" -eq 0 ]]    && issues=$((issues + 1))
+          [[ "$invalid_count" -gt 0 ]] && issues=$((issues + 1))
+
+          {
+            echo "# Compliance Audit — ${{ github.repository }}"
+            echo ""
+            echo "> **Branch:** \`${{ github.ref_name }}\` · **Run:** [${{ github.run_id }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) · $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+
+            echo "## Required files"
+            echo ""
+            if [[ -z "$missing" ]]; then
+              echo "✅ All required files present (README.md, CONTEXT.md, ARCHITECTURE.md, CHANGELOG.md, CLAUDE.md)"
+            else
+              echo "❌ Missing:"
+              for f in $missing; do echo "  - \`$f\`"; done
+              echo ""
+              echo "_Use templates from [how-i-work/templates](https://github.com/RenatoAntonioCL/how-i-work/tree/main/templates)._"
+            fi
+            echo ""
+
+            echo "## CI/CD configuration"
+            echo ""
+            if [[ "$cicd_count" -gt 0 ]]; then
+              echo "✅ ${cicd_count} workflow file(s) in \`.github/workflows/\`"
+            else
+              echo "❌ No workflow files — \`.github/workflows/\` is missing or empty"
+              echo ""
+              echo "_Every repo must have a working CI pipeline. See [how-i-work/conventions/CI_CD.md](https://github.com/RenatoAntonioCL/how-i-work/blob/main/conventions/CI_CD.md)._"
+            fi
+            echo ""
+
+            echo "## Commit format (last 20 non-merge commits)"
+            echo ""
+            if [[ "$invalid_count" -eq 0 ]]; then
+              echo "✅ All commits follow Conventional Commits"
+            else
+              echo "❌ ${invalid_count} commit(s) do not follow \`type(scope): description\` format:"
+              while IFS= read -r line; do
+                [[ -n "$line" ]] && echo "  - \`${line}\`"
+              done < /tmp/invalid_commits.txt
+              echo ""
+              echo "_Valid types: \`feat\` · \`fix\` · \`docs\` · \`chore\` · \`refactor\` · \`test\` · \`ci\` · \`release\`. See [GIT.md](https://github.com/RenatoAntonioCL/how-i-work/blob/main/conventions/GIT.md)._"
+            fi
+            echo ""
+
+            echo "---"
+            echo ""
+            echo "## Summary"
+            echo ""
+            if [[ "$issues" -eq 0 ]]; then
+              echo "✅ **Fully compliant** with [how-i-work](https://github.com/RenatoAntonioCL/how-i-work) standards."
+            else
+              echo "⚠️ **${issues} area(s) out of compliance.** Address the items above."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "issues=$issues" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if non-compliant
+        if: steps.report.outputs.issues != '0'
+        run: |
+          echo "::error::Compliance check failed — ${{ steps.report.outputs.issues }} area(s) out of compliance. See the job summary for details."
+          exit 1
