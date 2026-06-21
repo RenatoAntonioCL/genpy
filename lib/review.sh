@@ -310,7 +310,9 @@ _review_detect_strategy() {
   local lib_dir="${LIB_DIR:?}"
 
   # 1. Try to read language from the project's blueprint.toml
-  local toml=".genpy/blueprint.toml"
+  local project_root
+  project_root=$(git rev-parse --show-toplevel 2>/dev/null) || true
+  local toml="${project_root:-.}/.genpy/blueprint.toml"
   if [[ -f "$toml" ]]; then
     local lang
     lang=$(grep -E '^language[[:space:]]*=' "$toml" 2>/dev/null | head -1 \
