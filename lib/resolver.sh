@@ -230,7 +230,7 @@ _rr_python() {
   command -v python3 &>/dev/null || return 1
 
   local result
-  result=$(python3 - "$kind" "$name" "$extra" "$file" <<'PYEOF' 2>/dev/null) || return 1
+  result=$(python3 - "$kind" "$name" "$extra" "$file" 2>/dev/null <<'PYEOF'
 import ast, sys
 
 kind, name, extra, path = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
@@ -268,6 +268,7 @@ elif kind == "method":
 
 sys.exit(1)
 PYEOF
+  ) || return 1
 
   if [[ "$result" =~ ^([0-9]+):([0-9]+)$ ]]; then
     RESOLVE_START="${BASH_REMATCH[1]}"
