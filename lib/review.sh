@@ -20,7 +20,7 @@ _GENPY_REVIEW_LOADED=1
 #
 # OPTIONS:
 #   --goal TEXT              Review goal (default: generic)
-#   --provider ollama|api    AI provider (default: ollama)
+#   --provider ollama|anthropic|api    AI provider (default: ollama)
 #   --model NAME             Force a specific model (equivalent to GENPY_MODEL)
 #
 # Environment variables for testing / CI:
@@ -121,10 +121,11 @@ genpy_review() {
   # of mock in tests by pre-sourcing ollama_mock.sh before calling genpy_review)
   if ! declare -f ai_complete &>/dev/null; then
     case "$provider" in
-      ollama) source "${LIB_DIR}/providers/ollama.sh" ;;
-      api)    source "${LIB_DIR}/providers/api.sh" ;;
+      ollama)    source "${LIB_DIR}/providers/ollama.sh" ;;
+      anthropic) source "${LIB_DIR}/providers/anthropic.sh" ;;
+      api)       source "${LIB_DIR}/providers/api.sh" ;;
       *)
-        echo "Error: unknown provider: '$provider'. Valid: ollama, api" >&2
+        echo "Error: unknown provider: '$provider'. Valid: ollama, anthropic, api" >&2
         return 1
         ;;
     esac
@@ -371,7 +372,7 @@ SELECTOR (one of):
 
 OPTIONS:
   --goal TEXT              Review goal
-  --provider ollama|api    AI provider (default: ollama)
+  --provider ollama|anthropic|api    AI provider (default: ollama)
   --model NAME             Force specific model
 
 Examples:
